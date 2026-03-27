@@ -7,23 +7,18 @@ import io
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Aegis - Personal Inventory", page_icon="🛡️", layout="wide")
 
-# --- SIDEBAR: LOGIN & KEYS ---
-st.sidebar.title("🛡️ Aegis Configuration")
-st.sidebar.info("Enter your API Key to activate the scanner.")
-
-api_key = st.sidebar.text_input("Google Gemini API Key", type="password")
-
-# --- CHECK API KEY ---
-if not api_key:
-    st.title("🛡️ AEGIS: Personal Inventory System")
-    st.write("Please enter your Google Gemini API Key in the sidebar to begin scanning loot.")
-    st.stop()
-else:
+# --- CONFIGURATION (SECURE) ---
+# This tries to find the key in Streamlit's secure 'Secrets' storage
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
+except Exception:
+    st.error("⚠️ App Configuration Error: API Key not found. Please contact support.")
+    st.stop() # Stops the app if the key is missing
 
 # --- MAIN APP ---
-st.title("🕵️ Loot Scanner")
-st.write("Upload a receipt image to decrypt your items.")
+st.title("🛡️ AEGIS: Personal Inventory System")
+st.write("Snap a photo of your receipt to decrypt your loot.")
 
 # --- FILE UPLOADER ---
 uploaded_file = st.file_uploader("Choose a receipt image...", type=["jpg", "png", "jpeg"])
