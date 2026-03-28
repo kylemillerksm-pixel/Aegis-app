@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEGIS — Your Purchases, Protected</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:    #080A0F;
+    --dark:     #0D1018;
+    --dark2:    #131720;
+    --surface:  #1A2030;
+    --surface2: #202840;
+    --border:   rgba(255,255,255,.07);
+    --border2:  rgba(255,255,255,.14);
+    --gold:     #F5C842;
+    --gold2:    #E8A800;
+    --gold3:    #FFF0A0;
+    --red:      #FF4444;
+    --orange:   #FF8C00;
+    --yellow:   #FFD700;
+    --blue:     #4488FF;
+    --green:    #44CC88;
+    --purple:   #8866FF;
+    --text:     #F0EEF8;
+    --text2:    #8890A8;
+    --text3:    #404860;
+  }
+
+  html, body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,.06) 2px, rgba(0,0,0,.06) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── UTILS ─────────────────────────── */
+  .hidden { display: none !important; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 11px 22px; border-radius: 8px; border: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
+    font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    transition: all .15s;
+  }
+  .btn-gold  { background: var(--gold);  color: var(--black); }
+  .btn-gold:hover  { background: var(--gold3); transform: translateY(-1px); }
+  .btn-purple{ background: var(--purple); color: #fff; }
+  .btn-purple:hover{ opacity: .88; transform: translateY(-1px); }
+  .btn-outline{ background: transparent; color: var(--gold); border: 1px solid rgba(245,200,66,.35); }
+  .btn-outline:hover{ background: rgba(245,200,66,.08); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-ghost:hover { background: var(--surface); color: var(--text); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+  .btn-full { width: 100%; }
+
+  .input {
+    width: 100%; padding: 11px 14px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text);
+    font-family: 'Barlow', sans-serif; font-size: 14px;
+    outline: none; transition: border-color .15s;
+  }
+  .input:focus { border-color: var(--gold); }
+  .input::placeholder { color: var(--text3); }
+
+  .label {
+    display: block; font-size: 11px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 6px;
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .alert-msg {
+    padding: 10px 14px; border-radius: 8px;
+    font-size: 13px; margin-bottom: 14px; display: none;
+  }
+  .alert-msg.error   { background: rgba(255,68,68,.12);  color: var(--red);   border: 1px solid rgba(255,68,68,.25);  display: block; }
+  .alert-msg.success { background: rgba(68,204,136,.12); color: var(--green); border: 1px solid rgba(68,204,136,.25); display: block; }
+  .alert-msg.info    { background: rgba(68,136,255,.12); color: var(--blue);  border: 1px solid rgba(68,136,255,.25); display: block; }
+
+  .panel {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  .panel-title {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
+    font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text);
+  }
+  .panel-action { font-size: 11px; color: var(--gold); cursor: pointer; letter-spacing: .05em; text-transform: uppercase; }
+  .panel-body { padding: 16px 20px; }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* ─── AUTH SCREEN ────────────────────── */
+  #screen-auth {
+    min-height: 100vh; display: flex;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 20% 50%, rgba(245,200,66,.05) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(136,102,255,.05) 0%, transparent 60%);
+  }
+
+  .auth-box {
+    width: 100%; max-width: 420px;
+    background: var(--dark); border: 1px solid var(--border2);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0,0,0,.6);
+  }
+
+  .auth-header {
+    padding: 32px 32px 24px; text-align: center;
+    background: linear-gradient(180deg, rgba(245,200,66,.08) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .auth-shield {
+    width: 52px; height: 52px;
+    background: var(--gold);
+    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
+    margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    animation: shieldPulse 3s ease-in-out infinite;
+  }
+  @keyframes shieldPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,200,66,.4); }
+    50%      { box-shadow: 0 0 0 12px rgba(245,200,66,.0); }
+  }
+  .auth-logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 36px;
+    letter-spacing: .2em; color: var(--gold); line-height: 1;
+  }
+  .auth-tagline { font-size: 12px; color: var(--text3); letter-spacing: .1em; margin-top: 4px; }
+
+  .auth-tabs {
+    display: flex; background: var(--dark2); border-bottom: 1px solid var(--border);
+  }
+  .auth-tab {
+    flex: 1; padding: 14px; text-align: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 13px;
+    font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all .15s; background: transparent; border: none;
+    border-bottom: 2px solid transparent;
+  }
+  .auth-tab.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(245,200,66,.04); }
+
+  .auth-body { padding: 28px 32px; }
+
+  .divider-text {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 11px; color: var(--text3); letter-spacing: .1em;
+    text-transform: uppercase; margin: 16px 0;
+  }
+  .divider-text::before, .divider-text::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .btn-google {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border2); width: 100%;
+    padding: 11px; border-radius: 8px; cursor: pointer;
+    font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all .15s;
+  }
+  .btn-google:hover { background: var(--surface2); border-color: rgba(255,255,255,.2); }
+  .google-icon { width: 18px; height: 18px; }
+
+  /* ─── APP LAYOUT ─────────────────────── */
+  #screen-app { display: none; min-height: 100vh; }
+  #screen-app.visible { display: flex; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 260px; min-height: 100vh;
+    background: var(--dark); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar::-webkit-scrollbar { width: 0; }
+
+  .sidebar-logo {
+    padding: 24px 20px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-shield {
+    width: 28px; height: 28px; background: var(--gold); flex-shrink: 0;
+    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
+  }
+  .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .15em; color: var(--gold); }
+  .logo-tag  { font-size: 9px; color: var(--text3); letter-spacing: .12em; text-transform: uppercase; }
+
+  /* OPERATOR CARD */
+  .op-card {
+    margin: 14px; background: var(--surface);
+    border: 1px solid var(--border2); border-radius: 12px;
+    padding: 14px; position: relative; overflow: hidden;
+  }
+  .op-card::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle at top right, rgba(245,200,66,.1), transparent);
+    pointer-events: none;
+  }
+  .op-rank {
+    font-size: 9px; font-weight: 600; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--gold2); margin-bottom: 2px;
+  }
+  .op-level {
+    font-family: 'Bebas Neue', sans-serif; font-size: 44px;
+    line-height: 1; color: var(--text); letter-spacing: .05em;
+  }
+  .op-level span { font-size: 16px; color: var(--text3); }
+  .op-title {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 16px;
+    font-weight: 700; color: var(--gold); letter-spacing: .1em;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .xp-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .xp-track { height: 4px; background: var(--dark2); border-radius: 2px; overflow: hidden; margin-bottom: 3px; }
+  .xp-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold2), var(--gold3)); transition: width .6s ease; }
+  .xp-next  { font-size: 9px; color: var(--text3); }
+  .credits-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .credits-icon {
+    width: 26px; height: 26px; background: rgba(245,200,66,.12);
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .credits-num  { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--gold); line-height: 1; }
+  .credits-label{ font-size: 9px; color: var(--text3); letter-spacing: .06em; }
+
+  /* NAV */
+  .nav { padding: 6px 0; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer; transition: all .12s;
+    border-left: 2px solid transparent; color: var(--text2);
+    font-size: 12px; font-weight: 500; letter-spacing: .06em;
+    text-transform: uppercase; text-decoration: none;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,.03); }
+  .nav-item.active { color: var(--gold); background: rgba(245,200,66,.05); border-left-color: var(--gold); }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .6; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .nav-badge {
+    margin-left: auto; background: var(--red); color: #fff;
+    font-size: 9px; font-weight: 700; padding: 2px 5px;
+    border-radius: 8px; min-width: 16px; text-align: center;
+  }
+  .nav-new {
+    margin-left: auto; font-size: 9px; font-weight: 700;
+    letter-spacing: .1em; background: rgba(136,102,255,.2);
+    color: var(--purple); border: 1px solid rgba(136,102,255,.3);
+    padding: 1px 6px; border-radius: 8px;
+  }
+
+  /* BADGES */
+  .badges-section { padding: 12px 14px; border-top: 1px solid var(--border); }
+  .badges-heading { font-size: 9px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+  .badges-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+  .badge-chip {
+    width: 30px; height: 30px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; cursor: default; transition: transform .15s; position: relative;
+  }
+  .badge-chip:hover { transform: scale(1.18); }
+  .badge-chip.earned { background: rgba(245,200,66,.12); border: 1px solid rgba(245,200,66,.25); }
+  .badge-chip.locked { background: var(--dark2); border: 1px solid var(--border); filter: grayscale(1) brightness(.4); }
+
+  /* SIGNOUT */
+  .sidebar-footer { padding: 12px 14px; border-top: 1px solid var(--border); }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  .topbar {
+    height: 56px; background: var(--dark); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; flex-shrink: 0; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .15em; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .status-dot {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text3);
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    animation: blink 2.5s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+  .content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+
+  /* PAGE SYSTEM */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STAT CARDS */
+  .stat-row { display: grid; gap: 14px; margin-bottom: 20px; }
+  .stat-row.cols4 { grid-template-columns: repeat(4,1fr); }
+  .stat-row.cols3 { grid-template-columns: repeat(3,1fr); }
+  .stat-row.cols5 { grid-template-columns: repeat(5,1fr); }
+
+  .stat-card {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+    position: relative; overflow: hidden; transition: border-color .2s, transform .15s;
+  }
+  .stat-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .stat-card.c-gold::before   { background: var(--gold); }
+  .stat-card.c-red::before    { background: var(--red); }
+  .stat-card.c-green::before  { background: var(--green); }
+  .stat-card.c-blue::before   { background: var(--blue); }
+  .stat-card.c-orange::before { background: var(--orange); }
+  .stat-card.c-purple::before { background: var(--purple); }
+  .sc-label { font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+  .sc-num   { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: .05em; line-height: 1; margin-bottom: 2px; }
+  .sc-sub   { font-size: 10px; color: var(--text3); }
+  .c-gold .sc-num   { color: var(--gold); }
+  .c-red .sc-num    { color: var(--red); }
+  .c-green .sc-num  { color: var(--green); }
+  .c-blue .sc-num   { color: var(--blue); }
+  .c-orange .sc-num { color: var(--orange); }
+  .c-purple .sc-num { color: var(--purple); }
+
+  /* GRIDS */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .grid3 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+  /* ALERT ITEMS */
+  .alert-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: all .12s;
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-item:hover { background: rgba(255,255,255,.02); margin: 0 -20px; padding: 9px 20px; }
+  .alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .alert-info { flex: 1; min-width: 0; }
+  .alert-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alert-meta { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .alert-badge {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: .08em; padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+  }
+  .ab-red    { background: rgba(255,68,68,.15);  color: var(--red);    border: 1px solid rgba(255,68,68,.3);   }
+  .ab-orange { background: rgba(255,140,0,.15);  color: var(--orange); border: 1px solid rgba(255,140,0,.3);   }
+  .ab-yellow { background: rgba(255,215,0,.12);  color: var(--yellow); border: 1px solid rgba(255,215,0,.25);  }
+  .ab-blue   { background: rgba(68,136,255,.12); color: var(--blue);   border: 1px solid rgba(68,136,255,.25); }
+  .ab-green  { background: rgba(68,204,136,.12); color: var(--green);  border: 1px solid rgba(68,204,136,.25); }
+
+  /* VAULT ITEMS */
+  .vault-header, .vault-row {
+    display: grid; grid-template-columns: 2.5fr 1fr 1.2fr 1.2fr 1.2fr;
+    align-items: center; padding: 9px 20px; gap: 8px;
+  }
+  .vault-header { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); }
+  .vault-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+  .vault-row:last-child { border-bottom: none; }
+  .vault-row:hover { background: rgba(255,255,255,.02); }
+  .vi-name     { font-size: 13px; font-weight: 500; color: var(--text); }
+  .vi-merchant { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .vi-price    { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+  .rarity-chip { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .1em; padding: 2px 7px; border-radius: 4px; display: inline-block; }
+  .r-exotic    { color: #F5C842; background: rgba(245,200,66,.12); }
+  .r-legendary { color: #CC88FF; background: rgba(204,136,255,.12); }
+  .r-rare      { color: #4488FF; background: rgba(68,136,255,.12); }
+  .r-common    { color: var(--text3); background: rgba(255,255,255,.05); }
+
+  /* SCAN ZONE */
+  .scan-zone {
+    border: 1.5px dashed var(--border2); border-radius: 12px;
+    padding: 36px 24px; text-align: center; cursor: pointer;
+    transition: all .2s; background: rgba(245,200,66,.02);
+    position: relative; overflow: hidden;
+  }
+  .scan-zone:hover { border-color: var(--gold); background: rgba(245,200,66,.04); }
+  .scan-zone.scanning { border-color: var(--gold); border-style: solid; }
+  .scan-zone::before {
+    content: ''; position: absolute; top: -100%; left: 0; right: 0;
+    height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    animation: scanLine 3s linear infinite;
+  }
+  @keyframes scanLine { to { top: 110%; } }
+  .scan-icon  { font-size: 36px; margin-bottom: 10px; display: block; }
+  .scan-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .15em; margin-bottom: 5px; }
+  .scan-sub   { font-size: 11px; color: var(--text3); line-height: 1.6; }
+  .scan-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  /* MANIFEST GRID */
+  .manifest-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 16px; }
+  .manifest-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 14px; animation: fadeUp .3s ease both;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .mc-rarity { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; }
+  .mc-name   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .mc-meta   { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
+  .mc-badge  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; margin-top: 5px; }
+
+  /* RECENT */
+  .recent-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .recent-item:last-child { border-bottom: none; }
+  .recent-thumb { width: 32px; height: 32px; background: var(--surface); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .recent-info  { flex: 1; }
+  .recent-name  { font-size: 12px; font-weight: 500; color: var(--text); }
+  .recent-time  { font-size: 10px; color: var(--text3); }
+  .recent-xp    { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; color: var(--gold); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 2px; background: var(--dark); border-radius: 8px; padding: 3px; margin-bottom: 16px; width: fit-content; }
+  .tab  { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; color: var(--text3); transition: all .12s; background: transparent; border: none; }
+  .tab.active { background: var(--surface); color: var(--text); border: 1px solid var(--border2); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text3); }
+  .empty-icon  { font-size: 40px; margin-bottom: 12px; display: block; opacity: .4; }
+  .empty-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; letter-spacing: .1em; color: var(--text2); margin-bottom: 6px; }
+  .empty-sub   { font-size: 12px; line-height: 1.6; }
+
+  /* TOAST */
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px;
+    color: var(--text); max-width: 300px; animation: toastIn .3s ease;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+  @keyframes toastIn { from { opacity:0; transform:translateX(20px); } }
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error   { border-left: 3px solid var(--red); }
+  .toast.info    { border-left: 3px solid var(--gold); }
+
+  /* SPINNER */
+  .spinner {
+    width: 20px; height: 20px; border: 2px solid var(--border2);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin .7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PDF PAGE */
+  .pdf-zone {
+    border: 1.5px dashed rgba(136,102,255,.4); border-radius: 12px;
+    padding: 36px 24px; text-align: center; cursor: pointer;
+    background: rgba(136,102,255,.03); transition: all .2s; position: relative; overflow: hidden;
+  }
+  .pdf-zone:hover { border-color: var(--purple); background: rgba(136,102,255,.06); }
+  .pdf-zone input[type=file] { position: absolute; inset:0; opacity:0; cursor:pointer; }
+
+  /* LOADING OVERLAY */
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(8,10,15,.85);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9000; gap: 16px;
+  }
+  .loading-spinner {
+    width: 48px; height: 48px; border: 3px solid var(--border2);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  .loading-text { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .2em; color: var(--gold); }
+  .loading-sub  { font-size: 12px; color: var(--text3); letter-spacing: .1em; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LOADING OVERLAY
+═══════════════════════════════════════════ -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">AEGIS</div>
+  <div class="loading-sub" id="loadingMsg">INITIALIZING SYSTEM...</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════ -->
+<div id="screen-auth" class="hidden">
+  <div class="auth-box">
+    <div class="auth-header">
+      <div class="auth-shield"></div>
+      <div class="auth-logo">AEGIS</div>
+      <div class="auth-tagline">Your purchases, protected.</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin"    onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab"        id="tabRegister" onclick="switchAuthTab('register')">Create Account</button>
+    </div>
+
+    <div class="auth-body">
+      <div id="authMsg"></div>
+
+      <!-- LOGIN FORM -->
+      <div id="formLogin">
+        <div class="field">
+          <label class="label">Email Address</label>
+          <input class="input" type="email" id="loginEmail" placeholder="operator@aegis.app">
+        </div>
+        <div class="field">
+          <label class="label">Password</label>
+          <input class="input" type="password" id="loginPassword" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter') doLogin()">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="doLogin()" id="btnLogin">
+          ⚡ Access Vault
+        </button>
+        <div class="divider-text">or</div>
+        <button class="btn-google" onclick="doGoogleLogin()">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="formRegister" class="hidden">
+        <div class="field">
+          <label class="label">Email Address</label>
+          <input class="input" type="email" id="regEmail" placeholder="operator@aegis.app">
+        </div>
+        <div class="field">
+          <label class="label">Password</label>
+          <input class="input" type="password" id="regPassword" placeholder="Minimum 6 characters">
+        </div>
+        <div class="field">
+          <label class="label">Confirm Password</label>
+          <input class="input" type="password" id="regConfirm" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter') doRegister()">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="doRegister()" id="btnRegister">
+          🛡️ Create Account
+        </button>
+        <div class="divider-text">or</div>
+        <button class="btn-google" onclick="doGoogleLogin()">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Sign up with Google
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════ -->
+<div id="screen-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-shield"></div>
+      <div>
+        <div class="logo-text">AEGIS</div>
+        <div class="logo-tag">Your purchases, protected.</div>
+      </div>
+    </div>
+
+    <div class="op-card">
+      <div class="op-rank">Clearance Level</div>
+      <div class="op-level" id="sideLevel">1 <span>/ 8</span></div>
+      <div class="op-title" id="sideTitle">Recruit</div>
+      <div class="xp-row">
+        <span id="sideCredits">0 XP</span>
+        <span id="sideNext">500 to Operative</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xpBar" style="width:0%"></div></div>
+      <div class="xp-next" id="xpUnlock">Keep scanning to level up</div>
+      <div class="credits-row">
+        <div class="credits-icon">⚡</div>
+        <div>
+          <div class="credits-num" id="sideCreditsNum">0</div>
+          <div class="credits-label">System Credits</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item active" onclick="showPage('dashboard')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" onclick="showPage('scanner')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+        Scanner
+      </a>
+      <a class="nav-item" onclick="showPage('alerts')" id="navAlerts">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Expiry Alerts
+        <span class="nav-badge hidden" id="alertBadge">0</span>
+      </a>
+      <a class="nav-item" onclick="showPage('vault')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+        The Vault
+      </a>
+      <a class="nav-item" onclick="showPage('pdf')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        PDF Scanner
+        <span class="nav-new">NEW</span>
+      </a>
+    </nav>
+
+    <div class="badges-section">
+      <div class="badges-heading">Badges</div>
+      <div class="badges-grid" id="badgesGrid">
+        <div class="badge-chip locked" title="First Acquisition">🎯</div>
+        <div class="badge-chip locked" title="High Roller">💎</div>
+        <div class="badge-chip locked" title="Operational">⚙️</div>
+        <div class="badge-chip locked" title="Asset Manager">📊</div>
+        <div class="badge-chip locked" title="Quartermaster">🏆</div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-ghost btn-full" onclick="doSignOut()" style="font-size:11px;padding:8px">
+        Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">OPERATOR DASHBOARD</div>
+      <div class="topbar-right">
+        <div class="status-dot"><div class="dot" style="background:var(--green)"></div>Database</div>
+        <div class="status-dot"><div class="dot" style="background:var(--gold)"></div>AI Ready</div>
+        <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 16px;font-size:12px">⚡ New Scan</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ─── DASHBOARD ─── -->
+      <div class="page active" id="page-dashboard">
+        <div class="stat-row cols4">
+          <div class="stat-card c-gold">
+            <div class="sc-label">Total Assets</div>
+            <div class="sc-num" id="dashTotal">0</div>
+            <div class="sc-sub">Items cataloged</div>
+          </div>
+          <div class="stat-card c-red">
+            <div class="sc-label">At Risk Value</div>
+            <div class="sc-num" id="dashRisk">$0</div>
+            <div class="sc-sub">Expiring soon</div>
+          </div>
+          <div class="stat-card c-green">
+            <div class="sc-label">Protected Value</div>
+            <div class="sc-num" id="dashProtected">$0</div>
+            <div class="sc-sub">Under warranty</div>
+          </div>
+          <div class="stat-card c-blue">
+            <div class="sc-label">System Credits</div>
+            <div class="sc-num" id="dashCredits">0</div>
+            <div class="sc-sub">Lifetime earned</div>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🔴 Active Alerts</div>
+              <div class="panel-action" onclick="showPage('alerts')">View All →</div>
+            </div>
+            <div class="panel-body" id="dashAlerts">
+              <div class="empty-state">
+                <span class="empty-icon">✅</span>
+                <div class="empty-title">All Clear</div>
+                <div class="empty-sub">No expiring items</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel" style="margin-bottom:16px">
+              <div class="panel-header"><div class="panel-title">⚡ Recent Scans</div></div>
+              <div class="panel-body" id="dashRecent">
+                <div class="empty-state" style="padding:20px">
+                  <span class="empty-icon" style="font-size:24px">📷</span>
+                  <div class="empty-sub">No scans yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🗄️ Top Assets</div>
+            <div class="panel-action" onclick="showPage('vault')">Full Vault →</div>
+          </div>
+          <div class="vault-header">
+            <div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
+          </div>
+          <div id="dashTopAssets">
+            <div class="empty-state">
+              <span class="empty-icon">🛡️</span>
+              <div class="empty-title">Vault Empty</div>
+              <div class="empty-sub">Scan a receipt to add your first asset</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SCANNER ─── -->
+      <div class="page" id="page-scanner">
+        <div class="grid2" style="margin-bottom:0">
+          <div>
+            <div class="scan-zone" id="scanZone">
+              <input type="file" accept="image/*" id="scanFileInput" onchange="handleImageScan(this)">
+              <span class="scan-icon" id="scanIcon">📷</span>
+              <div class="scan-title" id="scanTitle">Drop Receipt Here</div>
+              <div class="scan-sub" id="scanSub">JPG, PNG, or JPEG · AI extracts items, warranties & expiry dates<br>Credits awarded for every scan</div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <button class="btn btn-gold" style="flex:1;justify-content:center" onclick="document.getElementById('scanFileInput').click()">
+                ⚡ Select Receipt
+              </button>
+              <button class="btn btn-outline" onclick="showPage('pdf')">📄 PDF Mode</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel" style="margin-bottom:14px">
+              <div class="panel-header"><div class="panel-title">📊 Your Stats</div></div>
+              <div class="panel-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statTotalScans">0</div>
+                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Scans</div>
+                  </div>
+                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statTotalItems">0</div>
+                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Items</div>
+                  </div>
+                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statCredits">0</div>
+                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Credits</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><div class="panel-title">🕐 Recent Scans</div></div>
+              <div class="panel-body" id="scannerRecent">
+                <div class="empty-state" style="padding:16px">
+                  <div class="empty-sub">No scans yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCAN RESULTS -->
+        <div id="scanResults" class="hidden" style="margin-top:18px">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title" id="resultsTitle">📦 Inventory Manifest</div>
+              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:7px 14px;font-size:11px">
+                💾 Save to Vault
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="manifest-grid" id="manifestGrid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── ALERTS ─── -->
+      <div class="page" id="page-alerts">
+        <div class="stat-row cols5" id="alertStats">
+          <div class="stat-card c-red"><div class="sc-label">Expired</div><div class="sc-num" id="aExpired">0</div></div>
+          <div class="stat-card c-orange"><div class="sc-label">Critical</div><div class="sc-num" id="aCritical">0</div></div>
+          <div class="stat-card" style="border-top:2px solid var(--yellow)"><div class="sc-label">Warning</div><div class="sc-num" style="color:var(--yellow)" id="aWarning">0</div></div>
+          <div class="stat-card c-blue"><div class="sc-label">Monitor</div><div class="sc-num" id="aMonitor">0</div></div>
+          <div class="stat-card c-gold"><div class="sc-label">At Risk $</div><div class="sc-num" id="aRisk">$0</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">⚠️ All Active Alerts</div></div>
+          <div class="panel-body" id="alertsList">
+            <div class="empty-state">
+              <span class="empty-icon">✅</span>
+              <div class="empty-title">All Clear</div>
+              <div class="empty-sub">Nothing expiring in the next 30 days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── VAULT ─── -->
+      <div class="page" id="page-vault">
+        <div class="stat-row cols3" style="margin-bottom:16px">
+          <div class="stat-card c-gold"><div class="sc-label">Total Assets</div><div class="sc-num" id="vTotal">0</div></div>
+          <div class="stat-card c-green"><div class="sc-label">Total Value</div><div class="sc-num" id="vValue">$0</div></div>
+          <div class="stat-card c-blue"><div class="sc-label">Under Warranty</div><div class="sc-num" id="vWarranty">0</div></div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="tabs" id="vaultTabs">
+            <button class="tab active" onclick="filterVault('all',this)">All</button>
+            <button class="tab" onclick="filterVault('Electronics',this)">Electronics</button>
+            <button class="tab" onclick="filterVault('Groceries',this)">Groceries</button>
+            <button class="tab" onclick="filterVault('Appliances',this)">Appliances</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="vault-header">
+            <div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
+          </div>
+          <div id="vaultList">
+            <div class="empty-state">
+              <span class="empty-icon">🗄️</span>
+              <div class="empty-title">Vault Empty</div>
+              <div class="empty-sub">Scan a receipt to add your first asset</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PDF SCANNER ─── -->
+      <div class="page" id="page-pdf">
+        <div class="grid2">
+          <div>
+            <div class="pdf-zone" id="pdfZone">
+              <input type="file" accept=".pdf" id="pdfFileInput" onchange="handlePdfScan(this)">
+              <span class="scan-icon" id="pdfIcon">📄</span>
+              <div class="scan-title" id="pdfTitle" style="color:var(--purple)">Drop PDF Here</div>
+              <div class="scan-sub" id="pdfSub">Warranty certificates · Insurance policies<br>Old invoices · Emailed receipts<br>Recover warranties from years ago.</div>
+            </div>
+            <div style="margin-top:10px">
+              <button class="btn btn-purple btn-full" onclick="document.getElementById('pdfFileInput').click()">
+                ⚡ Select Document
+              </button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">💡 Why PDF Scanning?</div></div>
+            <div class="panel-body">
+              <div style="font-size:13px;color:var(--text2);line-height:1.9">
+                <div style="margin-bottom:10px">📧 <strong style="color:var(--text)">Email receipts</strong><br><span style="font-size:11px;color:var(--text3)">Forward any receipt email as PDF, Aegis extracts everything</span></div>
+                <div style="margin-bottom:10px">🛡️ <strong style="color:var(--text)">Warranty certificates</strong><br><span style="font-size:11px;color:var(--text3)">Scan the PDF that came in the box</span></div>
+                <div style="margin-bottom:10px">🏠 <strong style="color:var(--text)">Insurance policies</strong><br><span style="font-size:11px;color:var(--text3)">Know exactly what's covered and when</span></div>
+                <div style="margin-bottom:14px">🚗 <strong style="color:var(--text)">Service records</strong><br><span style="font-size:11px;color:var(--text3)">Track car maintenance and extended coverage</span></div>
+                <div style="padding:12px;background:rgba(136,102,255,.1);border-radius:8px;border:1px solid rgba(136,102,255,.2);color:var(--purple);font-size:12px;line-height:1.6">
+                  💡 Most people have $500–$1,100 in active warranties sitting in old emails right now. Scan them before they expire.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="pdfResults" class="hidden" style="margin-top:18px">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title" id="pdfResultsTitle">📦 Document Manifest</div>
+              <button class="btn btn-purple" onclick="savePdfResults()" style="padding:7px 14px;font-size:11px">
+                💾 Save to Vault
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="manifest-grid" id="pdfManifestGrid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script>
+// ─── CONFIG — REPLACE WITH YOUR KEYS ──────────────────────────
+const SUPABASE_URL     = 'https://eeizfajopbpmjsxykgmz.supabase.co';
+const SUPABASE_ANON    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlaXpmYWpvcGJwbWpzeHlrZ216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzU0NzQsImV4cCI6MjA5MDIxMTQ3NH0.pxnBz7yFfw69l5qR9RoW8rDmvKAkXvs8for_XaS05N0';
+const GEMINI_API_KEY   = 'PASTE_YOUR_GEMINI_KEY_HERE';
+// ───────────────────────────────────────────────────────────────
+
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ─── STATE ────────────────────────────────────────────────────
+let currentUser  = null;
+let allItems     = [];
+let pendingItems = [];
+let totalCredits = 0;
+let scanCount    = 0;
+
+const LEVELS = [
+  [0,    'Recruit'],
+  [500,  'Operative'],
+  [1000, 'Specialist'],
+  [2000, 'Agent'],
+  [3500, 'Commander'],
+  [5000, 'Director'],
+  [7500, 'Executive'],
+  [10000,'Sovereign'],
+];
+
+const UNLOCK_HINTS = [
+  'Keep scanning to level up',
+  'Unlock Document Scanner at Level 4',
+  'Scan 10 items for Asset Manager badge',
+  'Scan $500 in items for High Roller badge',
+  'Scan 25 items for Quartermaster badge',
+];
+
+// ─── INIT ─────────────────────────────────────────────────────
+(async () => {
+  setLoadingMsg('CHECKING CREDENTIALS...');
+  const { data: { session } } = await supa.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    await bootApp();
+  } else {
+    hideLoading();
+    showAuth();
+  }
+
+  supa.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      currentUser = session.user;
+      await bootApp();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      showAuth();
+    }
+  });
+})();
+
+async function bootApp() {
+  setLoadingMsg('LOADING VAULT...');
+  await loadItems();
+  hideLoading();
+  showApp();
+  refreshDashboard();
+  refreshAlerts();
+  refreshVault();
+  updateSidebar();
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────
+function showAuth() {
+  document.getElementById('screen-auth').classList.remove('hidden');
+  document.getElementById('screen-app').classList.remove('visible');
+}
+
+function showApp() {
+  document.getElementById('screen-auth').classList.add('hidden');
+  document.getElementById('screen-app').classList.add('visible');
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('formLogin').classList.toggle('hidden',    tab !== 'login');
+  document.getElementById('formRegister').classList.toggle('hidden', tab !== 'register');
+  document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+  document.getElementById('authMsg').innerHTML = '';
+}
+
+function setAuthMsg(msg, type) {
+  const el = document.getElementById('authMsg');
+  el.className = `alert-msg ${type}`;
+  el.textContent = msg;
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  if (!email || !pass) return setAuthMsg('Please fill in all fields.', 'error');
+
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+
+  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false; btn.textContent = '⚡ Access Vault';
+  if (error) setAuthMsg(error.message, 'error');
+}
+
+async function doRegister() {
+  const email   = document.getElementById('regEmail').value.trim();
+  const pass    = document.getElementById('regPassword').value;
+  const confirm = document.getElementById('regConfirm').value;
+  if (!email || !pass) return setAuthMsg('Please fill in all fields.', 'error');
+  if (pass !== confirm) return setAuthMsg('Passwords do not match.', 'error');
+  if (pass.length < 6)  return setAuthMsg('Password must be at least 6 characters.', 'error');
+
+  const btn = document.getElementById('btnRegister');
+  btn.disabled = true; btn.textContent = 'Creating account...';
+
+  const { error } = await supa.auth.signUp({ email, password: pass });
+  btn.disabled = false; btn.textContent = '🛡️ Create Account';
+  if (error) setAuthMsg(error.message, 'error');
+  else setAuthMsg('Account created! Check your email to confirm, then sign in.', 'success');
+}
+
+async function doGoogleLogin() {
+  await supa.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function doSignOut() {
+  await supa.auth.signOut();
+  showAuth();
+}
+
+// ─── DATA ─────────────────────────────────────────────────────
+async function loadItems() {
+  if (!currentUser) return;
+  const { data, error } = await supa
+    .from('items')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('id', { ascending: false });
+  if (!error) {
+    allItems     = data || [];
+    totalCredits = allItems.reduce((s, i) => s + (10 + Math.max(0, Math.floor((i.price || 0) - 50))), 0);
+    scanCount    = new Set(allItems.map(i => i.image_url)).size;
+  }
+}
+
+// ─── LEVEL SYSTEM ─────────────────────────────────────────────
+function getLevelInfo(credits) {
+  let level = 1, title = 'Recruit', min = 0, nextMin = 500;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (credits >= LEVELS[i][0]) { level = i + 1; title = LEVELS[i][1]; min = LEVELS[i][0]; nextMin = LEVELS[i+1] ? LEVELS[i+1][0] : null; }
+  }
+  const atMax    = nextMin === null;
+  const progress = atMax ? 1 : (credits - min) / (nextMin - min);
+  const toNext   = atMax ? 0 : nextMin - credits;
+  const nextTitle= LEVELS[level] ? LEVELS[level][1] : null;
+  return { level, title, progress, toNext, atMax, nextTitle };
+}
+
+function updateSidebar() {
+  const info = getLevelInfo(totalCredits);
+  document.getElementById('sideLevel').innerHTML      = `${info.level} <span>/ 8</span>`;
+  document.getElementById('sideTitle').textContent    = info.title;
+  document.getElementById('sideCredits').textContent  = `${totalCredits.toLocaleString()} XP`;
+  document.getElementById('sideCreditsNum').textContent = totalCredits.toLocaleString();
+  document.getElementById('xpBar').style.width        = (info.progress * 100).toFixed(1) + '%';
+  document.getElementById('sideNext').textContent     = info.atMax ? 'MAX LEVEL' : `${info.toNext} to ${info.nextTitle}`;
+  document.getElementById('xpUnlock').textContent     = info.atMax ? '🏆 Maximum clearance achieved' : UNLOCK_HINTS[Math.min(info.level - 1, UNLOCK_HINTS.length - 1)];
+  document.getElementById('dashCredits').textContent  = totalCredits.toLocaleString();
+  document.getElementById('statCredits').textContent  = totalCredits.toLocaleString();
+  updateBadges();
+}
+
+function updateBadges() {
+  const totalValue = allItems.reduce((s, i) => s + (i.price || 0), 0);
+  const hasRare    = allItems.some(i => ['RARE','LEGENDARY','EXOTIC'].includes(i.rarity));
+  const badges     = [
+    allItems.length >= 1,
+    totalValue >= 500,
+    hasRare,
+    allItems.length >= 10,
+    allItems.length >= 25,
+  ];
+  const chips = document.querySelectorAll('.badge-chip');
+  const labels= ['First Acquisition','High Roller','Operational','Asset Manager','Quartermaster'];
+  badges.forEach((earned, i) => {
+    if (chips[i]) {
+      chips[i].className = `badge-chip ${earned ? 'earned' : 'locked'}`;
+    }
+  });
+}
+
+// ─── PAGE NAVIGATION ──────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard: 'OPERATOR DASHBOARD',
+  scanner:   'ACQUISITION SCANNER',
+  alerts:    'EXPIRY ALERTS',
+  vault:     'THE VAULT',
+  pdf:       'DOCUMENT SCANNER',
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  const order = ['dashboard','scanner','alerts','vault','pdf'];
+  const idx = order.indexOf(id);
+  if (navItems[idx]) navItems[idx].classList.add('active');
+  document.getElementById('topbarTitle').textContent = PAGE_TITLES[id] || id.toUpperCase();
+  if (id === 'dashboard') { refreshDashboard(); }
+  if (id === 'alerts')    { refreshAlerts(); }
+  if (id === 'vault')     { refreshVault(); }
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────
+function refreshDashboard() {
+  const total     = allItems.length;
+  const totalVal  = allItems.reduce((s, i) => s + (i.price || 0), 0);
+  const warranted = allItems.filter(i => (i.warranty_days || 0) > 0);
+  const protectedVal = warranted.reduce((s, i) => s + (i.price || 0), 0);
+
+  document.getElementById('dashTotal').textContent     = total;
+  document.getElementById('dashProtected').textContent = '$' + protectedVal.toFixed(0);
+  document.getElementById('statTotalScans').textContent= scanCount;
+  document.getElementById('statTotalItems').textContent= total;
+
+  const alerts = buildAlerts();
+  const atRisk = alerts.reduce((s, a) => s + (a.price || 0), 0);
+  document.getElementById('dashRisk').textContent = '$' + atRisk.toFixed(0);
+
+  // Alerts panel
+  const alertsEl = document.getElementById('dashAlerts');
+  if (alerts.length === 0) {
+    alertsEl.innerHTML = `<div class="empty-state"><span class="empty-icon">✅</span><div class="empty-title">All Clear</div><div class="empty-sub">Nothing expiring soon</div></div>`;
+  } else {
+    alertsEl.innerHTML = alerts.slice(0,5).map(a => renderAlertItem(a)).join('');
+    document.getElementById('alertBadge').textContent = alerts.length;
+    document.getElementById('alertBadge').classList.remove('hidden');
+  }
+
+  // Top assets
+  const topEl = document.getElementById('dashTopAssets');
+  const sorted = [...allItems].sort((a,b) => (b.price||0)-(a.price||0)).slice(0,5);
+  if (sorted.length === 0) {
+    topEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🛡️</span><div class="empty-title">Vault Empty</div><div class="empty-sub">Scan a receipt to get started</div></div>`;
+  } else {
+    topEl.innerHTML = sorted.map(item => renderVaultRow(item)).join('');
+  }
+
+  // Recent scans
+  const recentEl = document.getElementById('dashRecent');
+  if (allItems.length === 0) {
+    recentEl.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-sub">No scans yet</div></div>`;
+  } else {
+    const sources = [...new Set(allItems.map(i => i.image_url).filter(Boolean))].slice(0,3);
+    recentEl.innerHTML = sources.map(src => {
+      const count = allItems.filter(i => i.image_url === src).length;
+      const isPdf = src.toLowerCase().endsWith('.pdf');
+      return `<div class="recent-item">
+        <div class="recent-thumb">${isPdf ? '📄' : '🧾'}</div>
+        <div class="recent-info">
+          <div class="recent-name">${src}</div>
+          <div class="recent-time">${count} item${count!==1?'s':''}</div>
+        </div>
+        <div class="recent-xp">+${count*10} XP</div>
+      </div>`;
+    }).join('');
+  }
+
+  const scannerRecentEl = document.getElementById('scannerRecent');
+  if (scannerRecentEl) scannerRecentEl.innerHTML = recentEl.innerHTML || `<div class="empty-state" style="padding:16px"><div class="empty-sub">No scans yet</div></div>`;
+}
+
+// ─── ALERTS ───────────────────────────────────────────────────
+function buildAlerts() {
+  const alerts = [];
+  const today  = new Date(); today.setHours(0,0,0,0);
+
+  allItems.forEach(item => {
+    const warranty = item.warranty_days || 0;
+    const spoil    = item.days_until_spoil || 0;
+
+    if (warranty > 0 && item.purchase_date) {
+      const purchased = new Date(item.purchase_date);
+      const expiry    = new Date(purchased);
+      expiry.setDate(expiry.getDate() + warranty);
+      const daysLeft  = Math.round((expiry - today) / 86400000);
+      if (daysLeft <= 30) alerts.push({ ...item, alertType: 'Warranty', days: daysLeft });
+    }
+
+    if (spoil > 0 && spoil <= 7) {
+      alerts.push({ ...item, alertType: 'Perishable', days: spoil });
+    }
+  });
+
+  return alerts.sort((a, b) => a.days - b.days);
+}
+
+function urgencyClass(days) {
+  if (days <= 0)  return ['ab-red',    'var(--red)',    'EXPIRED'];
+  if (days <= 3)  return ['ab-orange', 'var(--orange)', days + 'D LEFT'];
+  if (days <= 7)  return ['ab-yellow', 'var(--yellow)', days + 'D LEFT'];
+  if (days <= 30) return ['ab-blue',   'var(--blue)',   days + 'D LEFT'];
+  return ['ab-green', 'var(--green)', days + 'D LEFT'];
+}
+
+function renderAlertItem(a) {
+  const [cls, color, label] = urgencyClass(a.days);
+  const icon = a.alertType === 'Warranty' ? '🛡️' : '🥗';
+  return `<div class="alert-item">
+    <div class="alert-dot" style="background:${color}"></div>
+    <div class="alert-info">
+      <div class="alert-name">${a.item_name || 'Unknown'}</div>
+      <div class="alert-meta">${a.merchant || '—'} · ${icon} ${a.alertType}</div>
+    </div>
+    <span class="alert-badge ${cls}">${label}</span>
+  </div>`;
+}
+
+function refreshAlerts() {
+  const alerts = buildAlerts();
+  const expired  = alerts.filter(a => a.days <= 0).length;
+  const critical = alerts.filter(a => a.days > 0 && a.days <= 3).length;
+  const warning  = alerts.filter(a => a.days > 3 && a.days <= 7).length;
+  const monitor  = alerts.filter(a => a.days > 7 && a.days <= 30).length;
+  const atRisk   = alerts.reduce((s, a) => s + (a.price || 0), 0);
+
+  document.getElementById('aExpired').textContent  = expired;
+  document.getElementById('aCritical').textContent = critical;
+  document.getElementById('aWarning').textContent  = warning;
+  document.getElementById('aMonitor').textContent  = monitor;
+  document.getElementById('aRisk').textContent     = '$' + atRisk.toFixed(0);
+
+  const el = document.getElementById('alertsList');
+  if (alerts.length === 0) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">✅</span><div class="empty-title">All Clear</div><div class="empty-sub">Nothing expiring in the next 30 days</div></div>`;
+  } else {
+    el.innerHTML = alerts.map(a => renderAlertItem(a)).join('');
+  }
+}
+
+// ─── VAULT ────────────────────────────────────────────────────
+let currentVaultFilter = 'all';
+
+function renderVaultRow(item) {
+  const price   = item.price || 0;
+  const rarity  = (item.rarity || 'COMMON').toUpperCase();
+  const rarityClass = { EXOTIC:'r-exotic', LEGENDARY:'r-legendary', RARE:'r-rare', COMMON:'r-common' }[rarity] || 'r-common';
+  const rarityEmoji = { EXOTIC:'🟡', LEGENDARY:'🟣', RARE:'🔵', COMMON:'⚪' }[rarity] || '⚪';
+
+  let statusBadge = '<span class="alert-badge ab-green">NO WARRANTY</span>';
+  if ((item.warranty_days || 0) > 0 && item.purchase_date) {
+    const today     = new Date(); today.setHours(0,0,0,0);
+    const purchased = new Date(item.purchase_date);
+    const expiry    = new Date(purchased);
+    expiry.setDate(expiry.getDate() + (item.warranty_days || 0));
+    const daysLeft  = Math.round((expiry - today) / 86400000);
+    const [cls,,label] = urgencyClass(daysLeft);
+    statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
+  }
+
+  return `<div class="vault-row">
+    <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
+    <div><span class="rarity-chip ${rarityClass}">${rarityEmoji} ${rarity}</span></div>
+    <div class="vi-price">$${price.toFixed(2)}</div>
+    <div style="font-size:11px;color:var(--text3)">${item.warranty_days ? item.warranty_days+'d' : '—'}</div>
+    <div>${statusBadge}</div>
+  </div>`;
+}
+
+function filterVault(filter, btn) {
+  currentVaultFilter = filter;
+  document.querySelectorAll('#vaultTabs .tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  refreshVault();
+}
+
+function refreshVault() {
+  const filtered = currentVaultFilter === 'all'
+    ? allItems
+    : allItems.filter(i => (i.category || '').toLowerCase() === currentVaultFilter.toLowerCase());
+
+  const totalVal = filtered.reduce((s,i) => s + (i.price||0), 0);
+  const warranted = filtered.filter(i => (i.warranty_days||0) > 0).length;
+
+  document.getElementById('vTotal').textContent   = filtered.length;
+  document.getElementById('vValue').textContent   = '$' + totalVal.toFixed(0);
+  document.getElementById('vWarranty').textContent= warranted;
+
+  const rarityOrder = { EXOTIC:0, LEGENDARY:1, RARE:2, COMMON:3 };
+  const sorted = [...filtered].sort((a,b) => (rarityOrder[a.rarity?.toUpperCase()]??3) - (rarityOrder[b.rarity?.toUpperCase()]??3));
+
+  const el = document.getElementById('vaultList');
+  if (sorted.length === 0) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">🗄️</span><div class="empty-title">Vault Empty</div><div class="empty-sub">Scan a receipt to add your first asset</div></div>`;
+  } else {
+    el.innerHTML = sorted.map(item => renderVaultRow(item)).join('');
+  }
+}
+
+// ─── SCAN — IMAGE ─────────────────────────────────────────────
+async function handleImageScan(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+
+  document.getElementById('scanZone').classList.add('scanning');
+  document.getElementById('scanIcon').textContent  = '🔍';
+  document.getElementById('scanTitle').textContent = 'Analyzing receipt...';
+  document.getElementById('scanSub').textContent   = 'AI is reading your receipt';
+  document.getElementById('scanResults').classList.add('hidden');
+
+  const b64 = await fileToBase64(file);
+  const result = await callGemini(b64, file.type || 'image/jpeg', 'image');
+
+  document.getElementById('scanZone').classList.remove('scanning');
+  document.getElementById('scanIcon').textContent  = '✅';
+  document.getElementById('scanTitle').textContent = `${result.length} item(s) found`;
+  document.getElementById('scanSub').textContent   = 'Review below and save to vault';
+
+  pendingItems = result.map(i => ({ ...i, image_url: file.name }));
+  renderManifest(result, 'manifestGrid', 'resultsTitle');
+  document.getElementById('scanResults').classList.remove('hidden');
+}
+
+// ─── SCAN — PDF ───────────────────────────────────────────────
+async function handlePdfScan(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+
+  document.getElementById('pdfZone').classList.add('scanning');
+  document.getElementById('pdfIcon').textContent  = '🔍';
+  document.getElementById('pdfTitle').textContent = 'Reading document...';
+  document.getElementById('pdfSub').textContent   = 'AI is extracting warranty data';
+  document.getElementById('pdfResults').classList.add('hidden');
+
+  const b64    = await fileToBase64(file);
+  const result = await callGemini(b64, 'application/pdf', 'pdf');
+
+  document.getElementById('pdfZone').classList.remove('scanning');
+  document.getElementById('pdfIcon').textContent  = '✅';
+  document.getElementById('pdfTitle').textContent = `${result.length} item(s) found`;
+  document.getElementById('pdfSub').textContent   = 'Review below and save to vault';
+
+  pendingItems = result.map(i => ({ ...i, image_url: file.name }));
+  renderManifest(result, 'pdfManifestGrid', 'pdfResultsTitle');
+  document.getElementById('pdfResults').classList.remove('hidden');
+}
+
+// ─── GEMINI API CALL ──────────────────────────────────────────
+async function callGemini(b64data, mimeType, sourceType) {
+  const isPdf   = sourceType === 'pdf';
+  const prompt  = `You are Aegis, a logistics AI that extracts purchase and warranty data.
+
+Return ONLY a valid JSON array — no prose, no markdown fences, no explanation.
+
+Each element must have these exact fields:
+  "item_name"        : string
+  "merchant"         : string
+  "price"            : float (number only, no $ symbol, 0 if not found)
+  "purchase_date"    : string (YYYY-MM-DD, use today if not visible)
+  "category"         : string (Electronics, Groceries, Clothing, Appliances, Food, Auto, Home, Other)
+  "warranty_days"    : integer (0 for food/perishables, 365 for most electronics if not shown)
+  "days_until_spoil" : integer (realistic days until spoilage, 0 for non-perishables)
+
+Rules:
+- Items over $50: one entry per item.
+- Items under $50: group into a single Misc Items entry.
+- Electronics with no visible warranty: use 365.
+- Appliances: use 365. Food: warranty_days=0, estimate days_until_spoil.
+- If a field is not visible, estimate based on item type.
+- Output ONLY the JSON array. Nothing else.
+${isPdf ? '\nThis is a PDF document. Extract all items and warranty information.' : '\nThis is a receipt image.'}`;
+
+  try {
+    const res  = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: mimeType, data: b64data } },
+              { text: prompt }
+            ]
+          }]
+        })
+      }
+    );
+    const json    = await res.json();
+    const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    return parseJSON(rawText);
+  } catch (err) {
+    showToast('AI error: ' + err.message, 'error');
+    return [];
+  }
+}
+
+function parseJSON(raw) {
+  const cleaned = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+  for (const [s,e] of [['[',']'],['{','}']]) {
+    const si = cleaned.indexOf(s), ei = cleaned.lastIndexOf(e);
+    if (si !== -1 && ei > si) {
+      try {
+        const r = JSON.parse(cleaned.slice(si, ei+1));
+        return Array.isArray(r) ? r : [r];
+      } catch {}
+    }
+  }
+  try { const r = JSON.parse(cleaned); return Array.isArray(r) ? r : [r]; } catch {}
+  return [];
+}
+
+// ─── RENDER MANIFEST ──────────────────────────────────────────
+function renderManifest(items, gridId, titleId) {
+  document.getElementById(titleId).textContent = `📦 Inventory Manifest — ${items.length} item(s) identified`;
+
+  const rarityOf = price => price > 1000 ? '🟡 EXOTIC' : price > 200 ? '🟣 LEGENDARY' : price > 50 ? '🔵 RARE' : '⚪ COMMON';
+  const colorOf  = price => price > 1000 ? 'var(--gold)' : price > 200 ? 'var(--purple)' : price > 50 ? 'var(--blue)' : 'var(--text3)';
+
+  document.getElementById(gridId).innerHTML = items.map((item, i) => {
+    const price   = parseFloat(item.price || 0);
+    const rarity  = rarityOf(price);
+    const color   = colorOf(price);
+    const warranty= parseInt(item.warranty_days || 0);
+    const spoil   = parseInt(item.days_until_spoil || 0);
+    return `<div class="manifest-card" style="animation-delay:${i*0.06}s">
+      <div class="mc-rarity" style="color:${color}">${rarity}</div>
+      <div class="mc-name">${item.item_name || 'Unknown'}</div>
+      <div class="mc-meta">📍 ${item.merchant || '—'}</div>
+      <div class="mc-meta">💰 $${price.toFixed(2)}</div>
+      ${warranty > 0 ? `<div class="mc-meta">🛡️ Warranty: ${warranty}d</div>` : ''}
+      ${spoil > 0    ? `<div class="mc-meta">⏳ Spoils in: ${spoil}d</div>`    : ''}
+      <span class="mc-badge" style="background:rgba(245,200,66,.1);color:var(--gold)">
+        +${10 + Math.max(0, Math.floor(price - 50))} XP
+      </span>
+    </div>`;
+  }).join('');
+}
+
+// ─── SAVE TO VAULT ────────────────────────────────────────────
+async function saveScanResults() { await saveItems('btnSave', 'scanResults'); }
+async function savePdfResults()  { await saveItems('btnSavePdf', 'pdfResults'); }
+
+async function saveItems(btnId, resultsId) {
+  if (!currentUser || !pendingItems.length) return;
+
+  const btn = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+  const rows = pendingItems.map(item => ({
+    user_id:         currentUser.id,
+    item_name:       item.item_name   || 'Unknown',
+    merchant:        item.merchant    || null,
+    price:           parseFloat(item.price || 0),
+    purchase_date:   item.purchase_date || new Date().toISOString().split('T')[0],
+    category:        item.category    || 'General',
+    rarity:          rarityWord(parseFloat(item.price || 0)),
+    warranty_days:   parseInt(item.warranty_days   || 0),
+    days_until_spoil:parseInt(item.days_until_spoil || 0),
+    image_url:       item.image_url   || null,
+  }));
+
+  const { error } = await supa.from('items').insert(rows);
+
+  if (btn) { btn.disabled = false; btn.textContent = '💾 Save to Vault'; }
+
+  if (error) {
+    showToast('Save failed: ' + error.message, 'error');
+  } else {
+    showToast(`✅ ${rows.length} item(s) saved to Vault`, 'success');
+    pendingItems = [];
+    document.getElementById(resultsId)?.classList.add('hidden');
+    await loadItems();
+    refreshDashboard();
+    refreshAlerts();
+    refreshVault();
+    updateSidebar();
+    checkBadges();
+  }
+}
+
+function rarityWord(price) {
+  if (price > 1000) return 'EXOTIC';
+  if (price > 200)  return 'LEGENDARY';
+  if (price > 50)   return 'RARE';
+  return 'COMMON';
+}
+
+function checkBadges() {
+  const totalValue = allItems.reduce((s, i) => s + (i.price || 0), 0);
+  const messages   = [];
+  if (allItems.length === 1) messages.push('🏅 Badge: First Acquisition!');
+  if (totalValue >= 500 && allItems.length > 0 && allItems.length <= 5) messages.push('🏅 Badge: High Roller!');
+  if (allItems.length === 10) messages.push('🏅 Badge: Asset Manager!');
+  if (allItems.length === 25) messages.push('🏅 Badge: Quartermaster!');
+  messages.forEach(m => showToast(m, 'success'));
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
+function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+function showToast(msg, type = 'info') {
+  const c    = document.getElementById('toastContainer');
+  const el   = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ─── PDF SAVE BUTTON ID FIX ───────────────────────────────────
+// PDF save button is inline so we wire it here
+document.addEventListener('DOMContentLoaded', () => {
+  const pdfSaveBtn = document.querySelector('#pdfResults button');
+  if (pdfSaveBtn) pdfSaveBtn.id = 'btnSavePdf';
+});
+</script>
+</body>
+</html>
