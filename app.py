@@ -32,20 +32,16 @@ if 'badges' not in st.session_state:
         "Asset Manager": False, "Operational": False, "Quartermaster": False
     }
 
-# --- HELPER: IMAGE COMPRESSION (SPEED BOOST) ---
+# --- HELPER: IMAGE COMPRESSION ---
 def compress_image(image):
-    """Resizes image to max 1024px width to speed up upload."""
     max_size = 1024
     if image.width > max_size:
         ratio = max_size / image.width
         new_height = int(image.height * ratio)
         image = image.resize((max_size, new_height), Image.Resampling.LANCZOS)
-    
-    # Save to bytes
     img_byte_arr = io.BytesIO()
     image.save(img_byte_arr, format='JPEG', quality=85)
-    img_byte_arr = img_byte_arr.getvalue()
-    return img_byte_arr
+    return img_byte_arr.getvalue()
 
 # --- FUNCTION: CHECK COMMENDATIONS ---
 def check_commendations():
@@ -98,7 +94,6 @@ if uploaded_file is not None:
     with col2:
         st.info("🔍 Processing...")
         
-        # OPTIMIZATION START
         try:
             pil_image = Image.open(uploaded_file)
             compressed_bytes = compress_image(pil_image)
@@ -106,12 +101,11 @@ if uploaded_file is not None:
         except Exception as e:
             st.error(f"Image Error: {e}")
             st.stop()
-        # OPTIMIZATION END
 
         prompt = """
         You are Aegis, a logistics AI. 
         Analyze receipt. Return JSON list. 
-        Fields: item_name, merchant, price, purchase_date (YYYY-MM-DD), category, warranty_days (int), days_until_spoil (int).
+        Fields: item_name, merchant, price (float), purchase_date (YYYY-MM-DD), category, warranty_days (int), days_until_spoil (int).
         Separate items over $50. Group items under $50.
         """
 
@@ -138,30 +132,42 @@ if uploaded_file is not None:
                     cols = st.columns(3)
                     
                     for i, item in enumerate(data):
-                        price = item['price']
+                        # SAFE PRICE HANDLING
+                        try:
+                            price = float(item.get('price', 0))
+                        except:
+                            price = 0.0
+
                         if price > 1000: 
                             classification = "🟡 EXOTIC"
                             credits = 100
                             if not st.session_state.badges["High Roller"]:
                                 st.session_state.badges["High Roller"] = True
                                 st.toast("🎖️ Commendation Unlocked: High Roller", icon="🎖️")
-                        elif price > 200: classification, credits = "🟣 LEGENDARY", 50
-                        elif price > 50: classification, credits = "🔵 RARE", 20
-                        else: classification, credits = "⚪ COMMON", 5
+                        elif price > 200: 
+                            classification, credits = "🟣 LEGENDARY", 50
+                        elif price > 50: 
+                            classification, credits = "🔵 RARE", 20
+                        else: 
+                            classification, credits = "⚪ COMMON", 5
                         
                         st.session_state.total_credits += credits
                         
-                        if item.get('days_until_spoil', 0) > 0:
-                            status = f"🍎 Spoilage Risk: {item['days_until_spoil']} days"
-                        elif item.get('warranty_days', 0) > 0:
-                            status = f"🛡️ Warranty Active: {item['warranty_days']} days"
+                        # SAFE STATUS HANDLING
+                        spoil = item.get('days_until_spoil', 0)
+                        warranty = item.get('warranty_days', 0)
+
+                        if spoil > 0:
+                            status = f"🍎 Spoilage Risk: {spoil} days"
+                        elif warranty > 0:
+                            status = f"🛡️ Warranty Active: {warranty} days"
                         else: status = "♻️ General Stock"
 
                         with cols[i % 3]:
                             st.markdown(f"### {classification}")
-                            st.markdown(f"**{item['item_name']}**")
-                            st.caption(f"Vendor: {item['merchant']}")
-                            st.write(f"Cost: ${item['price']}")
+                            st.markdown(f"**{item.get('item_name', 'Unknown')}**")
+                            st.caption(f"Vendor: {item.get('merchant', 'Unknown')}")
+                            st.write(f"Cost: ${price}")
                             st.write(f"Status: {status}")
                             st.write(f"⚡ +{credits} Credits")
                             st.markdown("---")
@@ -176,3 +182,4 @@ if uploaded_file is not None:
 
                 except Exception as e:
                     st.error(f"❌ SYSTEM ERROR: {e}")
+                    st.code(raw_text) # This helps us debug what the AI actually sent
