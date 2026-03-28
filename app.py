@@ -103,6 +103,194 @@ def classify_item(price: float) -> str:
     else:             return "⚪ COMMON"
 
 
+def get_item_emoji(item_name: str, category: str) -> tuple:
+    """
+    Returns (emoji, bg_color) based on item name and category.
+    Checks specific keywords first, falls back to category.
+    """
+    name = (item_name or "").lower()
+    cat  = (category or "").lower()
+
+    # Specific item keywords — checked first
+    keywords = {
+        # Flowers
+        "rose":         ("🌹", "#8B1A1A"),
+        "tulip":        ("🌷", "#C2185B"),
+        "sunflower":    ("🌻", "#F57F17"),
+        "orchid":       ("🌸", "#880E4F"),
+        "lily":         ("💐", "#6A1B9A"),
+        "daisy":        ("🌼", "#F9A825"),
+        "lavender":     ("💜", "#6A1B9A"),
+        "bouquet":      ("💐", "#AD1457"),
+        "carnation":    ("🌸", "#C2185B"),
+        "peony":        ("🌺", "#AD1457"),
+        "hydrangea":    ("🌸", "#1565C0"),
+        "mums":         ("🌼", "#E65100"),
+        "flower":       ("🌸", "#AD1457"),
+        "floral":       ("💐", "#AD1457"),
+        # Produce
+        "banana":       ("🍌", "#F57F17"),
+        "apple":        ("🍎", "#B71C1C"),
+        "orange":       ("🍊", "#E65100"),
+        "lemon":        ("🍋", "#F9A825"),
+        "lime":         ("🍋", "#2E7D32"),
+        "strawberr":    ("🍓", "#B71C1C"),
+        "blueberr":     ("🫐", "#1565C0"),
+        "grape":        ("🍇", "#6A1B9A"),
+        "watermelon":   ("🍉", "#2E7D32"),
+        "pineapple":    ("🍍", "#F57F17"),
+        "mango":        ("🥭", "#E65100"),
+        "avocado":      ("🥑", "#2E7D32"),
+        "broccoli":     ("🥦", "#2E7D32"),
+        "carrot":       ("🥕", "#E65100"),
+        "tomato":       ("🍅", "#B71C1C"),
+        "corn":         ("🌽", "#F9A825"),
+        "spinach":      ("🥬", "#2E7D32"),
+        "lettuce":      ("🥬", "#2E7D32"),
+        "kale":         ("🥬", "#1B5E20"),
+        "pepper":       ("🫑", "#2E7D32"),
+        "mushroom":     ("🍄", "#795548"),
+        "onion":        ("🧅", "#795548"),
+        "garlic":       ("🧄", "#795548"),
+        "potato":       ("🥔", "#795548"),
+        "cucumber":     ("🥒", "#2E7D32"),
+        # Dairy
+        "milk":         ("🥛", "#1565C0"),
+        "egg":          ("🥚", "#F9A825"),
+        "butter":       ("🧈", "#F9A825"),
+        "yogurt":       ("🥛", "#1565C0"),
+        "cheese":       ("🧀", "#F57F17"),
+        "cream":        ("🥛", "#1565C0"),
+        # Meat
+        "chicken":      ("🍗", "#E65100"),
+        "beef":         ("🥩", "#B71C1C"),
+        "steak":        ("🥩", "#B71C1C"),
+        "pork":         ("🥩", "#C62828"),
+        "bacon":        ("🥓", "#B71C1C"),
+        "salmon":       ("🐟", "#E65100"),
+        "shrimp":       ("🍤", "#E65100"),
+        "fish":         ("🐟", "#1565C0"),
+        "turkey":       ("🦃", "#795548"),
+        "sausage":      ("🌭", "#C62828"),
+        # Bread
+        "bread":        ("🍞", "#795548"),
+        "bagel":        ("🥯", "#795548"),
+        "muffin":       ("🧁", "#AD1457"),
+        "donut":        ("🍩", "#AD1457"),
+        "croissant":    ("🥐", "#F57F17"),
+        "cake":         ("🎂", "#AD1457"),
+        "cookie":       ("🍪", "#795548"),
+        "tortilla":     ("🫓", "#F9A825"),
+        # Electronics
+        "iphone":       ("📱", "#1565C0"),
+        "samsung":      ("📱", "#1565C0"),
+        "phone":        ("📱", "#1565C0"),
+        "laptop":       ("💻", "#263238"),
+        "macbook":      ("💻", "#263238"),
+        "computer":     ("🖥️", "#263238"),
+        "tv":           ("📺", "#1565C0"),
+        "television":   ("📺", "#1565C0"),
+        "ipad":         ("📱", "#1565C0"),
+        "tablet":       ("📱", "#1565C0"),
+        "airpods":      ("🎧", "#263238"),
+        "headphone":    ("🎧", "#263238"),
+        "earbud":       ("🎧", "#263238"),
+        "speaker":      ("🔊", "#1565C0"),
+        "camera":       ("📷", "#263238"),
+        "playstation":  ("🎮", "#1565C0"),
+        "xbox":         ("🎮", "#2E7D32"),
+        "nintendo":     ("🎮", "#B71C1C"),
+        "watch":        ("⌚", "#263238"),
+        "printer":      ("🖨️", "#455A64"),
+        "router":       ("📡", "#1565C0"),
+        "kindle":       ("📖", "#263238"),
+        "charger":      ("🔌", "#455A64"),
+        # Appliances
+        "refrigerator": ("🧊", "#1565C0"),
+        "fridge":       ("🧊", "#1565C0"),
+        "washer":       ("🫧", "#1565C0"),
+        "dryer":        ("🌀", "#455A64"),
+        "dishwasher":   ("🫧", "#1565C0"),
+        "microwave":    ("📦", "#455A64"),
+        "air fryer":    ("🍳", "#E65100"),
+        "blender":      ("🫙", "#1565C0"),
+        "coffee":       ("☕", "#795548"),
+        "toaster":      ("🍞", "#E65100"),
+        "vacuum":       ("🌀", "#455A64"),
+        "roomba":       ("🤖", "#1565C0"),
+        "iron":         ("👔", "#455A64"),
+        "hair dryer":   ("💨", "#E65100"),
+        # Home
+        "mattress":     ("🛏️", "#455A64"),
+        "sofa":         ("🛋️", "#795548"),
+        "couch":        ("🛋️", "#795548"),
+        "desk":         ("🪑", "#795548"),
+        "chair":        ("🪑", "#795548"),
+        "lamp":         ("💡", "#F9A825"),
+        "rug":          ("🪄", "#795548"),
+        "curtain":      ("🪟", "#1565C0"),
+        "mirror":       ("🪞", "#455A64"),
+        "bedding":      ("🛏️", "#1565C0"),
+        "towel":        ("🧺", "#1565C0"),
+        # Clothing
+        "shoes":        ("👟", "#263238"),
+        "sneakers":     ("👟", "#263238"),
+        "boots":        ("👢", "#795548"),
+        "jacket":       ("🧥", "#263238"),
+        "coat":         ("🧥", "#263238"),
+        "jeans":        ("👖", "#1565C0"),
+        "shirt":        ("👕", "#1565C0"),
+        "dress":        ("👗", "#AD1457"),
+        "hat":          ("🧢", "#263238"),
+        "socks":        ("🧦", "#263238"),
+        "gloves":       ("🧤", "#263238"),
+        # Auto
+        "tire":         ("🔧", "#263238"),
+        "battery":      ("🔋", "#263238"),
+        "oil":          ("🛢️", "#263238"),
+        "wiper":        ("🚗", "#263238"),
+        "car seat":     ("💺", "#263238"),
+        # Health
+        "vitamin":      ("💊", "#2E7D32"),
+        "supplement":   ("💊", "#2E7D32"),
+        "medicine":     ("💊", "#B71C1C"),
+        "sunscreen":    ("🧴", "#E65100"),
+        # Beverages
+        "juice":        ("🧃", "#E65100"),
+        "wine":         ("🍷", "#6A1B9A"),
+        "beer":         ("🍺", "#F57F17"),
+        "coffee":       ("☕", "#795548"),
+        "tea":          ("🍵", "#2E7D32"),
+        "soda":         ("🥤", "#B71C1C"),
+        "water":        ("💧", "#1565C0"),
+    }
+
+    # Check specific keywords
+    for keyword, (emoji, color) in keywords.items():
+        if keyword in name:
+            return emoji, color
+
+    # Fall back to category
+    category_defaults = {
+        "electronics":  ("📱", "#1565C0"),
+        "appliances":   ("⚡", "#E65100"),
+        "groceries":    ("🛒", "#2E7D32"),
+        "flowers":      ("🌸", "#AD1457"),
+        "food":         ("🍽️", "#E65100"),
+        "clothing":     ("👕", "#263238"),
+        "home":         ("🏠", "#795548"),
+        "auto":         ("🚗", "#263238"),
+        "health":       ("💊", "#2E7D32"),
+        "other":        ("📦", "#455A64"),
+    }
+
+    for key, val in category_defaults.items():
+        if key in cat:
+            return val
+
+    return ("📦", "#455A64")
+
+
 def extract_json(raw: str) -> list:
     cleaned = raw.replace("```json", "").replace("```", "").strip()
     for start_ch, end_ch in [("[", "]"), ("{", "}")]:
@@ -766,7 +954,18 @@ elif page == "🗄️ Vault":
         warranty_days = int(item.get("warranty_days") or 0)
         days_to_spoil = int(item.get("days_until_spoil") or 0)
         purchase_date = item.get("purchase_date")
-        c1, c2, c3, c4, c5 = st.columns([3, 2, 2, 2, 2])
+        item_emoji, emoji_color = get_item_emoji(
+            item.get("item_name", ""), item.get("category", "")
+        )
+        c0, c1, c2, c3, c4, c5 = st.columns([1, 3, 2, 2, 2, 2])
+        with c0:
+            st.markdown(
+                f"<div style='width:40px;height:40px;background:{emoji_color}22;"
+                f"border:1px solid {emoji_color}55;border-radius:10px;"
+                f"display:flex;align-items:center;justify-content:center;"
+                f"font-size:20px;margin-top:4px'>{item_emoji}</div>",
+                unsafe_allow_html=True
+            )
         with c1:
             st.markdown(f"**{item.get('item_name', 'Unknown')}**")
             st.caption(f"📍 {item.get('merchant', '—')} · {item.get('category', '—')}")
