@@ -591,7 +591,7 @@ elif page == "🗄️ Vault":
 
     st.divider()
 
-    categories = sorted(set(i.get("category", "General") for i in all_items))
+    categories = sorted(set(i.get("category") or "General" for i in all_items))
     selected   = st.multiselect(
         "Filter by category", options=categories, default=categories
     )
