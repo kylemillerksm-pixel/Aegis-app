@@ -485,20 +485,36 @@ def lookup_knowledge_base(item_name: str) -> dict:
 
 def build_prompt(source_type: str) -> str:
     base = """
-You are Aegis, an expert logistics and consumer protection AI.
+You are Aegis, an expert logistics and consumer protection AI with deep knowledge of retail products, brands, and receipt formats.
 
 Analyze the receipt and return ONLY a valid JSON array. No prose, no markdown, no explanation.
 
+CRITICAL — NAME NORMALIZATION:
+Receipts often use abbreviated, truncated, or coded product names. You must translate these into clear human-readable product names.
+Examples:
+- "RVNSBRGR 500PC" → "Ravensburger Puzzle 500 Pieces"
+- "SAM 65 QLED 4K" → "Samsung 65 inch QLED 4K TV"
+- "GLD RSE 12ST" → "Gold Roses 12 Stems"
+- "NK AIR MX 90" → "Nike Air Max 90 Sneakers"
+- "CHKN BRST BNL" → "Boneless Chicken Breast"
+- "CAMPBLS CHKN NSP" → "Campbell's Chicken Noodle Soup"
+- "MTN DEW 2L" → "Mountain Dew 2 Liter"
+- "LNDT 70% DRK" → "Lindt 70% Dark Chocolate"
+- "QKR OTS" → "Quaker Oats"
+- "WNDX SPRY" → "Windex Spray Cleaner"
+- "GLD PSO WMR" → "Glade Piso Warmer Air Freshener"
+Always use the full readable product name. Never return abbreviations or codes as the item name.
+
 Each element must have these exact fields:
-  "item_name"        : string (specific product name)
+  "item_name"        : string (full readable product name — no abbreviations)
   "merchant"         : string (store or company name)
   "price"            : float (number only, no $ symbol, 0 if not found)
   "purchase_date"    : string (YYYY-MM-DD, use today if not visible)
   "category"         : string (Electronics, Groceries, Flowers, Clothing, Appliances, Food, Auto, Home, Health, Household, Other)
-  "warranty_days"    : integer (0 for food/perishables)
-  "days_until_spoil" : integer (0 for non-perishables)
+  "warranty_days"    : integer
+  "days_until_spoil" : integer
 
-SMART GROUPING RULES — critical:
+SMART GROUPING RULES:
 
 ALWAYS give an item its OWN entry if ANY of these are true:
 - It is perishable (food, flowers, produce, meat, dairy) — even if under $1
@@ -515,6 +531,7 @@ Group these as "Household Supplies (N items)" with category "Household", warrant
 
 WARRANTY RULES:
 - Smartphones, laptops, TVs, appliances, headphones, gaming consoles, furniture: 365 days
+- Power tools DeWalt Milwaukee: 1095 days
 - Clothing and shoes: 30 days
 - Food, groceries, flowers, perishables: 0
 - Unknown electronics: 365
@@ -522,7 +539,7 @@ WARRANTY RULES:
 
 SPOILAGE RULES — use precise knowledge:
 Flowers: Roses=7, Tulips=5, Sunflowers=6, Lilies=7, Orchids=14, Mixed bouquet=6, Any cut flowers=7
-Produce: Bananas=5, Apples=21, Berries=5, Grapes=7, Leafy greens=5, Broccoli=7, Carrots=21, Tomatoes=5, Avocados=2, Citrus=14
+Produce: Bananas=5, Apples=21, Berries=3-5, Grapes=7, Leafy greens=5, Broccoli=7, Carrots=21, Tomatoes=5, Avocados=2, Citrus=14
 Dairy: Milk=7, Yogurt=14, Hard cheese=21, Soft cheese=7, Butter=30, Eggs=21
 Meat: Raw chicken=2, Raw beef/pork=3, Raw fish=1, Deli meat=5, Bacon=7
 Bread: Fresh bread=5, Pastries=2, Bagels=5
