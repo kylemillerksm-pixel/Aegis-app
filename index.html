@@ -497,6 +497,113 @@
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: var(--dark); }
   ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  /* SCAN ANIMATION */
+  .scan-overlay {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.92);
+    z-index: 5000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0; padding: 24px;
+  }
+  .scan-shield {
+    width: 64px; height: 64px;
+    background: var(--gold);
+    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
+    margin-bottom: 24px;
+    animation: shieldPulse 1.5s ease-in-out infinite;
+    position: relative;
+  }
+  .scan-shield::after {
+    content: '🛡️';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+  @keyframes shieldPulse {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: .85; }
+  }
+  .scan-status {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: .2em;
+    color: var(--gold); margin-bottom: 8px;
+    text-align: center;
+  }
+  .scan-substatus {
+    font-size: 12px; color: var(--text3);
+    letter-spacing: .1em; margin-bottom: 24px;
+    text-align: center; min-height: 18px;
+  }
+  .scan-progress-track {
+    width: 280px; height: 3px;
+    background: var(--surface2);
+    border-radius: 2px; overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .scan-progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--gold2), var(--gold3));
+    border-radius: 2px;
+    transition: width .6s ease;
+  }
+  .scan-steps {
+    display: flex; flex-direction: column;
+    gap: 10px; width: 280px;
+  }
+  .scan-step {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--text3);
+    transition: color .3s;
+  }
+  .scan-step.active { color: var(--text); }
+  .scan-step.done   { color: var(--green); }
+  .scan-step-icon {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0;
+    transition: all .3s;
+  }
+  .scan-step.active .scan-step-icon {
+    border-color: var(--gold);
+    background: rgba(245,200,66,.15);
+    animation: spin .8s linear infinite;
+  }
+  .scan-step.done .scan-step-icon {
+    border-color: var(--green);
+    background: rgba(68,204,136,.15);
+    color: var(--green);
+  }
+  .scan-receipt-preview {
+    width: 120px; height: 80px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .scan-receipt-preview img {
+    width: 100%; height: 100%;
+    object-fit: cover; opacity: .6;
+  }
+  .scan-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    animation: scanLineAnim 1.5s linear infinite;
+  }
+  @keyframes scanLineAnim {
+    from { top: 0; }
+    to   { top: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -974,6 +1081,42 @@
 
     </div>
   </main>
+</div>
+
+<!-- SCAN OVERLAY -->
+<div class="scan-overlay hidden" id="scanOverlay">
+  <div class="scan-receipt-preview" id="scanPreview">
+    <img id="scanPreviewImg" src="" alt="">
+    <div class="scan-line"></div>
+  </div>
+  <div class="scan-shield"></div>
+  <div class="scan-status" id="scanStatusText">INITIALIZING</div>
+  <div class="scan-substatus" id="scanSubText">Preparing analysis...</div>
+  <div class="scan-progress-track">
+    <div class="scan-progress-fill" id="scanProgressFill"></div>
+  </div>
+  <div class="scan-steps">
+    <div class="scan-step" id="step1">
+      <div class="scan-step-icon">⟳</div>
+      <span>Reading receipt image</span>
+    </div>
+    <div class="scan-step" id="step2">
+      <div class="scan-step-icon">⟳</div>
+      <span>Identifying items and prices</span>
+    </div>
+    <div class="scan-step" id="step3">
+      <div class="scan-step-icon">⟳</div>
+      <span>Cross-referencing 547 products</span>
+    </div>
+    <div class="scan-step" id="step4">
+      <div class="scan-step-icon">⟳</div>
+      <span>Calculating warranty and expiry dates</span>
+    </div>
+    <div class="scan-step" id="step5">
+      <div class="scan-step-icon">⟳</div>
+      <span>Building your inventory manifest</span>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST CONTAINER -->
@@ -1469,16 +1612,17 @@ async function handleImageScan(input) {
   if (!input.files[0]) return;
   const file = input.files[0];
 
-  document.getElementById('scanZone').classList.add('scanning');
-  document.getElementById('scanIcon').textContent  = '🔍';
-  document.getElementById('scanTitle').textContent = 'Analyzing receipt...';
-  document.getElementById('scanSub').textContent   = 'AI is reading your receipt';
   document.getElementById('scanResults').classList.add('hidden');
 
-  const b64 = await fileToBase64(file);
+  // Show preview in overlay
+  const previewUrl = URL.createObjectURL(file);
+  showScanOverlay(previewUrl);
+
+  const b64    = await fileToBase64(file);
   const result = await callGemini(b64, file.type || 'image/jpeg', 'image');
 
-  document.getElementById('scanZone').classList.remove('scanning');
+  hideScanOverlay();
+
   document.getElementById('scanIcon').textContent  = '✅';
   document.getElementById('scanTitle').textContent = `${result.length} item(s) found`;
   document.getElementById('scanSub').textContent   = 'Review below and save to vault';
@@ -1493,16 +1637,17 @@ async function handlePdfScan(input) {
   if (!input.files[0]) return;
   const file = input.files[0];
 
-  document.getElementById('pdfZone').classList.add('scanning');
-  document.getElementById('pdfIcon').textContent  = '🔍';
-  document.getElementById('pdfTitle').textContent = 'Reading document...';
-  document.getElementById('pdfSub').textContent   = 'AI is extracting warranty data';
   document.getElementById('pdfResults').classList.add('hidden');
+  showScanOverlay(null);
+
+  document.getElementById('scanStatusText').textContent = 'READING';
+  document.getElementById('scanSubText').textContent    = 'Parsing PDF document...';
 
   const b64    = await fileToBase64(file);
   const result = await callGemini(b64, 'application/pdf', 'pdf');
 
-  document.getElementById('pdfZone').classList.remove('scanning');
+  hideScanOverlay();
+
   document.getElementById('pdfIcon').textContent  = '✅';
   document.getElementById('pdfTitle').textContent = `${result.length} item(s) found`;
   document.getElementById('pdfSub').textContent   = 'Review below and save to vault';
@@ -1824,8 +1969,69 @@ function showToast(msg, type = 'info') {
   setTimeout(() => el.remove(), 4000);
 }
 
+// ─── SCAN ANIMATION ───────────────────────────────────────────
+let scanTimer = null;
+
+function showScanOverlay(imageDataUrl) {
+  const overlay = document.getElementById('scanOverlay');
+  const img     = document.getElementById('scanPreviewImg');
+  if (imageDataUrl) img.src = imageDataUrl;
+  overlay.classList.remove('hidden');
+
+  // Reset all steps
+  [1,2,3,4,5].forEach(i => {
+    const step = document.getElementById(`step${i}`);
+    step.className = 'scan-step';
+    step.querySelector('.scan-step-icon').textContent = '⟳';
+  });
+
+  document.getElementById('scanProgressFill').style.width = '0%';
+
+  // Animate through steps
+  const steps = [
+    { id: 1, status: 'SCANNING',      sub: 'Reading receipt image...', progress: '15%', delay: 0 },
+    { id: 2, status: 'IDENTIFYING',   sub: 'Identifying items and prices...', progress: '35%', delay: 1800 },
+    { id: 3, status: 'CROSS-REF',     sub: 'Cross-referencing 547 known products...', progress: '55%', delay: 3500 },
+    { id: 4, status: 'CALCULATING',   sub: 'Calculating warranty and expiry dates...', progress: '75%', delay: 5200 },
+    { id: 5, status: 'BUILDING',      sub: 'Building your inventory manifest...', progress: '90%', delay: 6800 },
+  ];
+
+  steps.forEach(({ id, status, sub, progress, delay }) => {
+    setTimeout(() => {
+      // Mark previous step done
+      if (id > 1) {
+        const prev = document.getElementById(`step${id-1}`);
+        prev.className = 'scan-step done';
+        prev.querySelector('.scan-step-icon').textContent = '✓';
+      }
+      // Activate current step
+      const current = document.getElementById(`step${id}`);
+      current.className = 'scan-step active';
+
+      document.getElementById('scanStatusText').textContent  = status;
+      document.getElementById('scanSubText').textContent     = sub;
+      document.getElementById('scanProgressFill').style.width = progress;
+    }, delay);
+  });
+}
+
+function hideScanOverlay() {
+  // Complete all steps
+  [1,2,3,4,5].forEach(i => {
+    const step = document.getElementById(`step${i}`);
+    step.className = 'scan-step done';
+    step.querySelector('.scan-step-icon').textContent = '✓';
+  });
+  document.getElementById('scanProgressFill').style.width = '100%';
+  document.getElementById('scanStatusText').textContent   = 'COMPLETE';
+  document.getElementById('scanSubText').textContent      = 'Assets cataloged successfully';
+
+  setTimeout(() => {
+    document.getElementById('scanOverlay').classList.add('hidden');
+  }, 800);
+}
+
 // ─── PDF SAVE BUTTON ID FIX ───────────────────────────────────
-// PDF save button is inline so we wire it here
 document.addEventListener('DOMContentLoaded', () => {
   const pdfSaveBtn = document.querySelector('#pdfResults button');
   if (pdfSaveBtn) pdfSaveBtn.id = 'btnSavePdf';
