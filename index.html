@@ -1386,8 +1386,6 @@ async function callGemini(b64data, mimeType, sourceType) {
       method:  'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey':        SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
       },
       body: JSON.stringify({
         imageData:  b64data,
