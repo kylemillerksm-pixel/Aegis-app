@@ -222,6 +222,14 @@ def display_items(data: list, purchase_date_default: str, source_name: str) -> l
         category       = item.get("category", "General")
         warranty_days  = int(item.get("warranty_days", 0))
         days_to_spoil  = int(item.get("days_until_spoil", 0))
+
+        # Override with knowledge base data if available — more accurate than Gemini guess
+        kb_match = lookup_knowledge_base(name)
+        if kb_match:
+            if kb_match.get("warranty_days") is not None:
+                warranty_days = int(kb_match["warranty_days"])
+            if kb_match.get("days_until_spoil") is not None:
+                days_to_spoil = int(kb_match["days_until_spoil"])
         classification = classify_item(price)
         rarity_word    = classification.split(" ")[-1]
         item_credits   = 10 + max(0, int(price - 50))
@@ -255,6 +263,35 @@ def display_items(data: list, purchase_date_default: str, source_name: str) -> l
 
     st.session_state.total_credits += credits_earned
     return items_to_save
+
+
+def lookup_knowledge_base(item_name: str) -> dict:
+    """
+    Check product_knowledge table for exact or partial match.
+    Returns dict with warranty_days and days_until_spoil if found.
+    Returns None if no match found.
+    """
+    if not item_name:
+        return None
+    try:
+        # Try to find a keyword match in the item name
+        keywords_result = supa_client.table("product_knowledge").select("*").execute()
+        if not keywords_result.data:
+            return None
+
+        item_lower = item_name.lower()
+        best_match = None
+
+        for row in keywords_result.data:
+            keyword = (row.get("item_keyword") or "").lower()
+            if keyword and keyword in item_lower:
+                # Prefer longer keyword matches (more specific)
+                if best_match is None or len(keyword) > len(best_match.get("item_keyword", "")):
+                    best_match = row
+
+        return best_match
+    except Exception:
+        return None
 
 
 def build_prompt(source_type: str) -> str:
@@ -591,7 +628,7 @@ elif page == "🗄️ Vault":
 
     st.divider()
 
-    categories = sorted(set(i.get("category") or "General" for i in all_items))
+    categories = sorted(set(i.get("category", "General") for i in all_items))
     selected   = st.multiselect(
         "Filter by category", options=categories, default=categories
     )
