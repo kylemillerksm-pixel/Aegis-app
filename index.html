@@ -1291,16 +1291,32 @@ function getLevelInfo(credits) {
 
 function updateSidebar() {
   const info = getLevelInfo(totalCredits);
-  document.getElementById('sideLevel').innerHTML      = `${info.level} <span>/ 8</span>`;
-  document.getElementById('sideTitle').textContent    = info.title;
-  document.getElementById('sideCredits').textContent  = `${totalCredits.toLocaleString()} XP`;
-  document.getElementById('sideCreditsNum').textContent = totalCredits.toLocaleString();
-  document.getElementById('xpBar').style.width        = (info.progress * 100).toFixed(1) + '%';
+  document.getElementById('sideLevel').innerHTML       = `${info.level} <span>/ 8</span>`;
+  document.getElementById('sideTitle').textContent     = info.title;
+  document.getElementById('sideCredits').textContent   = `${totalCredits.toLocaleString()} XP`;
+  document.getElementById('sideCreditsNum').textContent= totalCredits.toLocaleString();
+
+  // Animate XP bar smoothly
+  const xpBar = document.getElementById('xpBar');
+  const targetWidth = (info.progress * 100).toFixed(1) + '%';
+  if (xpBar && xpBar.style.width !== targetWidth) {
+    requestAnimationFrame(() => { xpBar.style.width = targetWidth; });
+  }
+
   document.getElementById('sideNext').textContent     = info.atMax ? 'MAX LEVEL' : `${info.toNext} to ${info.nextTitle}`;
   document.getElementById('xpUnlock').textContent     = info.atMax ? '🏆 Maximum clearance achieved' : UNLOCK_HINTS[Math.min(info.level - 1, UNLOCK_HINTS.length - 1)];
   document.getElementById('dashCredits').textContent  = totalCredits.toLocaleString();
   document.getElementById('statCredits').textContent  = totalCredits.toLocaleString();
   updateBadges();
+
+  // Show level up toast if leveled up
+  const prevLevel = parseInt(localStorage.getItem('aegis_level') || '1');
+  if (info.level > prevLevel) {
+    showToast(`🎉 Level Up! You are now ${info.title}`, 'success');
+    localStorage.setItem('aegis_level', info.level);
+  } else {
+    localStorage.setItem('aegis_level', info.level);
+  }
 }
 
 function updateBadges() {
@@ -1917,6 +1933,7 @@ async function saveItems(btnId, resultsId) {
 
   if (error) {
     showToast('Save failed: ' + error.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Save to Vault'; }
   } else {
     showToast(`✅ ${rows.length} item(s) saved to Vault`, 'success');
     pendingItems = [];
@@ -1927,6 +1944,12 @@ async function saveItems(btnId, resultsId) {
     refreshVault();
     updateSidebar();
     checkBadges();
+    // Flash XP bar to show update
+    const xpBar = document.getElementById('xpBar');
+    if (xpBar) {
+      xpBar.style.transition = 'width 1s ease';
+      setTimeout(() => { xpBar.style.transition = 'width .6s ease'; }, 1100);
+    }
   }
 }
 
