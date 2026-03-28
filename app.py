@@ -281,6 +281,7 @@ def get_item_emoji(item_name: str, category: str) -> tuple:
         "home":         ("🏠", "#795548"),
         "auto":         ("🚗", "#263238"),
         "health":       ("💊", "#2E7D32"),
+        "household":    ("🧺", "#455A64"),
         "other":        ("📦", "#455A64"),
     }
 
@@ -484,32 +485,55 @@ def lookup_knowledge_base(item_name: str) -> dict:
 
 def build_prompt(source_type: str) -> str:
     base = """
-You are Aegis, a logistics AI that extracts purchase and warranty data.
+You are Aegis, an expert logistics and consumer protection AI.
 
-Return ONLY a valid JSON array — no prose, no markdown fences, no explanation.
+Analyze the receipt and return ONLY a valid JSON array. No prose, no markdown, no explanation.
 
 Each element must have these exact fields:
   "item_name"        : string (specific product name)
   "merchant"         : string (store or company name)
   "price"            : float (number only, no $ symbol, 0 if not found)
   "purchase_date"    : string (YYYY-MM-DD, use today if not visible)
-  "category"         : string (Electronics, Groceries, Clothing, Appliances, Food, Auto, Home, Other)
-  "warranty_days"    : integer (total warranty period in days, 0 for food/perishables)
-  "days_until_spoil" : integer (days until spoilage for perishables, 0 for non-perishables)
+  "category"         : string (Electronics, Groceries, Flowers, Clothing, Appliances, Food, Auto, Home, Health, Household, Other)
+  "warranty_days"    : integer (0 for food/perishables)
+  "days_until_spoil" : integer (0 for non-perishables)
 
-Rules:
-- Items over $50: one entry per item.
-- Items under $50: group into a single Misc Items entry.
-- Electronics with no visible warranty: use 365.
-- Appliances: use 365.
-- Food and groceries: warranty_days = 0, estimate days_until_spoil realistically.
-- If a warranty end date is visible, calculate warranty_days from purchase_date to that end date.
-- If a field is not visible, make a realistic estimate based on item type.
-- Output ONLY the JSON array. Nothing else.
+SMART GROUPING RULES — critical:
+
+ALWAYS give an item its OWN entry if ANY of these are true:
+- It is perishable (food, flowers, produce, meat, dairy) — even if under $1
+- It costs more than $10
+- It has a warranty
+- It has a known spoil date
+
+ONLY group items if ALL of these are true:
+- Non-perishable (cleaning supplies, paper goods, personal care, household items)
+- Under $10 each
+- No warranty
+- No spoil date
+Group these as "Household Supplies (N items)" with category "Household", warranty_days=0, days_until_spoil=0
+
+WARRANTY RULES:
+- Smartphones, laptops, TVs, appliances, headphones, gaming consoles, furniture: 365 days
+- Clothing and shoes: 30 days
+- Food, groceries, flowers, perishables: 0
+- Unknown electronics: 365
+- Everything else with no visible warranty: 0
+
+SPOILAGE RULES — use precise knowledge:
+Flowers: Roses=7, Tulips=5, Sunflowers=6, Lilies=7, Orchids=14, Mixed bouquet=6, Any cut flowers=7
+Produce: Bananas=5, Apples=21, Berries=5, Grapes=7, Leafy greens=5, Broccoli=7, Carrots=21, Tomatoes=5, Avocados=2, Citrus=14
+Dairy: Milk=7, Yogurt=14, Hard cheese=21, Soft cheese=7, Butter=30, Eggs=21
+Meat: Raw chicken=2, Raw beef/pork=3, Raw fish=1, Deli meat=5, Bacon=7
+Bread: Fresh bread=5, Pastries=2, Bagels=5
+Prepared food: Leftovers=3, Deli prepared=3
+Canned goods, frozen food, chips, snacks sealed: days_until_spoil=0
+
+Output ONLY the JSON array. Nothing else.
     """.strip()
 
     if source_type == "pdf":
-        return base + "\n\nThis is a PDF document — it may be a warranty certificate, invoice, insurance policy, or emailed receipt. Extract all purchasable items and their warranty information."
+        return base + "\n\nThis is a PDF document — warranty certificate, invoice, insurance policy, or emailed receipt."
     else:
         return base + "\n\nThis is a receipt image. Extract all items purchased."
 
