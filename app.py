@@ -618,6 +618,7 @@ elif page == "🗄️ Vault":
         st.info("Vault is empty. Scan a receipt to add your first asset.")
         st.stop()
 
+    # ── Summary metrics ─────────────────────────────────────────
     total_value    = sum(float(i.get("price", 0)) for i in all_items)
     warranty_count = sum(1 for i in all_items if int(i.get("warranty_days") or 0) > 0)
 
@@ -628,32 +629,62 @@ elif page == "🗄️ Vault":
 
     st.divider()
 
-    categories = sorted(set(i.get("category", "General") for i in all_items))
-    selected   = st.multiselect(
-        "Filter by category", options=categories, default=categories
-    )
+    # ── SMART ROW: Expiring This Week ───────────────────────────
+    expiring = []
+    for item in all_items:
+        warranty_days = int(item.get("warranty_days") or 0)
+        days_to_spoil = int(item.get("days_until_spoil") or 0)
+        purchase_date = item.get("purchase_date")
 
-    rarity_order = {"EXOTIC": 0, "LEGENDARY": 1, "RARE": 2, "COMMON": 3}
-    filtered = sorted(
-        [i for i in all_items if i.get("category", "General") in selected],
-        key=lambda x: rarity_order.get(x.get("rarity", "COMMON"), 3),
-    )
+        if warranty_days > 0 and purchase_date:
+            days_left = compute_days_left(purchase_date, warranty_days)
+            if 0 <= days_left <= 7:
+                expiring.append({**item, "days": days_left, "type": "Warranty"})
 
-    if not filtered:
-        st.info("No items match the selected filters.")
+        if days_to_spoil > 0 and days_to_spoil <= 7:
+            expiring.append({**item, "days": days_to_spoil, "type": "Perishable"})
+
+    expiring.sort(key=lambda x: x["days"])
+
+    st.subheader("🔴 Expiring This Week")
+    if not expiring:
+        st.success("✅ Nothing expiring this week — all clear.")
     else:
-        for item in filtered:
-            price         = float(item.get("price", 0))
-            warranty_days = int(item.get("warranty_days") or 0)
-            days_to_spoil = int(item.get("days_until_spoil") or 0)
-            purchase_date = item.get("purchase_date")
-
-            c1, c2, c3, c4, c5 = st.columns([3, 2, 2, 2, 2])
+        for item in expiring:
+            emoji, label, color = urgency_label(item["days"])
+            icon = "🛡️" if item["type"] == "Warranty" else "🥗"
+            c1, c2, c3 = st.columns([3, 2, 2])
             with c1:
                 st.markdown(f"**{item.get('item_name', 'Unknown')}**")
-                st.caption(
-                    f"📍 {item.get('merchant', '—')} · {item.get('category', '—')}"
+                st.caption(f"📍 {item.get('merchant', '—')}")
+            with c2:
+                st.write(f"{icon} {item['type']} · ${float(item.get('price',0)):.2f}")
+            with c3:
+                st.markdown(
+                    f"<span style='color:{color};font-weight:600'>{emoji} {item['days']}d left</span>",
+                    unsafe_allow_html=True
                 )
+            st.divider()
+
+    # ── SMART ROW: High Value Assets ────────────────────────────
+    st.subheader("💎 High Value Assets")
+    high_value = sorted(
+        [i for i in all_items if float(i.get("price", 0)) >= 50],
+        key=lambda x: float(x.get("price", 0)),
+        reverse=True
+    )[:5]
+
+    if not high_value:
+        st.info("No high value items yet — items over $50 appear here.")
+    else:
+        for item in high_value:
+            price         = float(item.get("price", 0))
+            warranty_days = int(item.get("warranty_days") or 0)
+            purchase_date = item.get("purchase_date")
+            c1, c2, c3, c4 = st.columns([3, 2, 2, 2])
+            with c1:
+                st.markdown(f"**{item.get('item_name', 'Unknown')}**")
+                st.caption(f"📍 {item.get('merchant', '—')} · {item.get('category', '—')}")
             with c2:
                 st.write(classify_item(price))
             with c3:
@@ -665,10 +696,95 @@ elif page == "🗄️ Vault":
                     st.write(f"🛡️ {emoji} {days_left}d")
                 else:
                     st.write("🛡️ —")
-            with c5:
-                if days_to_spoil > 0:
+            st.divider()
+
+    # ── SMART ROW: Recently Added ───────────────────────────────
+    st.subheader("⚡ Recently Added")
+    recent = all_items[:5]
+    if not recent:
+        st.info("No items yet.")
+    else:
+        for item in recent:
+            price         = float(item.get("price", 0))
+            days_to_spoil = int(item.get("days_until_spoil") or 0)
+            warranty_days = int(item.get("warranty_days") or 0)
+            purchase_date = item.get("purchase_date")
+            c1, c2, c3, c4 = st.columns([3, 2, 2, 2])
+            with c1:
+                st.markdown(f"**{item.get('item_name', 'Unknown')}**")
+                st.caption(f"📍 {item.get('merchant', '—')} · {item.get('category', '—')}")
+            with c2:
+                st.write(classify_item(price))
+            with c3:
+                st.write(f"💰 ${price:.2f}")
+            with c4:
+                if warranty_days > 0 and purchase_date:
+                    days_left = compute_days_left(purchase_date, warranty_days)
+                    emoji, _, _ = urgency_label(days_left)
+                    st.write(f"🛡️ {emoji} {days_left}d")
+                elif days_to_spoil > 0:
                     emoji, _, _ = urgency_label(days_to_spoil)
                     st.write(f"⏳ {emoji} {days_to_spoil}d")
                 else:
-                    st.write("⏳ —")
+                    st.write("—")
             st.divider()
+
+    # ── SMART ROW: Perishables ──────────────────────────────────
+    st.subheader("🥗 Perishables")
+    perishables = sorted(
+        [i for i in all_items if int(i.get("days_until_spoil") or 0) > 0],
+        key=lambda x: int(x.get("days_until_spoil") or 0)
+    )
+    if not perishables:
+        st.info("No perishables tracked yet.")
+    else:
+        for item in perishables:
+            days_to_spoil = int(item.get("days_until_spoil") or 0)
+            emoji, label, color = urgency_label(days_to_spoil)
+            c1, c2, c3 = st.columns([3, 2, 2])
+            with c1:
+                st.markdown(f"**{item.get('item_name', 'Unknown')}**")
+                st.caption(f"📍 {item.get('merchant', '—')}")
+            with c2:
+                st.write(f"💰 ${float(item.get('price', 0)):.2f}")
+            with c3:
+                st.markdown(
+                    f"<span style='color:{color};font-weight:600'>{emoji} {days_to_spoil}d left</span>",
+                    unsafe_allow_html=True
+                )
+            st.divider()
+
+    # ── FULL REGISTRY ───────────────────────────────────────────
+    st.subheader("🗄️ Full Registry")
+    rarity_order = {"EXOTIC": 0, "LEGENDARY": 1, "RARE": 2, "COMMON": 3}
+    sorted_all = sorted(
+        all_items,
+        key=lambda x: rarity_order.get(x.get("rarity", "COMMON"), 3),
+    )
+    for item in sorted_all:
+        price         = float(item.get("price", 0))
+        warranty_days = int(item.get("warranty_days") or 0)
+        days_to_spoil = int(item.get("days_until_spoil") or 0)
+        purchase_date = item.get("purchase_date")
+        c1, c2, c3, c4, c5 = st.columns([3, 2, 2, 2, 2])
+        with c1:
+            st.markdown(f"**{item.get('item_name', 'Unknown')}**")
+            st.caption(f"📍 {item.get('merchant', '—')} · {item.get('category', '—')}")
+        with c2:
+            st.write(classify_item(price))
+        with c3:
+            st.write(f"💰 ${price:.2f}")
+        with c4:
+            if warranty_days > 0 and purchase_date:
+                days_left = compute_days_left(purchase_date, warranty_days)
+                emoji, _, _ = urgency_label(days_left)
+                st.write(f"🛡️ {emoji} {days_left}d")
+            else:
+                st.write("🛡️ —")
+        with c5:
+            if days_to_spoil > 0:
+                emoji, _, _ = urgency_label(days_to_spoil)
+                st.write(f"⏳ {emoji} {days_to_spoil}d")
+            else:
+                st.write("⏳ —")
+        st.divider()
