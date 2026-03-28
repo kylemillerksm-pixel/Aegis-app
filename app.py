@@ -737,6 +737,7 @@ elif page == "⚠️ Expiry Alerts":
                     "price":    price,
                     "type":     "Warranty",
                     "days":     days_left,
+                    "category": item.get("category", ""),
                 })
 
         if days_to_spoil > 0 and days_to_spoil <= 7:
@@ -746,6 +747,7 @@ elif page == "⚠️ Expiry Alerts":
                 "price":    price,
                 "type":     "Perishable",
                 "days":     days_to_spoil,
+                "category": item.get("category", ""),
             })
 
     alerts.sort(key=lambda x: x["days"])
@@ -769,14 +771,25 @@ elif page == "⚠️ Expiry Alerts":
         st.divider()
 
         for alert in alerts:
-            emoji, label, color = urgency_label(alert["days"])
+            urgency_emoji, label, color = urgency_label(alert["days"])
             days_text = (
                 "EXPIRED"
                 if alert["days"] <= 0
                 else f"{alert['days']} day{'s' if alert['days'] != 1 else ''} left"
             )
+            item_emoji, emoji_color = get_item_emoji(
+                alert.get("name", ""), alert.get("category", "")
+            )
 
-            c1, c2, c3, c4 = st.columns([3, 2, 2, 2])
+            c0, c1, c2, c3, c4 = st.columns([1, 3, 2, 2, 2])
+            with c0:
+                st.markdown(
+                    f"<div style='width:40px;height:40px;background:{emoji_color}22;"
+                    f"border:1px solid {emoji_color}55;border-radius:10px;"
+                    f"display:flex;align-items:center;justify-content:center;"
+                    f"font-size:20px;margin-top:4px'>{item_emoji}</div>",
+                    unsafe_allow_html=True
+                )
             with c1:
                 st.markdown(f"**{alert['name']}**")
                 st.caption(f"📍 {alert['merchant']}")
@@ -788,7 +801,7 @@ elif page == "⚠️ Expiry Alerts":
             with c4:
                 st.markdown(
                     f"<span style='color:{color};font-weight:600'>"
-                    f"{emoji} {days_text}</span>",
+                    f"{urgency_emoji} {days_text}</span>",
                     unsafe_allow_html=True,
                 )
             st.divider()
