@@ -2,111 +2,46 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 import json
-
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Aegis - Logistics Core", page_icon="🛡️", layout="wide")
-
-# --- CSS FOR TACTICAL LOOK ---
-st.markdown("""
-<style>
-    .badge-locked { filter: grayscale(100%); opacity: 0.3; }
-    .badge-unlocked { filter: none; opacity: 1.0; }
-</style>
-""", unsafe_allow_html=True)
+import io
+import supabase
 
 # --- CONFIGURATION ---
+# Google AI
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
 except Exception:
-    st.error("⚠️ SYSTEM ERROR: API Key not found.")
+    st.error("⚠️ SYSTEM ERROR: Google API Key missing.")
     st.stop()
 
-# --- SESSION STATE ---
+# Supabase
+try:
+    SUPABASE_URL = "https://eeizfajopbpmjsxykgmz.supabase.co"
+    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlaXpmYWpvcGJwbWpzeHlrZ216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzU0NzQsImV4cCI6MjA5MDIxMTQ3NH0.pxnBz7yFfw69l5qR9RoW8rDmvKAkXvs8for_XaS05N0"
+    supa_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
+except Exception as e:
+    st.error(f"⚠️ DATABASE CONNECTION FAILED: {e}")
+    st.stop()
+
+# --- SESSION STATE (Memory) ---
 if 'total_credits' not in st.session_state:
     st.session_state.total_credits = 0 
 if 'level' not in st.session_state:
     st.session_state.level = 1
-if 'streak' not in st.session_state:
-    st.session_state.streak = 0
-if 'scan_count' not in st.session_state:
-    st.session_state.scan_count = 0
-if 'total_items_scanned' not in st.session_state:
-    st.session_state.total_items_scanned = 0
-    
-# BADGES STATE
 if 'badges' not in st.session_state:
     st.session_state.badges = {
-        "First Acquisition": False,
-        "High Roller": False,
-        "Asset Manager": False,
-        "Operational": False,
-        "Quartermaster": False
+        "First Acquisition": False, "High Roller": False, 
+        "Asset Manager": False, "Operational": False, "Quartermaster": False
     }
-
-# --- FUNCTION: CHECK COMMENDATIONS ---
-def check_commendations():
-    # 1. First Acquisition
-    if st.session_state.scan_count >= 1 and not st.session_state.badges["First Acquisition"]:
-        st.session_state.badges["First Acquisition"] = True
-        st.toast("🎖️ Commendation Unlocked: First Acquisition", icon="🎖️")
-
-    # 2. High Roller (Logic happens in main loop if item found)
-    
-    # 3. Asset Manager (10 items)
-    if st.session_state.total_items_scanned >= 10 and not st.session_state.badges["Asset Manager"]:
-        st.session_state.badges["Asset Manager"] = True
-        st.toast("🎖️ Commendation Unlocked: Asset Manager", icon="🎖️")
-
-    # 4. Operational (3 Day Streak - Simulated)
-    if st.session_state.streak >= 3 and not st.session_state.badges["Operational"]:
-        st.session_state.badges["Operational"] = True
-        st.toast("🎖️ Commendation Unlocked: Operational", icon="🎖️")
-
-    # 5. Quartermaster (Level 5)
-    if st.session_state.level >= 5 and not st.session_state.badges["Quartermaster"]:
-        st.session_state.badges["Quartermaster"] = True
-        st.toast("🎖️ Commendation Unlocked: Quartermaster", icon="🎖️")
 
 # --- SIDEBAR: SYSTEM STATUS ---
 st.sidebar.title("🛡️ Operator Status")
 st.sidebar.metric("Clearance Level", st.session_state.level)
 st.sidebar.metric("System Credits", st.session_state.total_credits)
 
-if st.session_state.streak > 0:
-    st.sidebar.markdown(f"### 🔥 {st.session_state.streak} Day Uptime")
-else:
-    st.sidebar.markdown("### ⚠️ Uptime Critical")
-
-st.sidebar.progress(st.session_state.total_credits % 100) 
-
-# --- SIDEBAR: COMMENDATIONS (THE NEW FEATURE) ---
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🎖️ Commendations")
-cols = st.sidebar.columns(3)
-
-badge_icons = {
-    "First Acquisition": "🎯",
-    "High Roller": "💰",
-    "Asset Manager": "📦",
-    "Operational": "📅",
-    "Quartermaster": "🛡️"
-}
-
-# Display Badges
-for i, (name, unlocked) in enumerate(st.session_state.badges.items()):
-    with cols[i % 3]:
-        if unlocked:
-            st.markdown(f"<div style='text-align:center; font-size: 24px;' title='{name}'>{badge_icons[name]}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<div style='text-align:center; font-size: 24px; opacity: 0.2;' title='LOCKED'>🔒</div>", unsafe_allow_html=True)
-
 # --- MAIN APP ---
 st.title("📡 Acquisition Scanner")
-st.write("Upload purchase data to catalog assets and consumables.")
-
-if st.session_state.scan_count == 0:
-    st.info("📅 **Daily Protocol:** Catalog 1 purchase to maintain system uptime. (+50 Credits)")
+st.write("Upload purchase data to catalog assets.")
 
 uploaded_file = st.file_uploader("Select Image File...", type=["jpg", "png", "jpeg"])
 
@@ -120,111 +55,79 @@ if uploaded_file is not None:
     with col2:
         st.info("🔍 Processing...")
         
-        bytes_data = uploaded_file.getvalue()
-        image_parts = [{"mime_type": uploaded_file.type, "data": bytes_data}]
+        # Image Compression
+        try:
+            pil_image = Image.open(uploaded_file)
+            img_byte_arr = io.BytesIO()
+            pil_image.save(img_byte_arr, format='JPEG', quality=85)
+            compressed_bytes = img_byte_arr.getvalue()
+            image_parts = [{"mime_type": "image/jpeg", "data": compressed_bytes}]
+        except Exception as e:
+            st.error(f"Image Error: {e}")
+            st.stop()
 
         prompt = """
-        You are Aegis, a logistics AI analyzing purchase records.
-        
-        1. Identify ALL items (Assets and Consumables).
-        2. **QUANTITY PROTOCOL:**
-           - If value > $50, list each unit separately.
-           - If value < $50, group by item type.
-        3. **EXPIRATION PROTOCOL:**
-           - Assets (Electronics/Furniture): Calculate "warranty_days".
-           - Consumables (Food): Calculate "days_until_spoil".
-           - General Goods: Set all expiry to 0.
-        
-        Return ONLY valid JSON:
-        [
-          {
-            "item_name": "string",
-            "merchant": "string",
-            "price": "float",
-            "purchase_date": "YYYY-MM-DD",
-            "category": "Electronics|Apparel|Home|Groceries|Furniture",
-            "warranty_days": "integer",
-            "days_until_spoil": "integer"
-          }
-        ]
+        You are Aegis, a logistics AI. 
+        Analyze receipt. Return JSON list. 
+        Fields: item_name, merchant, price (float), purchase_date (YYYY-MM-DD), category, warranty_days (int), days_until_spoil (int).
+        Separate items over $50. Group items under $50.
         """
 
         if st.button("Process Assets"):
             with st.spinner("Analyzing data..."):
                 try:
+                    # 1. AI SCAN
                     model = genai.GenerativeModel('gemini-2.5-flash')
                     response = model.generate_content([prompt, image_parts[0]])
                     raw_text = response.text.replace("```json", "").replace("```", "").strip()
                     
                     data = json.loads(raw_text)
-                    if not isinstance(data, list):
-                        data = [data]
-                    
-                    # --- TACTICAL GAMIFICATION ---
-                    base_credits = 10 
-                    
-                    if st.session_state.scan_count == 0:
-                        st.session_state.streak += 1
-                        st.session_state.total_credits += 50 
-
-                    st.session_state.scan_count += 1
-                    st.session_state.total_items_scanned += len(data) # Track total items count
+                    if not isinstance(data, list): data = [data]
                     
                     st.success(f"✅ CATALOGING COMPLETE. {len(data)} items identified.")
                     st.subheader("📦 Inventory Manifest")
                     
                     cols = st.columns(3)
                     
-                    for i, item in enumerate(data):
-                        price = item['price']
-                        
-                        # CLASSIFICATION
-                        if price > 1000: 
-                            classification = "🟡 CLASS: EXOTIC"
-                            credits = 100
-                            # HIGH ROLLER BADGE CHECK
-                            if not st.session_state.badges["High Roller"]:
-                                st.session_state.badges["High Roller"] = True
-                                st.toast("🎖️ Commendation Unlocked: High Roller", icon="🎖️")
-                        elif price > 200: 
-                            classification = "🟣 CLASS: LEGENDARY"
-                            credits = 50
-                        elif price > 50: 
-                            classification = "🔵 CLASS: RARE"
-                            credits = 20
-                        else: 
-                            classification = "⚪ CLASS: COMMON"
-                            credits = 5
-                        
-                        st.session_state.total_credits += credits
-                        
-                        # STATUS LOGIC
-                        if item.get('days_until_spoil', 0) > 0:
-                            status = f"🍎 Spoilage Risk: {item['days_until_spoil']} days"
-                        elif item.get('warranty_days', 0) > 0:
-                            status = f"🛡️ Warranty Active: {item['warranty_days']} days"
-                        else:
-                            status = "♻️ General Stock"
+                    items_to_save = []
 
-                        col_idx = i % 3
-                        with cols[col_idx]:
+                    for i, item in enumerate(data):
+                        # Extract Data
+                        price = float(item.get('price', 0))
+                        name = item.get('item_name', 'Unknown')
+                        
+                        # Determine Rarity
+                        if price > 1000: classification = "🟡 EXOTIC"
+                        elif price > 200: classification = "🟣 LEGENDARY"
+                        elif price > 50: classification = "🔵 RARE"
+                        else: classification = "⚪ COMMON"
+                        
+                        # Prepare Data for Database
+                        items_to_save.append({
+                            "item_name": name,
+                            "merchant": item.get('merchant'),
+                            "price": price,
+                            "purchase_date": item.get('purchase_date'),
+                            "category": item.get('category'),
+                            "rarity": classification.split(' ')[-1], # Just the word
+                            "image_url": str(uploaded_file.name) # Placeholder
+                        })
+
+                        # UI Display
+                        with cols[i % 3]:
                             st.markdown(f"### {classification}")
-                            st.markdown(f"**{item['item_name']}**")
-                            st.caption(f"Vendor: {item['merchant']}")
-                            st.write(f"Cost: ${item['price']}")
-                            st.write(f"Status: {status}")
-                            st.write(f"⚡ +{credits} Credits")
+                            st.markdown(f"**{name}**")
+                            st.write(f"Cost: ${price}")
                             st.markdown("---")
 
-                    # LEVEL UP
-                    new_level = (st.session_state.total_credits // 100) + 1
-                    if new_level > st.session_state.level:
-                        st.session_state.level = new_level
-                        st.balloons()
-                        st.toast(f"🎖️ CLEARANCE UPGRADE: Level {new_level}", icon="🎖️")
-
-                    # CHECK ALL COMMENDATIONS
-                    check_commendations()
+                    # 2. SAVE TO DATABASE (The New Logic)
+                    try:
+                        # We are inserting without a user_id for this MVP test
+                        result = supa_client.table("items").insert(items_to_save).execute()
+                        st.toast(f"💾 {len(items_to_save)} items saved to Vault.", icon="💾")
+                    except Exception as db_error:
+                        st.warning(f"Display works, but Database Save Failed: {db_error}")
+                        st.info("This is likely due to Row Level Security (RLS). We will fix this next.")
 
                 except Exception as e:
                     st.error(f"❌ SYSTEM ERROR: {e}")
