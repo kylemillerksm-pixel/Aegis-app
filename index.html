@@ -814,8 +814,6 @@
     to   { top: 100%; }
   }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 </head>
 <body>
 
@@ -1356,6 +1354,15 @@
       </svg>
       <span class="bn-label">PDF</span>
     </button>
+    <button class="bottom-nav-item" id="bn-receipts" onclick="showPage('receipts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+        <line x1="9" y1="12" x2="15" y2="12"/>
+        <line x1="9" y1="16" x2="13" y2="16"/>
+      </svg>
+      <span class="bn-label">History</span>
+    </button>
   </div>
 </div>
 
@@ -1462,6 +1469,7 @@ const UNLOCK_HINTS = [
 async function bootApp() {
   setLoadingMsg('LOADING VAULT...');
   await loadItems();
+  await loadReceipts();
   hideLoading();
   showApp();
   applyMobileLayout();
@@ -1580,6 +1588,18 @@ async function loadItems() {
     totalCredits = allItems.reduce((s, i) => s + (10 + Math.max(0, Math.floor((i.price || 0) - 50))), 0);
     scanCount    = new Set(allItems.map(i => i.image_url)).size;
   }
+}
+
+let allReceipts = [];
+
+async function loadReceipts() {
+  if (!currentUser) return;
+  const { data, error } = await supa
+    .from('receipts')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  if (!error) allReceipts = data || [];
 }
 
 // ─── LEVEL SYSTEM ─────────────────────────────────────────────
@@ -1709,6 +1729,7 @@ function showPage(id) {
   if (id === 'dashboard') { refreshDashboard(); }
   if (id === 'alerts')    { refreshAlerts(); }
   if (id === 'vault')     { refreshVault(); }
+  if (id === 'receipts')  { refreshReceipts(); }
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────
@@ -2255,6 +2276,58 @@ function renderManifest(items, gridId, titleId) {
 }
 
 // ─── SAVE TO VAULT ────────────────────────────────────────────
+function refreshReceipts() {
+  const el = document.getElementById('receiptList');
+  const countEl = document.getElementById('receiptCount');
+  if (!el) return;
+
+  if (!allReceipts.length) {
+    el.innerHTML = `<div class="empty-state">
+      <span class="empty-icon">🧾</span>
+      <div class="empty-title">No Receipts Yet</div>
+      <div class="empty-sub">Scan a receipt to start building your history</div>
+    </div>`;
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  if (countEl) countEl.textContent = `${allReceipts.length} scan${allReceipts.length !== 1 ? 's' : ''}`;
+
+  el.innerHTML = allReceipts.map(r => {
+    const date     = new Date(r.scan_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const icon     = r.source_type === 'pdf' ? '📄' : '🧾';
+    const items    = allItems.filter(i => i.receipt_id === r.id);
+    const expiring = items.filter(i => {
+      const today = new Date(); today.setHours(0,0,0,0);
+      if ((i.warranty_days || 0) > 0 && i.purchase_date) {
+        const exp = new Date(i.purchase_date);
+        exp.setDate(exp.getDate() + i.warranty_days);
+        return Math.round((exp - today) / 86400000) <= 30;
+      }
+      return (i.days_until_spoil || 0) > 0 && (i.days_until_spoil || 0) <= 7;
+    }).length;
+
+    return `<div class="alert-item" style="padding:14px 0;cursor:pointer" onclick="filterVaultByReceipt('${r.id}')">
+      <div style="font-size:24px;margin-right:4px">${icon}</div>
+      <div class="alert-info">
+        <div class="alert-name">${r.merchant || 'Unknown Merchant'}</div>
+        <div class="alert-meta">📅 ${date} · ${r.item_count} item${r.item_count !== 1 ? 's' : ''} · $${parseFloat(r.total_value || 0).toFixed(2)}</div>
+        ${expiring > 0 ? `<div style="font-size:11px;color:var(--red);margin-top:3px">⚠️ ${expiring} item${expiring !== 1 ? 's' : ''} expiring soon</div>` : ''}
+      </div>
+      <span style="font-size:11px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">${r.source_type === 'pdf' ? 'PDF' : 'Image'}</span>
+    </div>`;
+  }).join('<div style="border-top:1px solid var(--border)"></div>');
+}
+
+function filterVaultByReceipt(receiptId) {
+  showPage('vault');
+  // Highlight items from this receipt in the vault
+  const receipt = allReceipts.find(r => r.id === receiptId);
+  if (receipt) {
+    showToast(`Showing items from ${receipt.merchant} · ${new Date(receipt.scan_date).toLocaleDateString()}`, 'info');
+  }
+}
+
 async function saveScanResults() { await saveItems('btnSave', 'scanResults'); }
 async function savePdfResults()  { await saveItems('btnSavePdf', 'pdfResults'); }
 
@@ -2264,12 +2337,35 @@ async function saveItems(btnId, resultsId) {
   const btn = document.getElementById(btnId);
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
+  // ── Step 1: Create receipt session record ──────────────────
+  const merchant    = pendingItems[0]?.merchant || 'Unknown';
+  const totalValue  = pendingItems.reduce((s,i) => s + parseFloat(i.price || 0), 0);
+  const sourceType  = resultsId === 'pdfResults' ? 'pdf' : 'image';
+  const today       = new Date().toISOString().split('T')[0];
+
+  const { data: receiptData, error: receiptError } = await supa
+    .from('receipts')
+    .insert({
+      user_id:     currentUser.id,
+      merchant:    merchant,
+      scan_date:   today,
+      item_count:  pendingItems.length,
+      total_value: totalValue.toFixed(2),
+      source_type: sourceType,
+    })
+    .select()
+    .single();
+
+  const receiptId = receiptData?.id || null;
+
+  // ── Step 2: Save items linked to receipt session ───────────
   const rows = pendingItems.map(item => ({
     user_id:         currentUser.id,
+    receipt_id:      receiptId,
     item_name:       item.item_name   || 'Unknown',
     merchant:        item.merchant    || null,
     price:           parseFloat(item.price || 0),
-    purchase_date:   item.purchase_date || new Date().toISOString().split('T')[0],
+    purchase_date:   item.purchase_date || today,
     category:        item.category    || 'General',
     rarity:          rarityWord(parseFloat(item.price || 0)),
     warranty_days:   parseInt(item.warranty_days   || 0),
@@ -2289,12 +2385,12 @@ async function saveItems(btnId, resultsId) {
     pendingItems = [];
     document.getElementById(resultsId)?.classList.add('hidden');
     await loadItems();
+    await loadReceipts();
     refreshDashboard();
     refreshAlerts();
     refreshVault();
     updateSidebar();
     checkBadges();
-    // Flash XP bar to show update
     const xpBar = document.getElementById('xpBar');
     if (xpBar) {
       xpBar.style.transition = 'width 1s ease';
@@ -2432,6 +2528,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'bn-alerts':    'alerts',
     'bn-vault':     'vault',
     'bn-pdf':       'pdf',
+    'bn-receipts':  'receipts',
   };
   Object.entries(bnMap).forEach(([id, page]) => {
     const el = document.getElementById(id);
