@@ -52,12 +52,13 @@
       0deg, transparent, transparent 2px,
       rgba(0,0,0,.06) 2px, rgba(0,0,0,.06) 4px
     );
-    pointer-events: none;
+    pointer-events: none !important;
     z-index: 9999;
+    touch-action: none;
   }
 
   /* ─── UTILS ─────────────────────────── */
-  .hidden { display: none !important; }
+  .hidden { display: none !important; pointer-events: none !important; visibility: hidden !important; }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -196,7 +197,10 @@
 
   /* ─── APP LAYOUT ─────────────────────── */
   #screen-app { display: none; min-height: 100vh; height: 100dvh; }
-  #screen-app.visible { display: flex; }
+  #screen-app.visible { display: flex; flex-direction: row; width: 100%; overflow: hidden; }
+  @media (max-width: 768px) {
+    #screen-app.visible { flex-direction: column; }
+  }
 
   /* SIDEBAR */
   .sidebar {
@@ -620,8 +624,8 @@
     .bottom-nav    { display: block !important; }
 
     /* Main layout */
-    .main { min-height: 100vh; padding-bottom: 70px; }
-    .app  { flex-direction: column; }
+    .main { min-height: 100vh; padding-bottom: 70px; width: 100%; max-width: 100vw; }
+    .app  { flex-direction: column; width: 100%; }
 
     /* Topbar */
     .topbar {
@@ -670,6 +674,9 @@
     .manifest-card { padding: 10px; }
     .mc-name { font-size: 12px; }
 
+    /* Remove decorative overlay on mobile - can block touches */
+    body::before { display: none; }
+
     /* Scan zone */
     .scan-zone { padding: 24px 16px; }
     .scan-title { font-size: 16px; }
@@ -684,7 +691,8 @@
     .auth-header { padding: 24px 20px 18px; }
 
     /* Scan overlay */
-    .scan-overlay { padding: 16px; }
+    .scan-overlay { padding: 16px; pointer-events: none; }
+  .scan-overlay:not(.hidden) { pointer-events: all; }
     .scan-receipt-preview { width: 100px; height: 65px; }
 
     /* Panel headers */
@@ -1456,6 +1464,7 @@ async function bootApp() {
   await loadItems();
   hideLoading();
   showApp();
+  applyMobileLayout();
   refreshDashboard();
   refreshAlerts();
   refreshVault();
@@ -1468,9 +1477,38 @@ function showAuth() {
   document.getElementById('screen-app').classList.remove('visible');
 }
 
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
+function applyMobileLayout() {
+  const sidebar = document.querySelector('.sidebar');
+  const mobileHeader = document.getElementById('mobileHeader');
+  const mobileXpBar = document.getElementById('mobileXpBar');
+  const bottomNav = document.getElementById('bottomNav');
+  const topbar = document.querySelector('.topbar');
+
+  if (isMobile()) {
+    if (sidebar)      sidebar.style.display = 'none';
+    if (mobileHeader) mobileHeader.style.display = 'flex';
+    if (mobileXpBar)  mobileXpBar.style.display = 'block';
+    if (bottomNav)    bottomNav.style.display = 'block';
+    if (topbar)       topbar.style.display = 'none';
+  } else {
+    if (sidebar)      sidebar.style.display = '';
+    if (mobileHeader) mobileHeader.style.display = 'none';
+    if (mobileXpBar)  mobileXpBar.style.display = 'none';
+    if (bottomNav)    bottomNav.style.display = 'none';
+    if (topbar)       topbar.style.display = '';
+  }
+}
+
+window.addEventListener('resize', applyMobileLayout);
+
 function showApp() {
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
+  applyMobileLayout();
 }
 
 function switchAuthTab(tab) {
@@ -1639,6 +1677,7 @@ const PAGE_TITLES = {
 document.addEventListener('touchstart', function(){}, {passive: true});
 
 function showPage(id) {
+  applyMobileLayout();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -2292,7 +2331,13 @@ function fileToBase64(file) {
 }
 
 function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
-function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'none';
+  overlay.style.visibility = 'hidden';
+  overlay.style.pointerEvents = 'none';
+  overlay.style.zIndex = '-1';
+}
 
 function showToast(msg, type = 'info') {
   const c    = document.getElementById('toastContainer');
@@ -2369,6 +2414,7 @@ function hideScanOverlay() {
 document.addEventListener('DOMContentLoaded', () => {
   const pdfSaveBtn = document.querySelector('#pdfResults button');
   if (pdfSaveBtn) pdfSaveBtn.id = 'btnSavePdf';
+  applyMobileLayout();
 
   // Mobile Safari touch fix - add touchend as fallback for all interactive elements
   function addTouchFallback(selector, handler) {
