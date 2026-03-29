@@ -377,12 +377,38 @@ def check_badge_unlocks(items: list):
     st.session_state.badges = badges
 
 
-def save_items_to_db(items_to_save: list, source_name: str) -> bool:
+def save_items_to_db(items_to_save: list, source_name: str, source_type: str = "image") -> bool:
     try:
+        user_id     = st.session_state.get("user_id")
+        merchant    = items_to_save[0].get("merchant", "Unknown") if items_to_save else "Unknown"
+        total_value = sum(float(i.get("price", 0)) for i in items_to_save)
+        today       = date.today().isoformat()
+
+        # Step 1: Create receipt session record
+        receipt_id = None
+        try:
+            receipt_res = supa_client.table("receipts").insert({
+                "user_id":    user_id,
+                "merchant":   merchant,
+                "scan_date":  today,
+                "item_count": len(items_to_save),
+                "total_value": round(total_value, 2),
+                "source_type": source_type,
+            }).execute()
+            if receipt_res.data:
+                receipt_id = receipt_res.data[0]["id"]
+        except Exception as re:
+            pass  # Receipt creation failing shouldn't block item save
+
+        # Step 2: Link items to receipt and save
+        for item in items_to_save:
+            if receipt_id:
+                item["receipt_id"] = receipt_id
+
         supa_client.table("items").insert(items_to_save).execute()
         st.toast(
-            f"💾 {len(items_to_save)} item(s) from {source_name} saved to Vault.",
-            icon="💾"
+            f"💾 {len(items_to_save)} item(s) saved · Receipt logged",
+            icon="🧾"
         )
         check_badge_unlocks(fetch_all_items())
         return True
@@ -1041,3 +1067,61 @@ elif page == "🗄️ Vault":
             else:
                 st.write("⏳ —")
         st.divider()
+
+elif page == "🧾 Receipt History":
+    st.title("🧾 Receipt History")
+    st.caption("Every scan session — organized by shopping trip.")
+
+    user_id = st.session_state.get("user_id")
+    if not user_id:
+        st.warning("Please log in to view receipt history.")
+        st.stop()
+
+    try:
+        receipts_res = supa_client.table("receipts") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .order("created_at", desc=True) \
+            .execute()
+        receipts = receipts_res.data or []
+    except Exception as e:
+        st.error(f"Failed to load receipts: {e}")
+        receipts = []
+
+    if not receipts:
+        st.info("No receipt history yet. Scan your first receipt to get started.")
+        st.stop()
+
+    # Summary metrics
+    total_scans  = len(receipts)
+    total_items  = sum(r.get("item_count", 0) for r in receipts)
+    total_spend  = sum(float(r.get("total_value", 0)) for r in receipts)
+
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Scans",   total_scans)
+    m2.metric("Total Items",   total_items)
+    m3.metric("Total Value",   f"${total_spend:,.2f}")
+
+    st.divider()
+
+    # Receipt list
+    for r in receipts:
+        scan_date  = r.get("scan_date", "Unknown date")
+        merchant   = r.get("merchant", "Unknown Merchant")
+        item_count = r.get("item_count", 0)
+        total_val  = float(r.get("total_value", 0))
+        source     = r.get("source_type", "image")
+        icon       = "📄" if source == "pdf" else "🧾"
+
+        with st.container():
+            c1, c2, c3, c4 = st.columns([1, 3, 2, 2])
+            with c1:
+                st.markdown(f"<div style='font-size:28px;margin-top:4px'>{icon}</div>", unsafe_allow_html=True)
+            with c2:
+                st.markdown(f"**{merchant}**")
+                st.caption(f"📅 {scan_date} · {source.upper()}")
+            with c3:
+                st.write(f"📦 {item_count} item{'s' if item_count != 1 else ''}")
+            with c4:
+                st.write(f"💰 ${total_val:.2f}")
+            st.divider()
