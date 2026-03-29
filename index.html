@@ -507,6 +507,215 @@
   ::-webkit-scrollbar-track { background: var(--dark); }
   ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
 
+  /* ── DELETE BUTTON ───────────────────────────────────── */
+  .delete-btn {
+    background: transparent; border: none;
+    color: var(--text3); cursor: pointer;
+    font-size: 14px; padding: 4px 6px;
+    border-radius: 4px; transition: all .15s;
+    touch-action: manipulation;
+    opacity: 0; transition: opacity .15s;
+  }
+  .vault-row:hover .delete-btn { opacity: 1; }
+  .delete-btn:hover { color: var(--red); background: rgba(255,68,68,.1); }
+
+  /* ── DELETE CONFIRM MODAL ────────────────────────────── */
+  .delete-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.85);
+    z-index: 8000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .delete-modal.hidden { display: none; }
+  .delete-box {
+    background: var(--dark2);
+    border: 1px solid rgba(255,68,68,.3);
+    border-radius: 14px; padding: 28px;
+    max-width: 360px; width: 100%;
+    text-align: center;
+  }
+  .delete-box-icon { font-size: 36px; margin-bottom: 14px; display: block; }
+  .delete-box-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: .08em;
+    color: var(--text); margin-bottom: 8px;
+  }
+  .delete-box-sub {
+    font-size: 13px; color: var(--text2);
+    line-height: 1.6; margin-bottom: 20px;
+  }
+  .delete-box-item {
+    font-weight: 600; color: var(--text);
+  }
+  .delete-actions {
+    display: flex; gap: 10px;
+  }
+  .btn-cancel {
+    flex: 1; padding: 11px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 7px; color: var(--text2);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; touch-action: manipulation;
+    transition: all .15s;
+  }
+  .btn-cancel:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+  .btn-delete-confirm {
+    flex: 1; padding: 11px;
+    background: var(--red);
+    border: none; border-radius: 7px;
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; touch-action: manipulation;
+    transition: all .15s;
+  }
+  .btn-delete-confirm:hover { background: #cc3333; }
+
+  /* ── ONBOARDING ─────────────────────────────────────── */
+  .onboarding-screen {
+    position: fixed; inset: 0;
+    background: var(--black);
+    z-index: 8000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 32px;
+  }
+  .ob-shield {
+    width: 80px; height: 80px;
+    background: var(--gold);
+    clip-path: polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);
+    margin-bottom: 28px;
+    animation: obPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes obPulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,200,66,.4); }
+    50% { transform: scale(1.06); box-shadow: 0 0 0 20px rgba(245,200,66,0); }
+  }
+  .ob-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px; letter-spacing: .12em;
+    color: var(--text); margin-bottom: 8px;
+  }
+  .ob-sub {
+    font-size: 16px; font-weight: 300;
+    color: var(--text2); line-height: 1.7;
+    max-width: 400px; margin: 0 auto 32px;
+  }
+  .ob-sub strong { color: var(--text); font-weight: 500; }
+  .ob-btn {
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    padding: 16px 40px; border-radius: 8px;
+    border: none; cursor: pointer;
+    box-shadow: 0 8px 32px rgba(245,200,66,.25);
+    transition: all .15s; margin-bottom: 12px;
+    display: block; width: 100%; max-width: 320px;
+    touch-action: manipulation;
+  }
+  .ob-btn:hover { background: var(--gold3); transform: translateY(-2px); }
+  .ob-skip {
+    font-size: 12px; color: var(--text3);
+    letter-spacing: .08em; cursor: pointer;
+    background: none; border: none;
+    touch-action: manipulation;
+  }
+  .ob-skip:hover { color: var(--text2); }
+  .ob-steps {
+    display: flex; gap: 24px; margin-bottom: 36px;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .ob-step {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 8px;
+    max-width: 100px;
+  }
+  .ob-step-icon {
+    width: 48px; height: 48px;
+    background: var(--dark2); border: 1px solid var(--border2);
+    border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .ob-step-label {
+    font-size: 11px; color: var(--text3);
+    text-align: center; line-height: 1.4;
+    letter-spacing: .04em;
+  }
+
+  /* ── SAVE REMINDER BANNER ───────────────────────────── */
+  .save-reminder {
+    background: rgba(245,200,66,.1);
+    border: 1px solid rgba(245,200,66,.3);
+    border-radius: 8px; padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--gold);
+    font-weight: 500;
+  }
+  .save-reminder.hidden { display: none; }
+
+  /* ── FIRST SAVE CELEBRATION ─────────────────────────── */
+  .celebration-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.9);
+    z-index: 8500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .celebration-modal.hidden { display: none; }
+  .celebration-box {
+    background: var(--dark2);
+    border: 1px solid rgba(245,200,66,.3);
+    border-radius: 16px; padding: 32px;
+    max-width: 400px; width: 100%;
+    text-align: center;
+  }
+  .cel-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+  .cel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px; letter-spacing: .1em;
+    color: var(--gold); margin-bottom: 8px;
+  }
+  .cel-sub {
+    font-size: 14px; color: var(--text2);
+    line-height: 1.7; margin-bottom: 20px;
+  }
+  .cel-stats {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 10px; margin-bottom: 24px;
+  }
+  .cel-stat {
+    background: var(--black);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 8px;
+  }
+  .cel-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; color: var(--gold);
+    line-height: 1;
+  }
+  .cel-stat-label {
+    font-size: 10px; color: var(--text3);
+    letter-spacing: .08em; text-transform: uppercase;
+    margin-top: 3px;
+  }
+  .cel-btn {
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: 12px 28px; border-radius: 7px;
+    border: none; cursor: pointer; width: 100%;
+    touch-action: manipulation;
+  }
+
   /* ═══════════════════════════════════════
      MOBILE BOTTOM NAVIGATION
   ═══════════════════════════════════════ */
@@ -1248,8 +1457,8 @@
             <div class="panel-title">🗄️ Full Registry</div>
             <div id="fullRegistryCount" class="panel-action"></div>
           </div>
-          <div class="vault-header" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr">
-            <div></div><div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
+          <div class="vault-header" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
+            <div></div><div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div><div></div>
           </div>
           <div id="vaultList">
             <div class="empty-state">
@@ -1366,6 +1575,83 @@
   </div>
 </div>
 
+<!-- DELETE CONFIRM MODAL -->
+<div class="delete-modal hidden" id="deleteModal">
+  <div class="delete-box">
+    <span class="delete-box-icon">🗑️</span>
+    <div class="delete-box-title">DELETE ITEM?</div>
+    <p class="delete-box-sub">
+      This will permanently remove<br>
+      <span class="delete-box-item" id="deleteItemName"></span><br>
+      from your vault. This cannot be undone.
+    </p>
+    <div class="delete-actions">
+      <button class="btn-cancel" onclick="cancelDelete()" ontouchend="this.onclick()">
+        Cancel
+      </button>
+      <button class="btn-delete-confirm" onclick="confirmDelete()" ontouchend="this.onclick()">
+        🗑️ Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING SCREEN -->
+<div class="onboarding-screen hidden" id="onboardingScreen">
+  <div class="ob-shield"></div>
+  <div class="ob-title">WELCOME TO AEGIS</div>
+  <p class="ob-sub">
+    <strong>Your purchases, protected.</strong><br>
+    Scan a receipt and Aegis tracks every warranty and expiry date — so nothing slips through the cracks.
+  </p>
+  <div class="ob-steps">
+    <div class="ob-step">
+      <div class="ob-step-icon">📷</div>
+      <div class="ob-step-label">Scan a receipt</div>
+    </div>
+    <div class="ob-step">
+      <div class="ob-step-icon">🧠</div>
+      <div class="ob-step-label">Aegis learns everything</div>
+    </div>
+    <div class="ob-step">
+      <div class="ob-step-icon">⚡</div>
+      <div class="ob-step-label">Get alerted before it's too late</div>
+    </div>
+  </div>
+  <button class="ob-btn" onclick="startOnboarding()" ontouchend="this.onclick()">
+    📷 Scan My First Receipt
+  </button>
+  <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
+    Skip for now →
+  </button>
+</div>
+
+<!-- FIRST SAVE CELEBRATION -->
+<div class="celebration-modal hidden" id="celebrationModal">
+  <div class="celebration-box">
+    <span class="cel-icon">🛡️</span>
+    <div class="cel-title">VAULT IS LIVE!</div>
+    <p class="cel-sub">Aegis is now protecting your purchases. Here's what we're tracking:</p>
+    <div class="cel-stats">
+      <div class="cel-stat">
+        <div class="cel-stat-num" id="celItems">0</div>
+        <div class="cel-stat-label">Items</div>
+      </div>
+      <div class="cel-stat">
+        <div class="cel-stat-num" id="celWarranties">0</div>
+        <div class="cel-stat-label">Warranties</div>
+      </div>
+      <div class="cel-stat">
+        <div class="cel-stat-num" id="celAlerts">0</div>
+        <div class="cel-stat-label">Alerts</div>
+      </div>
+    </div>
+    <button class="cel-btn" onclick="dismissCelebration()" ontouchend="this.onclick()">
+      🚀 Explore My Vault
+    </button>
+  </div>
+</div>
+
 <!-- SCAN OVERLAY -->
 <div class="scan-overlay hidden" id="scanOverlay">
   <div class="scan-receipt-preview" id="scanPreview">
@@ -1477,6 +1763,7 @@ async function bootApp() {
   refreshAlerts();
   refreshVault();
   updateSidebar();
+  checkOnboarding();
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────
@@ -1879,13 +2166,14 @@ function renderVaultRow(item) {
     statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
   }
 
-  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr">
+  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
     <div>${emojiAvatar(item.item_name, item.category)}</div>
     <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
     <div><span class="rarity-chip ${rarityClass}">${rarityEmoji} ${rarity}</span></div>
     <div class="vi-price">$${price.toFixed(2)}</div>
     <div style="font-size:11px;color:var(--text3)">${item.warranty_days ? item.warranty_days+'d' : '—'}</div>
     <div>${statusBadge}</div>
+    <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
   </div>`;
 }
 
@@ -2384,6 +2672,9 @@ async function saveItems(btnId, resultsId) {
     showToast(`✅ ${rows.length} item(s) saved to Vault`, 'success');
     pendingItems = [];
     document.getElementById(resultsId)?.classList.add('hidden');
+    // Hide save reminder banners
+    document.getElementById('saveReminder')?.classList.add('hidden');
+    document.getElementById('pdfSaveReminder')?.classList.add('hidden');
     await loadItems();
     await loadReceipts();
     refreshDashboard();
@@ -2391,6 +2682,8 @@ async function saveItems(btnId, resultsId) {
     refreshVault();
     updateSidebar();
     checkBadges();
+    // Show first save celebration
+    showCelebration(allItems);
     const xpBar = document.getElementById('xpBar');
     if (xpBar) {
       xpBar.style.transition = 'width 1s ease';
@@ -2442,6 +2735,102 @@ function showToast(msg, type = 'info') {
   el.textContent = msg;
   c.appendChild(el);
   setTimeout(() => el.remove(), 4000);
+}
+
+// ─── DELETE ITEM ──────────────────────────────────────────────
+let pendingDeleteId = null;
+
+function promptDelete(itemId, itemName, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  pendingDeleteId = itemId;
+  document.getElementById('deleteItemName').textContent = itemName;
+  document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function cancelDelete() {
+  pendingDeleteId = null;
+  document.getElementById('deleteModal').classList.add('hidden');
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+
+  const { error } = await supa
+    .from('items')
+    .delete()
+    .eq('id', pendingDeleteId)
+    .eq('user_id', currentUser.id);
+
+  document.getElementById('deleteModal').classList.add('hidden');
+
+  if (error) {
+    showToast('Delete failed: ' + error.message, 'error');
+  } else {
+    showToast('Item removed from vault', 'info');
+    pendingDeleteId = null;
+    await loadItems();
+    refreshDashboard();
+    refreshAlerts();
+    refreshVault();
+    updateSidebar();
+  }
+}
+
+// Close modal on background tap
+document.addEventListener('DOMContentLoaded', () => {
+  const deleteModal = document.getElementById('deleteModal');
+  if (deleteModal) {
+    deleteModal.addEventListener('click', function(e) {
+      if (e.target === this) cancelDelete();
+    });
+  }
+});
+
+// ─── ONBOARDING ───────────────────────────────────────────────
+function checkOnboarding() {
+  const hasSeenOnboarding = localStorage.getItem('aegis_onboarded');
+  const hasItems = allItems.length > 0;
+  if (!hasSeenOnboarding && !hasItems) {
+    document.getElementById('onboardingScreen').classList.remove('hidden');
+  }
+}
+
+function startOnboarding() {
+  dismissOnboarding();
+  showPage('scanner');
+}
+
+function dismissOnboarding() {
+  document.getElementById('onboardingScreen').classList.add('hidden');
+  localStorage.setItem('aegis_onboarded', 'true');
+}
+
+function showCelebration(items) {
+  const hasSeenCelebration = localStorage.getItem('aegis_celebrated');
+  if (hasSeenCelebration) return;
+
+  const warrantyCount = items.filter(i => (i.warranty_days || 0) > 0).length;
+  const alertCount    = items.filter(i => {
+    if ((i.days_until_spoil || 0) > 0 && (i.days_until_spoil || 0) <= 7) return true;
+    if ((i.warranty_days || 0) > 0 && i.purchase_date) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const exp   = new Date(i.purchase_date);
+      exp.setDate(exp.getDate() + i.warranty_days);
+      return Math.round((exp - today) / 86400000) <= 30;
+    }
+    return false;
+  }).length;
+
+  document.getElementById('celItems').textContent     = items.length;
+  document.getElementById('celWarranties').textContent = warrantyCount;
+  document.getElementById('celAlerts').textContent     = alertCount;
+  document.getElementById('celebrationModal').classList.remove('hidden');
+  localStorage.setItem('aegis_celebrated', 'true');
+}
+
+function dismissCelebration() {
+  document.getElementById('celebrationModal').classList.add('hidden');
+  showPage('vault');
 }
 
 // ─── SCAN ANIMATION ───────────────────────────────────────────
