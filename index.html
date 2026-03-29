@@ -81,7 +81,7 @@
     width: 100%; padding: 11px 14px;
     background: var(--surface); border: 1px solid var(--border2);
     border-radius: 8px; color: var(--text);
-    font-family: 'Barlow', sans-serif; font-size: 14px;
+    font-family: 'Barlow', sans-serif; font-size: 16px;
     outline: none; transition: border-color .15s;
   }
   .input:focus { border-color: var(--gold); }
@@ -195,7 +195,7 @@
   .google-icon { width: 18px; height: 18px; }
 
   /* ─── APP LAYOUT ─────────────────────── */
-  #screen-app { display: none; min-height: 100vh; }
+  #screen-app { display: none; min-height: 100vh; height: 100dvh; }
   #screen-app.visible { display: flex; }
 
   /* SIDEBAR */
@@ -321,7 +321,7 @@
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-  .content { flex: 1; padding: 24px 28px; overflow-y: auto; }
+  .content { flex: 1; padding: 24px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
   /* PAGE SYSTEM */
   .page { display: none; }
@@ -404,7 +404,7 @@
     border: 1.5px dashed var(--border2); border-radius: 12px;
     padding: 36px 24px; text-align: center; cursor: pointer;
     transition: all .2s; background: rgba(245,200,66,.02);
-    position: relative; overflow: hidden;
+    position: relative; overflow: visible;
   }
   .scan-zone:hover { border-color: var(--gold); background: rgba(245,200,66,.04); }
   .scan-zone.scanning { border-color: var(--gold); border-style: solid; }
@@ -478,7 +478,7 @@
   .pdf-zone {
     border: 1.5px dashed rgba(136,102,255,.4); border-radius: 12px;
     padding: 36px 24px; text-align: center; cursor: pointer;
-    background: rgba(136,102,255,.03); transition: all .2s; position: relative; overflow: hidden;
+    background: rgba(136,102,255,.03); transition: all .2s; position: relative; overflow: visible;
   }
   .pdf-zone:hover { border-color: var(--purple); background: rgba(136,102,255,.06); }
   .pdf-zone input[type=file] { position: absolute; inset:0; opacity:0; cursor:pointer; -webkit-appearance:none; touch-action:manipulation; }
@@ -560,7 +560,7 @@
     position: fixed; bottom: 0; left: 0; right: 0;
     background: var(--dark);
     border-top: 1px solid var(--border);
-    z-index: 500;
+    z-index: 1000;
     padding: 0 0 env(safe-area-inset-bottom, 0);
   }
   .bottom-nav-inner {
@@ -632,7 +632,12 @@
     .topbar-right .btn { padding: 7px 12px; font-size: 11px; }
 
     /* Content */
-    .content { padding: 14px 14px 80px; }
+    .content { padding: 14px 14px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Grid fixes */
+    .grid2 { grid-template-columns: 1fr; }
+    .grid3 { grid-template-columns: 1fr; }
+    .scanner-grid { grid-template-columns: 1fr; }
 
     /* Stat rows — 2 columns on mobile */
     .stat-row.cols4 { grid-template-columns: 1fr 1fr; }
@@ -901,7 +906,7 @@
       AEGIS
     </div>
     <div style="font-size:11px;color:var(--text3)" id="mobilePageTitle">DASHBOARD</div>
-    <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:6px 12px;font-size:11px">⚡ Scan</button>
+    <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 14px;font-size:12px;min-height:36px">⚡ Scan</button>
   </div>
 
   <!-- MOBILE XP BAR -->
@@ -1073,11 +1078,10 @@
 
       <!-- ─── SCANNER ─── -->
       <div class="page" id="page-scanner">
-        <div class="grid2" style="margin-bottom:0">
+        <div class="grid2 scanner-grid" style="margin-bottom:0">
           <div>
-            <div class="scan-zone" id="scanZone">
-              <label for="scanFileInput" style="position:absolute;inset:0;z-index:2;cursor:pointer"></label>
-              <input type="file" accept="image/*" capture="environment" id="scanFileInput" onchange="handleImageScan(this)" style="position:absolute;inset:0;opacity:0;z-index:3;width:100%;height:100%">
+            <div class="scan-zone" id="scanZone" onclick="document.getElementById('scanFileInput').click()" style="cursor:pointer">
+              <input type="file" accept="image/*,application/pdf" id="scanFileInput" onchange="handleImageScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
               <span class="scan-icon" id="scanIcon">📷</span>
               <div class="scan-title" id="scanTitle">Drop Receipt Here</div>
               <div class="scan-sub" id="scanSub">JPG, PNG, or JPEG · AI extracts items, warranties & expiry dates<br>Credits awarded for every scan</div>
@@ -1126,7 +1130,7 @@
           <div class="panel">
             <div class="panel-header">
               <div class="panel-title" id="resultsTitle">📦 Inventory Manifest</div>
-              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:7px 14px;font-size:11px">
+              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px">
                 💾 Save to Vault
               </button>
             </div>
@@ -1251,9 +1255,8 @@
       <div class="page" id="page-pdf">
         <div class="grid2">
           <div>
-            <div class="pdf-zone" id="pdfZone">
-              <label for="pdfFileInput" style="position:absolute;inset:0;z-index:2;cursor:pointer"></label>
-              <input type="file" accept=".pdf,application/pdf" id="pdfFileInput" onchange="handlePdfScan(this)" style="position:absolute;inset:0;opacity:0;z-index:3;width:100%;height:100%">
+            <div class="pdf-zone" id="pdfZone" onclick="document.getElementById('pdfFileInput').click()" style="cursor:pointer">
+              <input type="file" accept=".pdf,application/pdf" id="pdfFileInput" onchange="handlePdfScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
               <span class="scan-icon" id="pdfIcon">📄</span>
               <div class="scan-title" id="pdfTitle" style="color:var(--purple)">Drop PDF Here</div>
               <div class="scan-sub" id="pdfSub">Warranty certificates · Insurance policies<br>Old invoices · Emailed receipts<br>Recover warranties from years ago.</div>
