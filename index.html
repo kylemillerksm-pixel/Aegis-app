@@ -630,6 +630,8 @@
     .topbar-title { font-size: 16px; }
     .topbar-right .status-dot { display: none; }
     .topbar-right .btn { padding: 7px 12px; font-size: 11px; }
+    .topbar-right span:not(.status-dot):not(.btn) { display: none; }
+    .topbar { display: none; }
 
     /* Content */
     .content { padding: 14px 14px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -950,24 +952,24 @@
     </div>
 
     <nav class="nav">
-      <a class="nav-item active" onclick="showPage('dashboard')">
+      <a class="nav-item active" href="javascript:void(0)" onclick="showPage('dashboard')">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </a>
-      <a class="nav-item" onclick="showPage('scanner')">
+      <a class="nav-item" href="javascript:void(0)" onclick="showPage('scanner')">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
         Scanner
       </a>
-      <a class="nav-item" onclick="showPage('alerts')" id="navAlerts">
+      <a class="nav-item" href="javascript:void(0)" onclick="showPage('alerts')" id="navAlerts">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         Expiry Alerts
         <span class="nav-badge hidden" id="alertBadge">0</span>
       </a>
-      <a class="nav-item" onclick="showPage('vault')">
+      <a class="nav-item" href="javascript:void(0)" onclick="showPage('vault')">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
         The Vault
       </a>
-      <a class="nav-item" onclick="showPage('pdf')">
+      <a class="nav-item" href="javascript:void(0)" onclick="showPage('pdf')">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         PDF Scanner
         <span class="nav-new">NEW</span>
@@ -2365,6 +2367,71 @@ function hideScanOverlay() {
 document.addEventListener('DOMContentLoaded', () => {
   const pdfSaveBtn = document.querySelector('#pdfResults button');
   if (pdfSaveBtn) pdfSaveBtn.id = 'btnSavePdf';
+
+  // Mobile Safari touch fix - add touchend as fallback for all interactive elements
+  function addTouchFallback(selector, handler) {
+    document.querySelectorAll(selector).forEach(el => {
+      el.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        handler(el);
+      }, {passive: false});
+    });
+  }
+
+  // Bottom nav touch handlers
+  const bnMap = {
+    'bn-dashboard': 'dashboard',
+    'bn-alerts':    'alerts',
+    'bn-vault':     'vault',
+    'bn-pdf':       'pdf',
+  };
+  Object.entries(bnMap).forEach(([id, page]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        showPage(page);
+      }, {passive: false});
+    }
+  });
+
+  // Scan zone touch handler
+  const scanZone = document.getElementById('scanZone');
+  if (scanZone) {
+    scanZone.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      document.getElementById('scanFileInput').click();
+    }, {passive: false});
+  }
+
+  // PDF zone touch handler
+  const pdfZone = document.getElementById('pdfZone');
+  if (pdfZone) {
+    pdfZone.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      document.getElementById('pdfFileInput').click();
+    }, {passive: false});
+  }
+
+  // Bottom nav scan button (center)
+  document.querySelectorAll('.scan-btn').forEach(btn => {
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      showPage('scanner');
+    }, {passive: false});
+  });
+
+  // Nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      const onclick = item.getAttribute('onclick');
+      if (onclick) {
+        const match = onclick.match(/showPage\('([^']+)'\)/);
+        if (match) showPage(match[1]);
+      }
+    }, {passive: false});
+  });
 });
 </script>
 </body>
