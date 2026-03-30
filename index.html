@@ -526,45 +526,121 @@
   ::-webkit-scrollbar-track { background: var(--dark); }
   ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
 
-  /* ── ONBOARDING MULTI-STEP ───────────────────────── */
-  .ob-progress { display:flex; gap:8px; margin-bottom:32px; }
-  .ob-dot { width:8px; height:8px; border-radius:50%; background:var(--border2); transition:all .3s; }
-  .ob-dot.active { background:var(--gold); width:24px; border-radius:4px; }
-  .ob-step-screen { width:100%; max-width:400px; text-align:center; }
-  .ob-step-icon-lg { font-size:52px; margin-bottom:16px; display:block; }
-  .ob-step-title { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:.08em; color:var(--text); margin-bottom:12px; }
-  .ob-example-card { background:var(--dark2); border:1px solid var(--border2); border-radius:10px; padding:14px; margin-bottom:24px; text-align:left; }
-  .ob-example-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:13px; color:var(--text2); border-bottom:1px solid var(--border); }
-  .ob-example-row:last-child { border-bottom:none; }
-  .ob-gmail-card { background:var(--dark2); border:1px solid var(--border2); border-radius:10px; padding:16px; margin-bottom:20px; text-align:left; }
-  .ob-gmail-step { display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; font-size:13px; color:var(--text2); line-height:1.5; }
-  .ob-gmail-num { min-width:22px; height:22px; background:rgba(245,200,66,.15); border:1px solid rgba(245,200,66,.3); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--gold); margin-top:1px; }
-  .ob-gmail-text code { background:var(--black); padding:2px 5px; border-radius:3px; font-size:11px; color:var(--gold); font-family:monospace; }
-  .ob-scan-address { background:var(--black); border:1px solid rgba(245,200,66,.3); border-radius:7px; padding:10px 14px; font-size:14px; font-weight:600; color:var(--gold); letter-spacing:.04em; text-align:center; margin-bottom:8px; font-family:monospace; }
-  .ob-copy-btn { width:100%; padding:8px; background:transparent; border:1px solid var(--border2); border-radius:6px; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; touch-action:manipulation; margin-bottom:4px; font-family:'Barlow Condensed',sans-serif; letter-spacing:.08em; text-transform:uppercase; }
-  .ob-alert-mock { background:var(--dark2); border:1px solid rgba(255,68,68,.2); border-radius:10px; padding:16px; margin-bottom:8px; text-align:left; }
+  /* ── MISSION BOARD ───────────────────────────────── */
+  .mission-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px; padding: 16px 20px;
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .mission-streak {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(245,200,66,.08); border: 1px solid rgba(245,200,66,.2);
+    border-radius: 10px; padding: 10px 16px; flex-shrink: 0;
+  }
+  .streak-fire { font-size: 22px; }
+  .streak-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px; color: var(--gold); line-height: 1;
+  }
+  .streak-label { font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
+  .mission-level-wrap { flex: 1; }
+  .mission-level-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--gold);
+    letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .mission-xp-track {
+    height: 5px; background: var(--dark);
+    border-radius: 3px; overflow: hidden; margin-bottom: 5px;
+  }
+  .mission-xp-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--gold2), var(--gold3));
+    transition: width .8s ease;
+  }
+  .mission-xp-label { font-size: 10px; color: var(--text3); }
 
-  /* ── VAULT FILTER TABS ───────────────────────────── */
-  .vault-tabs { display:flex; gap:8px; margin-bottom:16px; padding:0 4px; }
-  .vault-tab { padding:6px 14px; background:transparent; border:1px solid var(--border); border-radius:20px; cursor:pointer; font-size:12px; font-weight:600; color:var(--text3); touch-action:manipulation; transition:all .15s; font-family:'Barlow Condensed',sans-serif; letter-spacing:.06em; text-transform:uppercase; }
-  .vault-tab.active { background:rgba(245,200,66,.1); border-color:rgba(245,200,66,.3); color:var(--gold); }
+  /* Urgent panel */
+  .mission-urgent-panel { }
+  .urgent-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px;
+  }
+  .urgent-emoji { font-size: 32px; flex-shrink: 0; }
+  .urgent-info { flex: 1; }
+  .urgent-name {
+    font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 3px;
+  }
+  .urgent-detail { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+  .urgent-action {
+    font-size: 12px; color: var(--text2); line-height: 1.5;
+    background: rgba(255,68,68,.06); border: 1px solid rgba(255,68,68,.15);
+    border-radius: 7px; padding: 8px 12px;
+  }
+  .urgent-badge { flex-shrink: 0; }
 
-  /* ── MARK AS USED BUTTONS ────────────────────────── */
-  .used-btn { background:transparent; border:1px solid rgba(68,204,136,.25); color:#44cc88; cursor:pointer; font-size:11px; font-weight:700; padding:3px 8px; border-radius:5px; touch-action:manipulation; transition:all .15s; font-family:'Barlow Condensed',sans-serif; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
-  .used-btn:hover { background:rgba(68,204,136,.1); }
-  .claim-btn { background:transparent; border:1px solid rgba(68,136,255,.25); color:var(--blue); cursor:pointer; font-size:11px; font-weight:700; padding:3px 8px; border-radius:5px; touch-action:manipulation; transition:all .15s; font-family:'Barlow Condensed',sans-serif; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
-  .claim-btn:hover { background:rgba(68,136,255,.1); }
+  /* Missions list */
+  .mission-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+  }
+  .mission-item:last-child { border-bottom: none; }
+  .mission-item.done { opacity: .5; }
+  .mission-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+    background: var(--surface); border: 1px solid var(--border2);
+  }
+  .mission-item.done .mission-icon { background: rgba(68,204,136,.1); border-color: rgba(68,204,136,.25); }
+  .mission-body { flex: 1; }
+  .mission-title {
+    font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px;
+  }
+  .mission-item.done .mission-title { text-decoration: line-through; color: var(--text3); }
+  .mission-desc { font-size: 11px; color: var(--text3); }
+  .mission-xp-badge {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+    font-weight: 700; color: var(--gold); letter-spacing: .06em;
+    background: rgba(245,200,66,.1); border: 1px solid rgba(245,200,66,.2);
+    padding: 3px 8px; border-radius: 6px; flex-shrink: 0;
+  }
+  .mission-item.done .mission-xp-badge {
+    color: var(--green); background: rgba(68,204,136,.1);
+    border-color: rgba(68,204,136,.25);
+  }
+  .mission-check {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1.5px solid var(--border2); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s; flex-shrink: 0;
+    touch-action: manipulation; font-size: 14px;
+  }
+  .mission-check:hover { border-color: var(--green); background: rgba(68,204,136,.08); }
+  .mission-item.done .mission-check {
+    border-color: var(--green); background: rgba(68,204,136,.15);
+    color: var(--green);
+  }
 
-  /* ── CLUTCH SAVE MODAL ───────────────────────────── */
-  .clutch-modal { position:fixed; inset:0; background:rgba(8,10,15,.88); z-index:8600; display:flex; align-items:center; justify-content:center; padding:24px; }
-  .clutch-modal.hidden { display:none; }
-  .clutch-box { background:var(--dark2); border:1px solid rgba(68,204,136,.3); border-radius:16px; padding:28px; max-width:340px; width:100%; text-align:center; }
-  .clutch-icon { font-size:48px; margin-bottom:12px; display:block; }
-  .clutch-title { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:.08em; color:#44cc88; margin-bottom:6px; }
-  .clutch-sub { font-size:14px; color:var(--text2); margin-bottom:16px; line-height:1.6; }
-  .clutch-xp { font-family:'Bebas Neue',sans-serif; font-size:36px; color:var(--gold); margin-bottom:4px; }
-  .clutch-xp-label { font-size:11px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; margin-bottom:20px; }
-  .clutch-btn { width:100%; padding:12px; background:#44cc88; color:var(--black); font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; border:none; border-radius:8px; cursor:pointer; touch-action:manipulation; }
+  /* Summary bar */
+  .mission-summary {
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 16px 20px; margin-top: 18px;
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .ms-stat { text-align: center; }
+  .ms-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 24px;
+    color: var(--text); line-height: 1; margin-bottom: 3px;
+  }
+  .ms-label { font-size: 9px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; }
+  .ms-divider { width: 1px; height: 32px; background: var(--border); }
+
+  /* Streak CSS additions */
+  .streak-zero .streak-fire { filter: grayscale(1); opacity: .4; }
+  .streak-zero .streak-num { color: var(--text3); }
 
   /* ── SHAREABLE NEAR MISS CARD ───────────────────────── */
   .share-card-modal {
@@ -1465,75 +1541,83 @@
 
     <div class="content">
 
-      <!-- ─── DASHBOARD ─── -->
+      <!-- ─── DASHBOARD: MISSION BOARD ─── -->
       <div class="page active" id="page-dashboard">
-        <div class="stat-row cols4">
-          <div class="stat-card c-gold">
-            <div class="sc-label">Total Assets</div>
-            <div class="sc-num" id="dashTotal">0</div>
-            <div class="sc-sub">Items cataloged</div>
+
+        <!-- STREAK + LEVEL HEADER -->
+        <div class="mission-header">
+          <div class="mission-streak" id="missionStreak">
+            <span class="streak-fire">🔥</span>
+            <span class="streak-num" id="streakNum">0</span>
+            <span class="streak-label">week streak</span>
           </div>
-          <div class="stat-card c-red">
-            <div class="sc-label">At Risk Value</div>
-            <div class="sc-num" id="dashRisk">$0</div>
-            <div class="sc-sub">Expiring soon</div>
-          </div>
-          <div class="stat-card c-green">
-            <div class="sc-label">Protected Value</div>
-            <div class="sc-num" id="dashProtected">$0</div>
-            <div class="sc-sub">Under warranty</div>
-          </div>
-          <div class="stat-card c-blue">
-            <div class="sc-label">System Credits</div>
-            <div class="sc-num" id="dashCredits">0</div>
-            <div class="sc-sub">Lifetime earned</div>
+          <div class="mission-level-wrap">
+            <div class="mission-level-title" id="missionLevelTitle">Recruit · Level 1</div>
+            <div class="mission-xp-track">
+              <div class="mission-xp-fill" id="missionXpFill" style="width:0%"></div>
+            </div>
+            <div class="mission-xp-label" id="missionXpLabel">0 XP · 500 to next level</div>
           </div>
         </div>
 
-        <div class="grid3">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">🔴 Active Alerts</div>
-              <div class="panel-action" onclick="showPage('alerts')">View All →</div>
-            </div>
-            <div class="panel-body" id="dashAlerts">
-              <div class="empty-state">
-                <span class="empty-icon">✅</span>
-                <div class="empty-title">All Clear</div>
-                <div class="empty-sub">No expiring items</div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div class="panel" style="margin-bottom:16px">
-              <div class="panel-header"><div class="panel-title">⚡ Recent Scans</div></div>
-              <div class="panel-body" id="dashRecent">
-                <div class="empty-state" style="padding:20px">
-                  <span class="empty-icon" style="font-size:24px">📷</span>
-                  <div class="empty-sub">No scans yet</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
+        <!-- RIGHT NOW: Most urgent item -->
+        <div class="panel mission-urgent-panel" id="urgentPanel">
           <div class="panel-header">
-            <div class="panel-title">🗄️ Top Assets</div>
-            <div class="panel-action" onclick="showPage('vault')">Full Vault →</div>
+            <div class="panel-title">⚡ Right Now</div>
+            <div class="panel-action" onclick="showPage('alerts')">All Alerts →</div>
           </div>
-          <div class="vault-header">
-            <div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
-          </div>
-          <div id="dashTopAssets">
-            <div class="empty-state">
-              <span class="empty-icon">🛡️</span>
-              <div class="empty-title">Vault Empty</div>
-              <div class="empty-sub">Scan a receipt to add your first asset</div>
+          <div id="urgentContent">
+            <div class="empty-state" style="padding:28px">
+              <span class="empty-icon">✅</span>
+              <div class="empty-title">Nothing Needs Attention</div>
+              <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
             </div>
           </div>
         </div>
+
+        <!-- THIS WEEK'S MISSIONS -->
+        <div class="panel" style="margin-top:18px">
+          <div class="panel-header">
+            <div class="panel-title">🎯 This Week's Missions</div>
+            <div class="panel-action" id="missionXpPool"></div>
+          </div>
+          <div id="missionsList" class="panel-body"></div>
+        </div>
+
+        <!-- VAULT SUMMARY (collapsed stats) -->
+        <div class="mission-summary" id="missionSummary">
+          <div class="ms-stat">
+            <div class="ms-num" id="msTotal">0</div>
+            <div class="ms-label">Items</div>
+          </div>
+          <div class="ms-divider"></div>
+          <div class="ms-stat">
+            <div class="ms-num" id="msProtected">$0</div>
+            <div class="ms-label">Protected</div>
+          </div>
+          <div class="ms-divider"></div>
+          <div class="ms-stat">
+            <div class="ms-num" id="msAlerts" style="color:var(--red)">0</div>
+            <div class="ms-label">Alerts</div>
+          </div>
+          <div class="ms-divider"></div>
+          <div class="ms-stat">
+            <div class="ms-num" id="msCredits" style="color:var(--gold)">0</div>
+            <div class="ms-label">XP</div>
+          </div>
+        </div>
+
+        <!-- hidden elements still needed by other functions -->
+        <div style="display:none">
+          <span id="dashTotal">0</span>
+          <span id="dashRisk">$0</span>
+          <span id="dashProtected">$0</span>
+          <span id="dashCredits">0</span>
+          <div id="dashAlerts"></div>
+          <div id="dashRecent"></div>
+          <div id="dashTopAssets"></div>
+        </div>
+
       </div>
 
       <!-- ─── SCANNER ─── -->
@@ -1697,11 +1781,6 @@
           <div class="panel-header">
             <div class="panel-title">🗄️ Full Registry</div>
             <div id="fullRegistryCount" class="panel-action"></div>
-          </div>
-          <div class="vault-tabs">
-            <button class="vault-tab active" id="vtab-active" onclick="setVaultFilter('active',this)" ontouchend="this.onclick()">Active</button>
-            <button class="vault-tab" id="vtab-used" onclick="setVaultFilter('used',this)" ontouchend="this.onclick()">Used</button>
-            <button class="vault-tab" id="vtab-archived" onclick="setVaultFilter('archived',this)" ontouchend="this.onclick()">Archived</button>
           </div>
           <div class="vault-header" style="grid-template-columns:40px 2fr 1.2fr 1.2fr 32px">
             <div></div><div>Item</div><div>Price</div><div>Status</div><div></div>
@@ -1883,18 +1962,6 @@
   </div>
 </div>
 
-<!-- CLUTCH SAVE MODAL -->
-<div class="clutch-modal hidden" id="clutchModal">
-  <div class="clutch-box">
-    <span class="clutch-icon">⚡</span>
-    <div class="clutch-title">CLUTCH SAVE!</div>
-    <p class="clutch-sub" id="clutchSub">You used it just in time.</p>
-    <div class="clutch-xp" id="clutchXP">+50 XP</div>
-    <div class="clutch-xp-label">Nothing slipped through</div>
-    <button class="clutch-btn" onclick="closeClutch()" ontouchend="this.onclick()">💪 Keep It Up</button>
-  </div>
-</div>
-
 <!-- DELETE CONFIRM MODAL -->
 <div class="delete-modal hidden" id="deleteModal">
   <div class="delete-box">
@@ -1916,73 +1983,34 @@
   </div>
 </div>
 
-<!-- MULTI-STEP ONBOARDING -->
+<!-- ONBOARDING SCREEN -->
 <div class="onboarding-screen hidden" id="onboardingScreen">
-  <div class="ob-progress" id="obProgress">
-    <div class="ob-dot active" id="obDot0"></div>
-    <div class="ob-dot" id="obDot1"></div>
-    <div class="ob-dot" id="obDot2"></div>
-    <div class="ob-dot" id="obDot3"></div>
-    <div class="ob-dot" id="obDot4"></div>
-  </div>
-  <!-- STEP 0: Welcome -->
-  <div class="ob-step-screen" id="obStep0">
-    <div class="ob-shield"></div>
-    <div class="ob-title">NOTHING SLIPS<br>THROUGH.</div>
-    <p class="ob-sub"><strong>GuardNest</strong> watches every warranty and expiry date so you never lose money on something you already paid to protect.</p>
-    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Get Started →</button>
-    <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">Skip setup</button>
-  </div>
-  <!-- STEP 1: Scan -->
-  <div class="ob-step-screen hidden" id="obStep1">
-    <div class="ob-step-icon-lg">📷</div>
-    <div class="ob-step-title">Scan Any Receipt</div>
-    <p class="ob-sub">Point your camera at any receipt — grocery, electronics, appliances. <strong>GuardNest reads it in seconds</strong> and tracks every item automatically.</p>
-    <div class="ob-example-card">
-      <div class="ob-example-row"><span>🍗 Chicken Breast</span><span style="color:#ff8c00">⏰ Use in 3 days</span></div>
-      <div class="ob-example-row"><span>📺 Samsung TV</span><span style="color:var(--blue)">🛡️ 1 year warranty</span></div>
-      <div class="ob-example-row"><span>🌹 Roses</span><span style="color:#ff8c00">⏰ Fresh for 7 days</span></div>
+  <div class="ob-shield"></div>
+  <div class="ob-title">WELCOME TO AEGIS</div>
+  <p class="ob-sub">
+    <strong>Nothing slips through.</strong><br>
+    Scan a receipt and Aegis tracks every warranty and expiry date — so nothing slips through the cracks.
+  </p>
+  <div class="ob-steps">
+    <div class="ob-step">
+      <div class="ob-step-icon">📷</div>
+      <div class="ob-step-label">Scan a receipt</div>
     </div>
-    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Next →</button>
-  </div>
-  <!-- STEP 2: Email Forwarding -->
-  <div class="ob-step-screen hidden" id="obStep2">
-    <div class="ob-step-icon-lg">📧</div>
-    <div class="ob-step-title">Auto-Capture Email Receipts</div>
-    <p class="ob-sub">Set up <strong>automatic forwarding</strong> and GuardNest captures every receipt the moment it hits your inbox. Set it once, works forever.</p>
-    <div class="ob-gmail-card">
-      <div class="ob-gmail-step"><div class="ob-gmail-num">1</div><div class="ob-gmail-text">Open <strong>Gmail</strong> → Settings → See all settings</div></div>
-      <div class="ob-gmail-step"><div class="ob-gmail-num">2</div><div class="ob-gmail-text">Click <strong>Filters and Blocked Addresses</strong> → Create a new filter</div></div>
-      <div class="ob-gmail-step"><div class="ob-gmail-num">3</div><div class="ob-gmail-text">In <strong>From</strong> field: <code>bestbuy.com OR target.com OR amazon.com OR walmart.com</code></div></div>
-      <div class="ob-gmail-step"><div class="ob-gmail-num">4</div><div class="ob-gmail-text">Select <strong>Forward to:</strong> and enter your GuardNest scan address below</div></div>
-      <div class="ob-scan-address">scan@guardnest.app</div>
-      <button class="ob-copy-btn" onclick="copyEmailAddress()" ontouchend="this.onclick()">📋 Copy Address</button>
+    <div class="ob-step">
+      <div class="ob-step-icon">🧠</div>
+      <div class="ob-step-label">Aegis learns everything</div>
     </div>
-    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Done — Next →</button>
-    <button class="ob-skip" onclick="obNext()" ontouchend="this.onclick()">Set up later</button>
-  </div>
-  <!-- STEP 3: Alerts -->
-  <div class="ob-step-screen hidden" id="obStep3">
-    <div class="ob-step-icon-lg">⚡</div>
-    <div class="ob-step-title">Get Alerted in Time</div>
-    <p class="ob-sub">When a warranty or expiry is within 7 days, GuardNest tells you — with <strong>exactly what to do next.</strong></p>
-    <div class="ob-alert-mock">
-      <div style="font-size:10px;color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">⚠️ Action Required</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text);margin-bottom:4px">Samsung 65" TV</div>
-      <div style="font-size:13px;color:var(--red);font-weight:600;margin-bottom:10px">Warranty expires in 7 days</div>
-      <div style="font-size:12px;color:var(--text2)">File a claim now before coverage runs out.</div>
+    <div class="ob-step">
+      <div class="ob-step-icon">⚡</div>
+      <div class="ob-step-label">Get alerted before it's too late</div>
     </div>
-    <p style="font-size:12px;color:var(--text3);margin:16px 0 24px">Plus a weekly email every Monday showing everything in your vault.</p>
-    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Next →</button>
   </div>
-  <!-- STEP 4: Ready -->
-  <div class="ob-step-screen hidden" id="obStep4">
-    <div class="ob-step-icon-lg">🛡️</div>
-    <div class="ob-step-title">You're Protected.</div>
-    <p class="ob-sub">Scan your first receipt and GuardNest starts watching. <strong>Nothing will slip through.</strong></p>
-    <button class="ob-btn" onclick="startOnboarding()" ontouchend="this.onclick()">📷 Scan My First Receipt</button>
-    <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">Go to dashboard</button>
-  </div>
+  <button class="ob-btn" onclick="startOnboarding()" ontouchend="this.onclick()">
+    📷 Scan My First Receipt
+  </button>
+  <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
+    Skip for now →
+  </button>
 </div>
 
 <!-- FIRST SAVE CELEBRATION -->
@@ -2123,7 +2151,6 @@ async function bootApp() {
   refreshVault();
   updateSidebar();
   checkOnboarding();
-  await autoArchiveExpired();
   // Check for near-miss alerts on app load
   if (allItems.length > 0) {
     const shownToday = localStorage.getItem('guardnest_nearmiss_' + new Date().toDateString());
@@ -2389,63 +2416,300 @@ function showPage(id) {
   if (id === 'receipts')  { refreshReceipts(); }
 }
 
-// ─── DASHBOARD ────────────────────────────────────────────────
+// ─── MISSION BOARD DASHBOARD ──────────────────────────────────
+function getStreak() {
+  const streak = parseInt(localStorage.getItem('guardnest_streak') || '0');
+  const lastScan = localStorage.getItem('guardnest_last_scan_week');
+  const thisWeek = getWeekKey();
+  return { streak, lastScan, thisWeek };
+}
+
+function getWeekKey() {
+  const d = new Date();
+  const startOfYear = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${week}`;
+}
+
+function updateStreak() {
+  const { streak, lastScan, thisWeek } = getStreak();
+  const lastWeek = getPrevWeekKey();
+  let newStreak = streak;
+
+  if (allItems.length > 0) {
+    if (lastScan === thisWeek) {
+      // Already scanned this week — streak maintained
+      newStreak = streak;
+    } else if (lastScan === lastWeek) {
+      // Scanned last week — increment
+      newStreak = streak + 1;
+      localStorage.setItem('guardnest_streak', newStreak);
+      localStorage.setItem('guardnest_last_scan_week', thisWeek);
+    } else if (!lastScan) {
+      // First scan ever
+      newStreak = 1;
+      localStorage.setItem('guardnest_streak', 1);
+      localStorage.setItem('guardnest_last_scan_week', thisWeek);
+    }
+    // else: missed a week — streak stays as is (they can see it)
+  }
+  return newStreak;
+}
+
+function getPrevWeekKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  const startOfYear = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${week}`;
+}
+
+function buildMissions() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekKey = getWeekKey();
+  const completedKey = `guardnest_missions_${weekKey}`;
+  const completed = JSON.parse(localStorage.getItem(completedKey) || '[]');
+
+  const missions = [];
+
+  // Mission 1: Scan a receipt this week
+  const scannedThisWeek = allItems.some(i => {
+    if (!i.purchase_date) return false;
+    const d = new Date(i.purchase_date);
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    return d >= startOfWeek;
+  });
+  missions.push({
+    id: 'scan_week',
+    icon: '📷',
+    title: 'Scan a receipt this week',
+    desc: 'Keep your vault up to date',
+    xp: 10,
+    done: scannedThisWeek || completed.includes('scan_week'),
+    action: () => showPage('scanner'),
+    actionLabel: 'Go Scan →',
+  });
+
+  // Mission 2: Use a perishable item (if any exist)
+  const perishables = allItems.filter(i => (i.days_until_spoil||0) > 0 && (i.status||'active') === 'active');
+  if (perishables.length > 0) {
+    const mostUrgent = perishables.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
+    missions.push({
+      id: 'use_perishable',
+      icon: '🥗',
+      title: `Use your ${mostUrgent.item_name || 'perishable'}`,
+      desc: `${mostUrgent.days_until_spoil} day${mostUrgent.days_until_spoil !== 1 ? 's' : ''} left — don't let it go to waste`,
+      xp: mostUrgent.days_until_spoil <= 1 ? 50 : 25,
+      done: completed.includes('use_perishable'),
+      action: () => showPage('vault'),
+      actionLabel: 'View Vault →',
+    });
+  }
+
+  // Mission 3: File a warranty claim (if any expiring within 30 days)
+  const expiringWarranty = allItems.filter(i => {
+    if (!(i.warranty_days||0) || !i.purchase_date || (i.status||'active') !== 'active') return false;
+    const exp = new Date(i.purchase_date);
+    exp.setDate(exp.getDate() + i.warranty_days);
+    const left = Math.round((exp - today) / 86400000);
+    return left >= 0 && left <= 30;
+  });
+  if (expiringWarranty.length > 0) {
+    const urgent = expiringWarranty.sort((a,b) => {
+      const expA = new Date(a.purchase_date); expA.setDate(expA.getDate() + a.warranty_days);
+      const expB = new Date(b.purchase_date); expB.setDate(expB.getDate() + b.warranty_days);
+      return expA - expB;
+    })[0];
+    const exp = new Date(urgent.purchase_date);
+    exp.setDate(exp.getDate() + urgent.warranty_days);
+    const daysLeft = Math.round((exp - today) / 86400000);
+    missions.push({
+      id: 'check_warranty',
+      icon: '🛡️',
+      title: `Check ${urgent.item_name || 'warranty'} coverage`,
+      desc: `Warranty expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — file a claim if needed`,
+      xp: 200,
+      done: completed.includes('check_warranty'),
+      action: () => {
+        const url = `https://www.google.com/search?q=${encodeURIComponent((urgent.merchant||'') + ' ' + (urgent.item_name||'') + ' warranty claim')}`;
+        window.open(url, '_blank');
+      },
+      actionLabel: 'Find Claim Info →',
+    });
+  }
+
+  // Mission 4: Clean week bonus (nothing expired this week)
+  const nothingExpired = allItems.every(i => {
+    if ((i.days_until_spoil||0) > 0 && i.days_until_spoil <= 0) return false;
+    return true;
+  });
+  missions.push({
+    id: 'clean_week',
+    icon: '✅',
+    title: 'Achieve a clean week',
+    desc: 'Nothing expires without your knowledge',
+    xp: 100,
+    done: nothingExpired && allItems.length > 0,
+    auto: true,
+  });
+
+  return { missions, completed, completedKey };
+}
+
+function completeMission(missionId, xp) {
+  const weekKey = getWeekKey();
+  const completedKey = `guardnest_missions_${weekKey}`;
+  const completed = JSON.parse(localStorage.getItem(completedKey) || '[]');
+  if (!completed.includes(missionId)) {
+    completed.push(missionId);
+    localStorage.setItem(completedKey, JSON.stringify(completed));
+    showToast(`✅ Mission complete! +${xp} XP`, 'success');
+    totalCredits += xp;
+    updateSidebar();
+    refreshDashboard();
+  }
+}
+
 function refreshDashboard() {
-  const total     = allItems.length;
-  const totalVal  = allItems.reduce((s, i) => s + (i.price || 0), 0);
-  const warranted = allItems.filter(i => (i.warranty_days || 0) > 0);
-  const protectedVal = warranted.reduce((s, i) => s + (i.price || 0), 0);
-
-  document.getElementById('dashTotal').textContent     = total;
-  document.getElementById('dashProtected').textContent = '$' + protectedVal.toFixed(0);
-  document.getElementById('statTotalScans').textContent= scanCount;
-  document.getElementById('statTotalItems').textContent= total;
-
   const alerts = buildAlerts();
-  const atRisk = alerts.reduce((s, a) => s + (a.price || 0), 0);
-  document.getElementById('dashRisk').textContent = '$' + atRisk.toFixed(0);
+  const total = allItems.length;
+  const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
+  const protectedVal = allItems.filter(i => (i.warranty_days||0) > 0).reduce((s,i) => s + (i.price||0), 0);
+  const atRisk = alerts.reduce((s,a) => s + (a.price||0), 0);
 
-  // Alerts panel
-  const alertsEl = document.getElementById('dashAlerts');
-  if (alerts.length === 0) {
-    alertsEl.innerHTML = `<div class="empty-state"><span class="empty-icon">✅</span><div class="empty-title">All Clear</div><div class="empty-sub">Nothing expiring soon</div></div>`;
-  } else {
-    alertsEl.innerHTML = alerts.slice(0,5).map(a => renderAlertItem(a)).join('');
+  // Update hidden fields (used by other functions)
+  const dashTotal = document.getElementById('dashTotal');
+  const dashProtected = document.getElementById('dashProtected');
+  const dashRisk = document.getElementById('dashRisk');
+  const dashCredits = document.getElementById('dashCredits');
+  if (dashTotal) dashTotal.textContent = total;
+  if (dashProtected) dashProtected.textContent = '$' + protectedVal.toFixed(0);
+  if (dashRisk) dashRisk.textContent = '$' + atRisk.toFixed(0);
+  if (dashCredits) dashCredits.textContent = totalCredits.toLocaleString();
+
+  // Update scanner stats
+  document.getElementById('statTotalScans').textContent = scanCount;
+  document.getElementById('statTotalItems').textContent = total;
+
+  // Update alert badge
+  if (alerts.length > 0) {
     document.getElementById('alertBadge').textContent = alerts.length;
     document.getElementById('alertBadge').classList.remove('hidden');
   }
 
-  // Top assets
-  const topEl = document.getElementById('dashTopAssets');
-  const sorted = [...allItems].sort((a,b) => (b.price||0)-(a.price||0)).slice(0,5);
-  if (sorted.length === 0) {
-    topEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🛡️</span><div class="empty-title">Vault Empty</div><div class="empty-sub">Scan a receipt to get started</div></div>`;
-  } else {
-    topEl.innerHTML = sorted.map(item => renderVaultRow(item)).join('');
+  // ── STREAK ────────────────────────────────────────────────
+  const streak = updateStreak();
+  const streakEl = document.getElementById('missionStreak');
+  if (streakEl) {
+    streakEl.className = `mission-streak${streak === 0 ? ' streak-zero' : ''}`;
+  }
+  const streakNum = document.getElementById('streakNum');
+  if (streakNum) streakNum.textContent = streak;
+
+  // ── LEVEL HEADER ──────────────────────────────────────────
+  const info = getLevelInfo(totalCredits);
+  const levelTitle = document.getElementById('missionLevelTitle');
+  const xpFill = document.getElementById('missionXpFill');
+  const xpLabel = document.getElementById('missionXpLabel');
+  if (levelTitle) levelTitle.textContent = `${info.title} · Level ${info.level}`;
+  if (xpFill) xpFill.style.width = (info.progress * 100).toFixed(1) + '%';
+  if (xpLabel) xpLabel.textContent = info.atMax
+    ? `${totalCredits.toLocaleString()} XP · Max Level 🏆`
+    : `${totalCredits.toLocaleString()} XP · ${info.toNext} to ${info.nextTitle}`;
+
+  // ── RIGHT NOW: Most urgent item ───────────────────────────
+  const urgentContent = document.getElementById('urgentContent');
+  if (urgentContent) {
+    if (alerts.length === 0) {
+      urgentContent.innerHTML = `<div class="empty-state" style="padding:28px">
+        <span class="empty-icon">✅</span>
+        <div class="empty-title">All Clear</div>
+        <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
+      </div>`;
+    } else {
+      const most = alerts[0];
+      const isSpoil = most.alertType === 'Perishable';
+      const [cls,,label] = urgencyClass(most.days);
+      const [emoji] = getItemEmoji(most.item_name, most.category);
+      const actionText = isSpoil
+        ? `Use tonight — ${most.days <= 0 ? 'already expired' : most.days + ' day' + (most.days !== 1 ? 's' : '') + ' left'}`
+        : `File a warranty claim — ${most.days <= 0 ? 'expired' : most.days + ' day' + (most.days !== 1 ? 's' : '') + ' remaining'}`;
+      const searchUrl = isSpoil
+        ? `https://www.google.com/search?q=recipe+with+${encodeURIComponent(most.item_name||'')}`
+        : `https://www.google.com/search?q=${encodeURIComponent((most.merchant||'') + ' ' + (most.item_name||'') + ' warranty claim')}`;
+
+      urgentContent.innerHTML = `<div class="urgent-item">
+        <div class="urgent-emoji">${emoji}</div>
+        <div class="urgent-info">
+          <div class="urgent-name">${most.item_name || 'Unknown'}</div>
+          <div class="urgent-detail">${most.merchant || '—'} · ${isSpoil ? '🥗 Perishable' : '🛡️ Warranty'}</div>
+          <div class="urgent-action">${actionText}</div>
+        </div>
+        <div class="urgent-badge">
+          <span class="alert-badge ${cls}">${label}</span>
+          ${alerts.length > 1 ? `<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px">+${alerts.length-1} more</div>` : ''}
+        </div>
+      </div>
+      <div style="padding:0 20px 14px">
+        <a href="${searchUrl}" target="_blank" style="display:block;text-align:center;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);border-radius:7px;padding:8px;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.06em;text-decoration:none;text-transform:uppercase">
+          ${isSpoil ? '🍳 Find a Recipe' : '🔍 Find Claim Info'}
+        </a>
+      </div>`;
+    }
   }
 
-  // Recent scans
-  const recentEl = document.getElementById('dashRecent');
-  if (allItems.length === 0) {
-    recentEl.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-sub">No scans yet</div></div>`;
-  } else {
+  // ── MISSIONS ──────────────────────────────────────────────
+  const { missions } = buildMissions();
+  const missionsEl = document.getElementById('missionsList');
+  const xpPool = document.getElementById('missionXpPool');
+  const remainingXp = missions.filter(m => !m.done).reduce((s,m) => s + m.xp, 0);
+  if (xpPool) xpPool.textContent = remainingXp > 0 ? `+${remainingXp} XP available` : '✅ All done';
+
+  if (missionsEl) {
+    if (missions.length === 0 || total === 0) {
+      missionsEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🎯</span><div class="empty-title">No Missions Yet</div><div class="empty-sub">Scan your first receipt to unlock missions</div></div>`;
+    } else {
+      missionsEl.innerHTML = missions.map(m => {
+        const doneClass = m.done ? ' done' : '';
+        const checkContent = m.done ? '✓' : '';
+        const checkClick = m.done || m.auto ? '' : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
+        return `<div class="mission-item${doneClass}">
+          <div class="mission-icon">${m.icon}</div>
+          <div class="mission-body">
+            <div class="mission-title">${m.title}</div>
+            <div class="mission-desc">${m.desc}</div>
+          </div>
+          <div class="mission-xp-badge">${m.done ? '✓' : '+' + m.xp + ' XP'}</div>
+          ${!m.auto ? `<button class="mission-check" ${checkClick}>${checkContent}</button>` : ''}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── SUMMARY BAR ───────────────────────────────────────────
+  const msTotal = document.getElementById('msTotal');
+  const msProtected = document.getElementById('msProtected');
+  const msAlerts = document.getElementById('msAlerts');
+  const msCredits = document.getElementById('msCredits');
+  if (msTotal) msTotal.textContent = total;
+  if (msProtected) msProtected.textContent = '$' + protectedVal.toFixed(0);
+  if (msAlerts) msAlerts.textContent = alerts.length;
+  if (msCredits) msCredits.textContent = totalCredits.toLocaleString();
+
+  // Update scanner recent
+  const scannerRecentEl = document.getElementById('scannerRecent');
+  if (scannerRecentEl && total > 0) {
     const sources = [...new Set(allItems.map(i => i.image_url).filter(Boolean))].slice(0,3);
-    recentEl.innerHTML = sources.map(src => {
+    scannerRecentEl.innerHTML = sources.map(src => {
       const count = allItems.filter(i => i.image_url === src).length;
-      const isPdf = src.toLowerCase().endsWith('.pdf');
       return `<div class="recent-item">
-        <div class="recent-thumb">${isPdf ? '📄' : '🧾'}</div>
-        <div class="recent-info">
-          <div class="recent-name">${src}</div>
-          <div class="recent-time">${count} item${count!==1?'s':''}</div>
-        </div>
+        <div class="recent-thumb">${src.toLowerCase().endsWith('.pdf') ? '📄' : '🧾'}</div>
+        <div class="recent-info"><div class="recent-name">${src}</div><div class="recent-time">${count} item${count!==1?'s':''}</div></div>
         <div class="recent-xp">+${count*10} XP</div>
       </div>`;
     }).join('');
   }
-
-  const scannerRecentEl = document.getElementById('scannerRecent');
-  if (scannerRecentEl) scannerRecentEl.innerHTML = recentEl.innerHTML || `<div class="empty-state" style="padding:16px"><div class="empty-sub">No scans yet</div></div>`;
 }
 
 // ─── ALERTS ───────────────────────────────────────────────────
@@ -2535,36 +2799,12 @@ function renderVaultRow(item) {
     statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
   }
 
-  // Action buttons
-  const isSpoilItem = (item.days_until_spoil || 0) > 0;
-  const isWarrantyItem = (item.warranty_days || 0) > 0 && item.purchase_date;
-  const itemStatus = item.status || 'active';
-  let actionBtn = '';
-  if (itemStatus === 'used') {
-    actionBtn = `<span style="font-size:11px;color:#44cc88;font-weight:600">✓ Used</span>`;
-  } else if (itemStatus === 'archived') {
-    actionBtn = `<span style="font-size:11px;color:var(--text3)">Expired</span>`;
-  } else if (isSpoilItem) {
-    const sn = (item.item_name||'').replace(/["\']/g,'');
-    actionBtn = `<button class="used-btn" onclick="markAsUsed('${item.id}','${sn}',${item.days_until_spoil||0},event)" ontouchend="this.onclick(event)">✓ Used it</button>`;
-  } else if (isWarrantyItem) {
-    const td = new Date(); td.setHours(0,0,0,0);
-    const ex = new Date(item.purchase_date);
-    ex.setDate(ex.getDate() + item.warranty_days);
-    const dl = Math.round((ex - td) / 86400000);
-    if (dl >= 0 && dl <= 30) {
-      const wn = (item.item_name||'').replace(/["\']/g,'');
-      actionBtn = `<button class="claim-btn" onclick="markClaimFiled('${item.id}','${wn}',event)" ontouchend="this.onclick(event)">🛡️ Claim</button>`;
-    }
-  }
-
-  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr auto 32px">
+  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
     <div>${emojiAvatar(item.item_name, item.category)}</div>
     <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
     <div class="vi-price">$${price.toFixed(2)}</div>
     <div>${statusBadge}</div>
-    <div>${actionBtn}</div>
-    <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/['"]/g,'')}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
+    <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
   </div>`;
 }
 
@@ -2576,10 +2816,9 @@ function filterVault(filter, btn) {
 }
 
 function refreshVault() {
-  const activeItems = allItems.filter(i => (i.status||'active') === 'active');
-  const total    = activeItems.length;
-  const totalVal = activeItems.reduce((s,i) => s + (i.price||0), 0);
-  const warranted= activeItems.filter(i => (i.warranty_days||0) > 0).length;
+  const total    = allItems.length;
+  const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
+  const warranted= allItems.filter(i => (i.warranty_days||0) > 0).length;
 
   document.getElementById('vTotal').textContent    = total;
   document.getElementById('vValue').textContent    = '$' + totalVal.toFixed(0);
@@ -3112,6 +3351,10 @@ async function saveItems(btnId, resultsId) {
     document.getElementById(resultsId)?.classList.add('hidden');
     document.getElementById('saveReminder')?.classList.add('hidden');
     document.getElementById('pdfSaveReminder')?.classList.add('hidden');
+    // Update streak
+    const wk = getWeekKey();
+    localStorage.setItem('guardnest_last_scan_week', wk);
+    if (!parseInt(localStorage.getItem('guardnest_streak')||'0')) localStorage.setItem('guardnest_streak','1');
     await loadItems();
     await loadReceipts();
     refreshDashboard();
@@ -3410,105 +3653,13 @@ function closeFirstWin() {
   showPage('vault');
 }
 
-// ─── VAULT FILTER ─────────────────────────────────────────────
-
-function setVaultFilter(filter, btn) {
-  currentVaultFilter = filter;
-  document.querySelectorAll('.vault-tab').forEach(t => t.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  refreshVault();
-}
-
-// ─── MARK AS USED ──────────────────────────────────────────────
-async function markAsUsed(itemId, itemName, daysLeft, event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
-  if (!currentUser) return;
-  const isClutch = daysLeft <= 1;
-  const xpEarned = isClutch ? 50 : 25;
-  const { error } = await supa.from('items')
-    .update({ status: 'used', used_at: new Date().toISOString() })
-    .eq('id', itemId).eq('user_id', currentUser.id);
-  if (error) { showToast('Error updating item', 'error'); return; }
-  await loadItems();
-  refreshVault(); refreshDashboard(); updateSidebar();
-  if (isClutch) {
-    document.getElementById('clutchSub').textContent =
-      `You used your ${itemName} with ${daysLeft <= 0 ? 'no' : daysLeft} day${daysLeft !== 1 ? 's' : ''} to spare.`;
-    document.getElementById('clutchXP').textContent = `+${xpEarned} XP`;
-    document.getElementById('clutchModal').classList.remove('hidden');
-  } else {
-    showToast(`✅ ${itemName} marked as used · +${xpEarned} XP`, 'success');
-  }
-}
-
-async function markClaimFiled(itemId, itemName, event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
-  if (!currentUser) return;
-  const { error } = await supa.from('items')
-    .update({ status: 'used', used_at: new Date().toISOString() })
-    .eq('id', itemId).eq('user_id', currentUser.id);
-  if (!error) {
-    await loadItems();
-    refreshVault(); refreshDashboard(); updateSidebar();
-    showToast(`🛡️ Claim filed on ${itemName} · +200 XP`, 'success');
-  }
-}
-
-function closeClutch() {
-  document.getElementById('clutchModal').classList.add('hidden');
-}
-
-// ─── AUTO-ARCHIVE EXPIRED ITEMS ────────────────────────────────
-async function autoArchiveExpired() {
-  if (!currentUser || !allItems.length) return;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const toArchive = allItems.filter(item => {
-    if ((item.status || 'active') !== 'active') return false;
-    if ((item.days_until_spoil || 0) > 0 && item.days_until_spoil < 0) return true;
-    if ((item.warranty_days || 0) > 0 && item.purchase_date) {
-      const exp = new Date(item.purchase_date);
-      exp.setDate(exp.getDate() + item.warranty_days);
-      return exp < today;
-    }
-    return false;
-  });
-  if (!toArchive.length) return;
-  await supa.from('items').update({ status: 'archived' })
-    .in('id', toArchive.map(i => i.id)).eq('user_id', currentUser.id);
-  await loadItems();
-}
-
 // ─── ONBOARDING ───────────────────────────────────────────────
-// ── MULTI-STEP ONBOARDING ──────────────────────────────────────
-let currentObStep = 0;
-const OB_TOTAL = 5;
-
 function checkOnboarding() {
-  const seen = localStorage.getItem('guardnest_onboarded');
-  if (!seen && allItems.length === 0) {
-    currentObStep = 0;
-    showObStep(0);
+  const hasSeenOnboarding = localStorage.getItem('aegis_onboarded');
+  const hasItems = allItems.length > 0;
+  if (!hasSeenOnboarding && !hasItems) {
     document.getElementById('onboardingScreen').classList.remove('hidden');
   }
-}
-
-function showObStep(step) {
-  for (let i = 0; i < OB_TOTAL; i++) {
-    const el = document.getElementById('obStep' + i);
-    const dot = document.getElementById('obDot' + i);
-    if (el) el.classList.add('hidden');
-    if (dot) dot.classList.remove('active');
-  }
-  const cur = document.getElementById('obStep' + step);
-  const curDot = document.getElementById('obDot' + step);
-  if (cur) cur.classList.remove('hidden');
-  if (curDot) curDot.classList.add('active');
-}
-
-function obNext() {
-  currentObStep++;
-  if (currentObStep >= OB_TOTAL) { dismissOnboarding(); return; }
-  showObStep(currentObStep);
 }
 
 function startOnboarding() {
@@ -3518,22 +3669,7 @@ function startOnboarding() {
 
 function dismissOnboarding() {
   document.getElementById('onboardingScreen').classList.add('hidden');
-  localStorage.setItem('guardnest_onboarded', 'true');
-}
-
-function copyEmailAddress() {
-  const addr = 'scan@guardnest.app';
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(addr).then(() => showToast('📋 Copied — paste into Gmail filter', 'success'));
-  } else {
-    const el = document.createElement('textarea');
-    el.value = addr;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    showToast('📋 Copied — paste into Gmail filter', 'success');
-  }
+  localStorage.setItem('aegis_onboarded', 'true');
 }
 
 function showCelebration(items) {
