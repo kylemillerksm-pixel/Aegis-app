@@ -642,6 +642,88 @@
   .streak-zero .streak-fire { filter: grayscale(1); opacity: .4; }
   .streak-zero .streak-num { color: var(--text3); }
 
+  /* ── SHOPPING PROMPT ─────────────────────────────── */
+  .shop-prompt-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.92);
+    z-index: 8700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .shop-prompt-modal.hidden { display: none; }
+  .shop-prompt-box {
+    background: var(--dark2);
+    border: 1px solid rgba(245,200,66,.25);
+    border-radius: 16px; padding: 24px;
+    max-width: 420px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .sp-header {
+    text-align: center; margin-bottom: 20px;
+  }
+  .sp-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+  .sp-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: .08em;
+    color: var(--text); margin-bottom: 6px;
+  }
+  .sp-sub { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .sp-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .sp-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 9px; cursor: pointer;
+    transition: all .15s; touch-action: manipulation;
+    user-select: none;
+  }
+  .sp-item.checked {
+    background: rgba(68,204,136,.08);
+    border-color: rgba(68,204,136,.3);
+  }
+  .sp-item-emoji { font-size: 22px; flex-shrink: 0; }
+  .sp-item-info { flex: 1; }
+  .sp-item-name {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    margin-bottom: 2px;
+  }
+  .sp-item-detail { font-size: 11px; color: var(--text3); }
+  .sp-item-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex-shrink: 0; transition: all .15s;
+  }
+  .sp-item.checked .sp-item-check {
+    border-color: var(--green);
+    background: rgba(68,204,136,.2);
+    color: var(--green);
+  }
+  .sp-footer { display: flex; gap: 10px; }
+  .sp-btn-save {
+    flex: 2; padding: 12px;
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    border: none; border-radius: 8px;
+    cursor: pointer; touch-action: manipulation;
+  }
+  .sp-btn-skip {
+    flex: 1; padding: 12px;
+    background: transparent; border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text3);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; touch-action: manipulation;
+  }
+  .sp-learned-time {
+    text-align: center; font-size: 11px;
+    color: var(--text3); margin-top: 10px;
+    letter-spacing: .04em;
+  }
+
   /* ── SHAREABLE NEAR MISS CARD ───────────────────────── */
   .share-card-modal {
     position: fixed; inset: 0;
@@ -1900,6 +1982,27 @@
   </div>
 </div>
 
+<!-- SHOPPING PROMPT MODAL -->
+<div class="shop-prompt-modal hidden" id="shopPromptModal">
+  <div class="shop-prompt-box">
+    <div class="sp-header">
+      <span class="sp-icon">🛒</span>
+      <div class="sp-title">Did you go shopping?</div>
+      <p class="sp-sub" id="spSubText">Based on your history, you usually pick these up. Tap what you bought and we'll track it automatically.</p>
+    </div>
+    <div class="sp-items" id="spItemsList"></div>
+    <div class="sp-footer">
+      <button class="sp-btn-save" onclick="saveShoppingPrompt()" ontouchend="this.onclick()">
+        ✅ Add to Vault
+      </button>
+      <button class="sp-btn-skip" onclick="skipShoppingPrompt()" ontouchend="this.onclick()">
+        Not yet
+      </button>
+    </div>
+    <div class="sp-learned-time" id="spLearnedTime"></div>
+  </div>
+</div>
+
 <!-- SHAREABLE NEAR MISS CARD -->
 <div class="share-card-modal hidden" id="shareCardModal">
   <div class="share-card-wrap">
@@ -2160,6 +2263,11 @@ async function bootApp() {
         localStorage.setItem('guardnest_nearmiss_' + new Date().toDateString(), 'true');
       }, 1500);
     }
+  }
+  // Learn patterns and show shopping prompt if due
+  if (allItems.length >= 5) {
+    learnShoppingPatterns();
+    setTimeout(() => showShoppingPrompt(), 3000);
   }
 }
 
@@ -3467,6 +3575,201 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ─── SHOPPING PATTERN ENGINE ──────────────────────────────────
+let shoppingPromptItems = [];
+
+function learnShoppingPatterns() {
+  if (allItems.length < 5) return null;
+
+  // Learn scan timing — what day of week user usually scans
+  const scanDays = allItems
+    .filter(i => i.purchase_date)
+    .map(i => new Date(i.purchase_date).getDay());
+
+  const dayCounts = [0,0,0,0,0,0,0];
+  scanDays.forEach(d => dayCounts[d]++);
+  const peakDay = dayCounts.indexOf(Math.max(...dayCounts));
+  localStorage.setItem('guardnest_peak_scan_day', peakDay);
+
+  // Find items that appear 2+ times
+  const itemFrequency = {};
+  allItems.forEach(item => {
+    const key = (item.item_name || '').toLowerCase().trim();
+    if (!key || key === 'unknown') return;
+    if (!itemFrequency[key]) {
+      itemFrequency[key] = {
+        name: item.item_name,
+        category: item.category,
+        count: 0,
+        totalPrice: 0,
+        days_until_spoil: item.days_until_spoil || 0,
+        warranty_days: item.warranty_days || 0,
+        lastSeen: item.purchase_date,
+        merchant: item.merchant,
+      };
+    }
+    itemFrequency[key].count++;
+    itemFrequency[key].totalPrice += parseFloat(item.price || 0);
+    if (item.purchase_date > (itemFrequency[key].lastSeen || '')) {
+      itemFrequency[key].lastSeen = item.purchase_date;
+    }
+  });
+
+  // Return items bought 2+ times, sorted by frequency
+  return Object.values(itemFrequency)
+    .filter(i => i.count >= 2)
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 8);
+}
+
+function shouldShowShoppingPrompt() {
+  if (allItems.length < 5) return false;
+
+  const lastPrompt = localStorage.getItem('guardnest_last_prompt');
+  const today = new Date();
+  const todayStr = today.toDateString();
+
+  // Don't show more than once per day
+  if (lastPrompt === todayStr) return false;
+
+  // Check if today matches their learned shopping day
+  const peakDay = parseInt(localStorage.getItem('guardnest_peak_scan_day') || '-1');
+  const todayDay = today.getDay();
+
+  // Show on their peak day OR if it's been 7+ days since last prompt
+  const lastPromptDate = localStorage.getItem('guardnest_last_prompt_date');
+  const daysSincePrompt = lastPromptDate
+    ? Math.round((today - new Date(lastPromptDate)) / 86400000)
+    : 999;
+
+  return todayDay === peakDay || daysSincePrompt >= 7;
+}
+
+function showShoppingPrompt() {
+  if (!shouldShowShoppingPrompt()) return;
+
+  const patterns = learnShoppingPatterns();
+  if (!patterns || patterns.length === 0) return;
+
+  shoppingPromptItems = patterns;
+
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const peakDay = parseInt(localStorage.getItem('guardnest_peak_scan_day') || '0');
+  const learnedEl = document.getElementById('spLearnedTime');
+  if (learnedEl) learnedEl.textContent = `GuardNest learned you usually shop on ${dayNames[peakDay]}s`;
+
+  const subEl = document.getElementById('spSubText');
+  if (subEl) subEl.textContent = `Based on your history, you usually pick these up. Tap what you bought and we'll track it automatically.`;
+
+  // Render items as checkboxes
+  const listEl = document.getElementById('spItemsList');
+  if (listEl) {
+    listEl.innerHTML = patterns.map((item, i) => {
+      const [emoji] = getItemEmoji(item.name, item.category);
+      const avgPrice = (item.totalPrice / item.count).toFixed(2);
+      const spoilText = item.days_until_spoil > 0
+        ? `Tracked for ${item.days_until_spoil} days`
+        : item.warranty_days > 0
+        ? `${item.warranty_days}d warranty`
+        : 'Item tracked';
+      return `<div class="sp-item" id="spItem${i}" onclick="toggleSpItem(${i})" ontouchend="this.onclick()">
+        <div class="sp-item-emoji">${emoji}</div>
+        <div class="sp-item-info">
+          <div class="sp-item-name">${item.name}</div>
+          <div class="sp-item-detail">Bought ${item.count}x · ~$${avgPrice} · ${spoilText}</div>
+        </div>
+        <div class="sp-item-check" id="spCheck${i}"></div>
+      </div>`;
+    }).join('');
+  }
+
+  // Mark as shown today
+  localStorage.setItem('guardnest_last_prompt', new Date().toDateString());
+  localStorage.setItem('guardnest_last_prompt_date', new Date().toISOString());
+
+  setTimeout(() => {
+    document.getElementById('shopPromptModal').classList.remove('hidden');
+  }, 800);
+}
+
+function toggleSpItem(i) {
+  const item = document.getElementById(`spItem${i}`);
+  const check = document.getElementById(`spCheck${i}`);
+  if (!item || !check) return;
+  const isChecked = item.classList.contains('checked');
+  item.classList.toggle('checked', !isChecked);
+  check.textContent = isChecked ? '' : '✓';
+}
+
+async function saveShoppingPrompt() {
+  if (!currentUser) return;
+
+  const checked = shoppingPromptItems.filter((_, i) => {
+    const el = document.getElementById(`spItem${i}`);
+    return el && el.classList.contains('checked');
+  });
+
+  if (checked.length === 0) {
+    showToast('Tap at least one item you bought', 'info');
+    return;
+  }
+
+  document.getElementById('shopPromptModal').classList.add('hidden');
+
+  const today = new Date().toISOString().split('T')[0];
+  const rows = checked.map(item => ({
+    user_id:          currentUser.id,
+    item_name:        item.name,
+    merchant:         item.merchant || 'Quick Add',
+    price:            parseFloat((item.totalPrice / item.count).toFixed(2)),
+    purchase_date:    today,
+    category:         item.category || 'General',
+    rarity:           'COMMON',
+    warranty_days:    parseInt(item.warranty_days || 0),
+    days_until_spoil: parseInt(item.days_until_spoil || 0),
+    image_url:        'quick-add',
+    status:           'active',
+  }));
+
+  // Create receipt session
+  const { data: receiptData } = await supa.from('receipts').insert({
+    user_id:     currentUser.id,
+    merchant:    'Quick Add',
+    scan_date:   today,
+    item_count:  rows.length,
+    total_value: rows.reduce((s,r) => s + r.price, 0).toFixed(2),
+    source_type: 'quick-add',
+  }).select().single();
+
+  if (receiptData?.id) {
+    rows.forEach(r => r.receipt_id = receiptData.id);
+  }
+
+  const { error } = await supa.from('items').insert(rows);
+
+  if (error) {
+    showToast('Save failed: ' + error.message, 'error');
+  } else {
+    showToast(`✅ ${rows.length} item${rows.length !== 1 ? 's' : ''} added to vault · +${rows.length * 10} XP`, 'success');
+    // Update streak
+    const wk = getWeekKey();
+    localStorage.setItem('guardnest_last_scan_week', wk);
+    if (!parseInt(localStorage.getItem('guardnest_streak') || '0')) {
+      localStorage.setItem('guardnest_streak', '1');
+    }
+    await loadItems();
+    refreshDashboard();
+    refreshAlerts();
+    refreshVault();
+    updateSidebar();
+  }
+}
+
+function skipShoppingPrompt() {
+  document.getElementById('shopPromptModal').classList.add('hidden');
+  showToast("No problem — we'll check in again next week", "info");
+}
 
 // ─── SHAREABLE NEAR MISS CARD ─────────────────────────────────
 let currentShareItem = null;
