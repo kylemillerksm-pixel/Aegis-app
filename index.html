@@ -2870,7 +2870,7 @@ function renderManifest(items, gridId, titleId) {
         ${!wText && !sText ? '<div class="mc-info-row" style="color:var(--text3)">No expiry for this item</div>' : ''}
       </div>
       <div class="mc-footer">
-        <button class="mc-thumbsdown" onclick="flagBadScan(this,'${(item.item_name||'').replace(/'/g,\"\\'\")}',event)" ontouchend="this.onclick(event)" title="This scan looks wrong">
+        <button class="mc-thumbsdown" onclick="flagBadScan(this,this.dataset.name,event)" data-name="${(item.item_name||'Unknown').replace(/['"]/g,'')}" ontouchend="this.onclick(event)" title="This scan looks wrong">
           👎 Wrong item?
         </button>
         <span class="mc-badge" style="background:rgba(245,200,66,.1);color:var(--gold)">+${xp} XP</span>
