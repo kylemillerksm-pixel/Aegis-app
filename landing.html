@@ -2,11 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<title>AEGIS — Your Purchases, Protected</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuardNest — Nothing Slips Through</title>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-87DCQ5CB9M"></script>
 <script>
@@ -16,4151 +13,580 @@
   gtag('config', 'G-87DCQ5CB9M');
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --black:    #080A0F;
-    --dark:     #0D1018;
-    --dark2:    #131720;
-    --surface:  #1A2030;
-    --surface2: #202840;
-    --border:   rgba(255,255,255,.07);
-    --border2:  rgba(255,255,255,.14);
-    --gold:     #F5C842;
-    --gold2:    #E8A800;
-    --gold3:    #FFF0A0;
-    --red:      #FF4444;
-    --orange:   #FF8C00;
-    --yellow:   #FFD700;
-    --blue:     #4488FF;
-    --green:    #44CC88;
-    --purple:   #8866FF;
-    --text:     #F0EEF8;
-    --text2:    #8890A8;
-    --text3:    #404860;
-  }
-
-  html, body {
-    background: var(--black);
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    font-size: 15px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg, transparent, transparent 2px,
-      rgba(0,0,0,.06) 2px, rgba(0,0,0,.06) 4px
-    );
-    pointer-events: none !important;
-    z-index: 9999;
-    touch-action: none;
-  }
-
-  /* ─── UTILS ─────────────────────────── */
-  .hidden { display: none !important; pointer-events: none !important; visibility: hidden !important; }
-
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 11px 22px; border-radius: 8px; border: none; cursor: pointer;
-    font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
-    font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-    transition: all .15s;
-  }
-  .btn-gold  { background: var(--gold);  color: var(--black); }
-  .btn-gold:hover  { background: var(--gold3); transform: translateY(-1px); }
-  .btn-purple{ background: var(--purple); color: #fff; }
-  .btn-purple:hover{ opacity: .88; transform: translateY(-1px); }
-  .btn-outline{ background: transparent; color: var(--gold); border: 1px solid rgba(245,200,66,.35); }
-  .btn-outline:hover{ background: rgba(245,200,66,.08); }
-  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
-  .btn-ghost:hover { background: var(--surface); color: var(--text); }
-  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
-  .btn-full { width: 100%; }
-
-  .input {
-    width: 100%; padding: 11px 14px;
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 8px; color: var(--text);
-    font-family: 'Barlow', sans-serif; font-size: 16px;
-    outline: none; transition: border-color .15s;
-  }
-  .input:focus { border-color: var(--gold); }
-  .input::placeholder { color: var(--text3); }
-
-  .label {
-    display: block; font-size: 11px; font-weight: 600;
-    letter-spacing: .1em; text-transform: uppercase;
-    color: var(--text3); margin-bottom: 6px;
-  }
-
-  .field { margin-bottom: 16px; }
-
-  .alert-msg {
-    padding: 10px 14px; border-radius: 8px;
-    font-size: 13px; margin-bottom: 14px; display: none;
-  }
-  .alert-msg.error   { background: rgba(255,68,68,.12);  color: var(--red);   border: 1px solid rgba(255,68,68,.25);  display: block; }
-  .alert-msg.success { background: rgba(68,204,136,.12); color: var(--green); border: 1px solid rgba(68,204,136,.25); display: block; }
-  .alert-msg.info    { background: rgba(68,136,255,.12); color: var(--blue);  border: 1px solid rgba(68,136,255,.25); display: block; }
-
-  .panel {
-    background: var(--dark2); border: 1px solid var(--border);
-    border-radius: 14px; overflow: hidden;
-  }
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-  }
-  .panel-title {
-    font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
-    font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text);
-  }
-  .panel-action { font-size: 11px; color: var(--gold); cursor: pointer; letter-spacing: .05em; text-transform: uppercase; }
-  .panel-body { padding: 16px 20px; }
-
-  .divider { height: 1px; background: var(--border); margin: 16px 0; }
-
-  /* ─── AUTH SCREEN ────────────────────── */
-  #screen-auth {
-    min-height: 100vh; display: flex;
-    align-items: center; justify-content: center;
-    padding: 24px;
-    background: radial-gradient(ellipse at 20% 50%, rgba(245,200,66,.05) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(136,102,255,.05) 0%, transparent 60%);
-  }
-
-  .auth-box {
-    width: 100%; max-width: 420px;
-    background: var(--dark); border: 1px solid var(--border2);
-    border-radius: 20px; overflow: hidden;
-    box-shadow: 0 40px 100px rgba(0,0,0,.6);
-  }
-
-  .auth-header {
-    padding: 32px 32px 24px; text-align: center;
-    background: linear-gradient(180deg, rgba(245,200,66,.08) 0%, transparent 100%);
-    border-bottom: 1px solid var(--border);
-  }
-  .auth-shield {
-    width: 52px; height: 52px;
-    background: var(--gold);
-    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
-    margin: 0 auto 14px;
-    display: flex; align-items: center; justify-content: center;
-    animation: shieldPulse 3s ease-in-out infinite;
-  }
-  @keyframes shieldPulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(245,200,66,.4); }
-    50%      { box-shadow: 0 0 0 12px rgba(245,200,66,.0); }
-  }
-  .auth-logo {
-    font-family: 'Bebas Neue', sans-serif; font-size: 36px;
-    letter-spacing: .2em; color: var(--gold); line-height: 1;
-  }
-  .auth-tagline { font-size: 12px; color: var(--text3); letter-spacing: .1em; margin-top: 4px; }
-
-  .auth-tabs {
-    display: flex; background: var(--dark2); border-bottom: 1px solid var(--border);
-  }
-  .auth-tab {
-    flex: 1; padding: 14px; text-align: center;
-    font-family: 'Barlow Condensed', sans-serif; font-size: 13px;
-    font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent;
-    transition: all .15s; background: transparent; border: none;
-    border-bottom: 2px solid transparent;
-  }
-  .auth-tab.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(245,200,66,.04); }
-
-  .auth-body { padding: 28px 32px; }
-
-  .divider-text {
-    display: flex; align-items: center; gap: 12px;
-    font-size: 11px; color: var(--text3); letter-spacing: .1em;
-    text-transform: uppercase; margin: 16px 0;
-  }
-  .divider-text::before, .divider-text::after {
-    content: ''; flex: 1; height: 1px; background: var(--border);
-  }
-
-  .btn-google {
-    background: var(--surface); color: var(--text);
-    border: 1px solid var(--border2); width: 100%;
-    padding: 11px; border-radius: 8px; cursor: pointer;
-    font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 500;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    transition: all .15s;
-  }
-  .btn-google:hover { background: var(--surface2); border-color: rgba(255,255,255,.2); }
-  .google-icon { width: 18px; height: 18px; }
-
-  /* ─── APP LAYOUT ─────────────────────── */
-  #screen-app { display: none; min-height: 100vh; height: 100dvh; }
-  #screen-app.visible { display: flex; flex-direction: row; width: 100%; overflow: hidden; }
-  @media (max-width: 768px) {
-    #screen-app.visible { flex-direction: column; }
-  }
-
-  /* SIDEBAR */
-  .sidebar {
-    width: 260px; min-height: 100vh;
-    background: var(--dark); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; flex-shrink: 0;
-    position: sticky; top: 0; height: 100vh; overflow-y: auto;
-  }
-  .sidebar::-webkit-scrollbar { width: 0; }
-
-  .sidebar-logo {
-    padding: 24px 20px 18px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 10px;
-  }
-  .logo-shield {
-    width: 28px; height: 28px; background: var(--gold); flex-shrink: 0;
-    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
-  }
-  .logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: .15em; color: var(--gold); }
-  .logo-tag  { font-size: 9px; color: var(--text3); letter-spacing: .12em; text-transform: uppercase; }
-
-  /* OPERATOR CARD */
-  .op-card {
-    margin: 14px; background: var(--surface);
-    border: 1px solid var(--border2); border-radius: 12px;
-    padding: 14px; position: relative; overflow: hidden;
-  }
-  .op-card::after {
-    content: ''; position: absolute; top: 0; right: 0;
-    width: 80px; height: 80px;
-    background: radial-gradient(circle at top right, rgba(245,200,66,.1), transparent);
-    pointer-events: none;
-  }
-  .op-rank {
-    font-size: 9px; font-weight: 600; letter-spacing: .15em;
-    text-transform: uppercase; color: var(--gold2); margin-bottom: 2px;
-  }
-  .op-level {
-    font-family: 'Bebas Neue', sans-serif; font-size: 44px;
-    line-height: 1; color: var(--text); letter-spacing: .05em;
-  }
-  .op-level span { font-size: 16px; color: var(--text3); }
-  .op-title {
-    font-family: 'Barlow Condensed', sans-serif; font-size: 16px;
-    font-weight: 700; color: var(--gold); letter-spacing: .1em;
-    text-transform: uppercase; margin-bottom: 10px;
-  }
-  .xp-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); margin-bottom: 4px; }
-  .xp-track { height: 4px; background: var(--dark2); border-radius: 2px; overflow: hidden; margin-bottom: 3px; }
-  .xp-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold2), var(--gold3)); transition: width .6s ease; }
-  .xp-next  { font-size: 9px; color: var(--text3); }
-  .credits-row {
-    display: flex; align-items: center; gap: 8px;
-    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
-  }
-  .credits-icon {
-    width: 26px; height: 26px; background: rgba(245,200,66,.12);
-    border-radius: 7px; display: flex; align-items: center; justify-content: center;
-    font-size: 13px; flex-shrink: 0;
-  }
-  .credits-num  { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--gold); line-height: 1; }
-  .credits-label{ font-size: 9px; color: var(--text3); letter-spacing: .06em; }
-
-  /* NAV */
-  .nav { padding: 6px 0; flex: 1; }
-  .nav-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 20px; cursor: pointer; transition: all .12s;
-    border-left: 2px solid transparent; color: var(--text2);
-    font-size: 12px; font-weight: 500; letter-spacing: .06em;
-    text-transform: uppercase; text-decoration: none;
-  }
-  .nav-item:hover { color: var(--text); background: rgba(255,255,255,.03); }
-  .nav-item.active { color: var(--gold); background: rgba(245,200,66,.05); border-left-color: var(--gold); }
-  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .6; }
-  .nav-item.active .nav-icon { opacity: 1; }
-  .nav-badge {
-    margin-left: auto; background: var(--red); color: #fff;
-    font-size: 9px; font-weight: 700; padding: 2px 5px;
-    border-radius: 8px; min-width: 16px; text-align: center;
-  }
-  .nav-new {
-    margin-left: auto; font-size: 9px; font-weight: 700;
-    letter-spacing: .1em; background: rgba(136,102,255,.2);
-    color: var(--purple); border: 1px solid rgba(136,102,255,.3);
-    padding: 1px 6px; border-radius: 8px;
-  }
-
-  /* BADGES */
-  .badges-section { padding: 12px 14px; border-top: 1px solid var(--border); }
-  .badges-heading { font-size: 9px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
-  .badges-grid { display: flex; flex-wrap: wrap; gap: 5px; }
-  .badge-chip {
-    width: 30px; height: 30px; border-radius: 7px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px; cursor: default; transition: transform .15s; position: relative;
-  }
-  .badge-chip:hover { transform: scale(1.18); }
-  .badge-chip.earned { background: rgba(245,200,66,.12); border: 1px solid rgba(245,200,66,.25); }
-  .badge-chip.locked { background: var(--dark2); border: 1px solid var(--border); filter: grayscale(1) brightness(.4); }
-
-  /* SIGNOUT */
-  .sidebar-footer { padding: 12px 14px; border-top: 1px solid var(--border); }
-
-  /* MAIN */
-  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-
-  .topbar {
-    height: 56px; background: var(--dark); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 28px; flex-shrink: 0; position: sticky; top: 0; z-index: 100;
-  }
-  .topbar-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .15em; }
-  .topbar-right { display: flex; align-items: center; gap: 12px; }
-  .status-dot {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 11px; color: var(--text3);
-  }
-  .dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    animation: blink 2.5s ease-in-out infinite;
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
-
-  .content { flex: 1; padding: 24px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
-  /* PAGE SYSTEM */
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* STAT CARDS */
-  .stat-row { display: grid; gap: 14px; margin-bottom: 20px; }
-  .stat-row.cols4 { grid-template-columns: repeat(4,1fr); }
-  .stat-row.cols3 { grid-template-columns: repeat(3,1fr); }
-  .stat-row.cols5 { grid-template-columns: repeat(5,1fr); }
-
-  .stat-card {
-    background: var(--dark2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px 18px;
-    position: relative; overflow: hidden; transition: border-color .2s, transform .15s;
-  }
-  .stat-card:hover { border-color: var(--border2); transform: translateY(-1px); }
-  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-  .stat-card.c-gold::before   { background: var(--gold); }
-  .stat-card.c-red::before    { background: var(--red); }
-  .stat-card.c-green::before  { background: var(--green); }
-  .stat-card.c-blue::before   { background: var(--blue); }
-  .stat-card.c-orange::before { background: var(--orange); }
-  .stat-card.c-purple::before { background: var(--purple); }
-  .sc-label { font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
-  .sc-num   { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: .05em; line-height: 1; margin-bottom: 2px; }
-  .sc-sub   { font-size: 10px; color: var(--text3); }
-  .c-gold .sc-num   { color: var(--gold); }
-  .c-red .sc-num    { color: var(--red); }
-  .c-green .sc-num  { color: var(--green); }
-  .c-blue .sc-num   { color: var(--blue); }
-  .c-orange .sc-num { color: var(--orange); }
-  .c-purple .sc-num { color: var(--purple); }
-
-  /* GRIDS */
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
-  .grid3 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 18px; }
-
-  /* ALERT ITEMS */
-  .alert-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: all .12s;
-  }
-  .alert-item:last-child { border-bottom: none; }
-  .alert-item:hover { background: rgba(255,255,255,.02); margin: 0 -20px; padding: 9px 20px; }
-  .alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .alert-info { flex: 1; min-width: 0; }
-  .alert-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .alert-meta { font-size: 10px; color: var(--text3); margin-top: 1px; }
-  .alert-badge {
-    font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
-    letter-spacing: .08em; padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
-  }
-  .ab-red    { background: rgba(255,68,68,.15);  color: var(--red);    border: 1px solid rgba(255,68,68,.3);   }
-  .ab-orange { background: rgba(255,140,0,.15);  color: var(--orange); border: 1px solid rgba(255,140,0,.3);   }
-  .ab-yellow { background: rgba(255,215,0,.12);  color: var(--yellow); border: 1px solid rgba(255,215,0,.25);  }
-  .ab-blue   { background: rgba(68,136,255,.12); color: var(--blue);   border: 1px solid rgba(68,136,255,.25); }
-  .ab-green  { background: rgba(68,204,136,.12); color: var(--green);  border: 1px solid rgba(68,204,136,.25); }
-
-  /* VAULT ITEMS */
-  .vault-header, .vault-row {
-    display: grid; grid-template-columns: 2.5fr 1fr 1.2fr 1.2fr 1.2fr;
-    align-items: center; padding: 9px 20px; gap: 8px;
-  }
-  .vault-header { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); }
-  .vault-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
-  .vault-row:last-child { border-bottom: none; }
-  .vault-row:hover { background: rgba(255,255,255,.02); }
-  .vi-name     { font-size: 13px; font-weight: 500; color: var(--text); }
-  .vi-merchant { font-size: 10px; color: var(--text3); margin-top: 1px; }
-  .vi-price    { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
-  .rarity-chip { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .1em; padding: 2px 7px; border-radius: 4px; display: inline-block; }
-  .r-exotic    { color: #F5C842; background: rgba(245,200,66,.12); }
-  .r-legendary { color: #CC88FF; background: rgba(204,136,255,.12); }
-  .r-rare      { color: #4488FF; background: rgba(68,136,255,.12); }
-  .r-common    { color: var(--text3); background: rgba(255,255,255,.05); }
-
-  /* SCAN ZONE */
-  .scan-zone {
-    border: 1.5px dashed var(--border2); border-radius: 12px;
-    padding: 36px 24px; text-align: center; cursor: pointer;
-    transition: all .2s; background: rgba(245,200,66,.02);
-    position: relative; overflow: visible;
-  }
-  .scan-zone:hover { border-color: var(--gold); background: rgba(245,200,66,.04); }
-  .scan-zone.scanning { border-color: var(--gold); border-style: solid; }
-  .scan-zone::before {
-    content: ''; position: absolute; top: -100%; left: 0; right: 0;
-    height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    animation: scanLine 3s linear infinite;
-  }
-  @keyframes scanLine { to { top: 110%; } }
-  .scan-icon  { font-size: 36px; margin-bottom: 10px; display: block; }
-  .scan-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .15em; margin-bottom: 5px; }
-  .scan-sub   { font-size: 11px; color: var(--text3); line-height: 1.6; }
-  .scan-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; }
-  .scan-zone label { position: absolute; inset: 0; cursor: pointer; z-index: 2; }
-
-  /* MANIFEST GRID */
-  .manifest-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 16px; }
-  .manifest-card {
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 10px; padding: 14px; animation: fadeUp .3s ease both;
-  }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-  .mc-rarity { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; }
-  .mc-name   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .mc-meta   { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
-  .mc-badge  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; margin-top: 5px; }
-  .mc-top-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-  .mc-sub     { font-size:11px; color:var(--text3); margin-bottom:10px; }
-  .mc-info-list { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
-  .mc-info-row  { font-size:12px; color:var(--text2); line-height:1.5; }
-  .mc-footer  { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid var(--border); }
-  .mc-thumbsdown {
-    background: transparent; border: none;
-    font-size: 11px; color: var(--text3);
-    cursor: pointer; padding: 3px 6px;
-    border-radius: 5px; transition: all .15s;
-    touch-action: manipulation;
-    font-family: 'Barlow', sans-serif;
-  }
-  .mc-thumbsdown:hover { color: var(--red); background: rgba(255,68,68,.08); }
-  .mc-thumbsdown.flagged { color: var(--red); }
-  .mc-prot    { font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 7px; border-radius:5px; }
-  .mc-prot-warranty { background:rgba(68,136,255,.12); color:var(--blue); border:1px solid rgba(68,136,255,.25); }
-  .mc-prot-spoil    { background:rgba(255,140,0,.12);  color:#ff8c00;    border:1px solid rgba(255,140,0,.25); }
-  .mc-prot-basic    { background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border); }
-
-  /* RECENT */
-  .recent-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
-  .recent-item:last-child { border-bottom: none; }
-  .recent-thumb { width: 32px; height: 32px; background: var(--surface); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .recent-info  { flex: 1; }
-  .recent-name  { font-size: 12px; font-weight: 500; color: var(--text); }
-  .recent-time  { font-size: 10px; color: var(--text3); }
-  .recent-xp    { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; color: var(--gold); }
-
-  /* TABS */
-  .tabs { display: flex; gap: 2px; background: var(--dark); border-radius: 8px; padding: 3px; margin-bottom: 16px; width: fit-content; }
-  .tab  { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; color: var(--text3); transition: all .12s; background: transparent; border: none; }
-  .tab.active { background: var(--surface); color: var(--text); border: 1px solid var(--border2); }
-
-  /* EMPTY STATE */
-  .empty-state { text-align: center; padding: 48px 24px; color: var(--text3); }
-  .empty-icon  { font-size: 40px; margin-bottom: 12px; display: block; opacity: .4; }
-  .empty-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; letter-spacing: .1em; color: var(--text2); margin-bottom: 6px; }
-  .empty-sub   { font-size: 12px; line-height: 1.6; }
-
-  /* TOAST */
-  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; }
-  .toast {
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 10px; padding: 12px 16px; font-size: 13px;
-    color: var(--text); max-width: 300px; animation: toastIn .3s ease;
-    display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.4);
-  }
-  @keyframes toastIn { from { opacity:0; transform:translateX(20px); } }
-  .toast.success { border-left: 3px solid var(--green); }
-  .toast.error   { border-left: 3px solid var(--red); }
-  .toast.info    { border-left: 3px solid var(--gold); }
-
-  /* SPINNER */
-  .spinner {
-    width: 20px; height: 20px; border: 2px solid var(--border2);
-    border-top-color: var(--gold); border-radius: 50%;
-    animation: spin .7s linear infinite; flex-shrink: 0;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* PDF PAGE */
-  .pdf-zone {
-    border: 1.5px dashed rgba(136,102,255,.4); border-radius: 12px;
-    padding: 36px 24px; text-align: center; cursor: pointer;
-    background: rgba(136,102,255,.03); transition: all .2s; position: relative; overflow: visible;
-  }
-  .pdf-zone:hover { border-color: var(--purple); background: rgba(136,102,255,.06); }
-  .pdf-zone input[type=file] { position: absolute; inset:0; opacity:0; cursor:pointer; -webkit-appearance:none; touch-action:manipulation; }
-  .pdf-zone label { position: absolute; inset: 0; cursor: pointer; z-index: 2; }
-
-  /* LOADING OVERLAY */
-  .loading-overlay {
-    position: fixed; inset: 0; background: rgba(8,10,15,.85);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 9000; gap: 16px;
-  }
-  .loading-spinner {
-    width: 48px; height: 48px; border: 3px solid var(--border2);
-    border-top-color: var(--gold); border-radius: 50%;
-    animation: spin .8s linear infinite;
-  }
-  .loading-text { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .2em; color: var(--gold); }
-  .loading-sub  { font-size: 12px; color: var(--text3); letter-spacing: .1em; }
-
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: var(--dark); }
-  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
-
-  /* ── MISSION BOARD ───────────────────────────────── */
-  .mission-header {
-    display: flex; align-items: center; gap: 16px;
-    margin-bottom: 20px; padding: 16px 20px;
-    background: var(--dark2); border: 1px solid var(--border);
-    border-radius: 14px;
-  }
-  .mission-streak {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(245,200,66,.08); border: 1px solid rgba(245,200,66,.2);
-    border-radius: 10px; padding: 10px 16px; flex-shrink: 0;
-  }
-  .streak-fire { font-size: 22px; }
-  .streak-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px; color: var(--gold); line-height: 1;
-  }
-  .streak-label { font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
-  .mission-level-wrap { flex: 1; }
-  .mission-level-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 15px; font-weight: 700; color: var(--gold);
-    letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px;
-  }
-  .mission-xp-track {
-    height: 5px; background: var(--dark);
-    border-radius: 3px; overflow: hidden; margin-bottom: 5px;
-  }
-  .mission-xp-fill {
-    height: 100%; border-radius: 3px;
-    background: linear-gradient(90deg, var(--gold2), var(--gold3));
-    transition: width .8s ease;
-  }
-  .mission-xp-label { font-size: 10px; color: var(--text3); }
-
-  /* Urgent panel */
-  .mission-urgent-panel { }
-  .urgent-item {
-    display: flex; align-items: center; gap: 14px;
-    padding: 16px 20px;
-  }
-  .urgent-emoji { font-size: 32px; flex-shrink: 0; }
-  .urgent-info { flex: 1; }
-  .urgent-name {
-    font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 3px;
-  }
-  .urgent-detail { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
-  .urgent-action {
-    font-size: 12px; color: var(--text2); line-height: 1.5;
-    background: rgba(255,68,68,.06); border: 1px solid rgba(255,68,68,.15);
-    border-radius: 7px; padding: 8px 12px;
-  }
-  .urgent-badge { flex-shrink: 0; }
-
-  /* Missions list */
-  .mission-item {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px 0; border-bottom: 1px solid var(--border);
-  }
-  .mission-item:last-child { border-bottom: none; }
-  .mission-item.done { opacity: .5; }
-  .mission-icon {
-    width: 40px; height: 40px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
-    background: var(--surface); border: 1px solid var(--border2);
-  }
-  .mission-item.done .mission-icon { background: rgba(68,204,136,.1); border-color: rgba(68,204,136,.25); }
-  .mission-body { flex: 1; }
-  .mission-title {
-    font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px;
-  }
-  .mission-item.done .mission-title { text-decoration: line-through; color: var(--text3); }
-  .mission-desc { font-size: 11px; color: var(--text3); }
-  .mission-xp-badge {
-    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
-    font-weight: 700; color: var(--gold); letter-spacing: .06em;
-    background: rgba(245,200,66,.1); border: 1px solid rgba(245,200,66,.2);
-    padding: 3px 8px; border-radius: 6px; flex-shrink: 0;
-  }
-  .mission-item.done .mission-xp-badge {
-    color: var(--green); background: rgba(68,204,136,.1);
-    border-color: rgba(68,204,136,.25);
-  }
-  .mission-check {
-    width: 28px; height: 28px; border-radius: 50%;
-    border: 1.5px solid var(--border2); background: transparent;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all .15s; flex-shrink: 0;
-    touch-action: manipulation; font-size: 14px;
-  }
-  .mission-check:hover { border-color: var(--green); background: rgba(68,204,136,.08); }
-  .mission-item.done .mission-check {
-    border-color: var(--green); background: rgba(68,204,136,.15);
-    color: var(--green);
-  }
-
-  /* Summary bar */
-  .mission-summary {
-    display: flex; align-items: center; justify-content: space-around;
-    padding: 16px 20px; margin-top: 18px;
-    background: var(--dark2); border: 1px solid var(--border);
-    border-radius: 14px;
-  }
-  .ms-stat { text-align: center; }
-  .ms-num {
-    font-family: 'Bebas Neue', sans-serif; font-size: 24px;
-    color: var(--text); line-height: 1; margin-bottom: 3px;
-  }
-  .ms-label { font-size: 9px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; }
-  .ms-divider { width: 1px; height: 32px; background: var(--border); }
-
-  /* Streak CSS additions */
-  .streak-zero .streak-fire { filter: grayscale(1); opacity: .4; }
-  .streak-zero .streak-num { color: var(--text3); }
-
-  /* ── SHOPPING PROMPT ─────────────────────────────── */
-  .shop-prompt-modal {
-    position: fixed; inset: 0;
-    background: rgba(8,10,15,.92);
-    z-index: 8700;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .shop-prompt-modal.hidden { display: none; }
-  .shop-prompt-box {
-    background: var(--dark2);
-    border: 1px solid rgba(245,200,66,.25);
-    border-radius: 16px; padding: 24px;
-    max-width: 420px; width: 100%;
-    max-height: 85vh; overflow-y: auto;
-  }
-  .sp-header {
-    text-align: center; margin-bottom: 20px;
-  }
-  .sp-icon { font-size: 36px; display: block; margin-bottom: 10px; }
-  .sp-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 24px; letter-spacing: .08em;
-    color: var(--text); margin-bottom: 6px;
-  }
-  .sp-sub { font-size: 13px; color: var(--text2); line-height: 1.6; }
-  .sp-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-  .sp-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px;
-    background: var(--dark); border: 1px solid var(--border);
-    border-radius: 9px; cursor: pointer;
-    transition: all .15s; touch-action: manipulation;
-    user-select: none;
-  }
-  .sp-item.checked {
-    background: rgba(68,204,136,.08);
-    border-color: rgba(68,204,136,.3);
-  }
-  .sp-item-emoji { font-size: 22px; flex-shrink: 0; }
-  .sp-item-info { flex: 1; }
-  .sp-item-name {
-    font-size: 13px; font-weight: 600; color: var(--text);
-    margin-bottom: 2px;
-  }
-  .sp-item-detail { font-size: 11px; color: var(--text3); }
-  .sp-item-check {
-    width: 22px; height: 22px; border-radius: 50%;
-    border: 1.5px solid var(--border2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; flex-shrink: 0; transition: all .15s;
-  }
-  .sp-item.checked .sp-item-check {
-    border-color: var(--green);
-    background: rgba(68,204,136,.2);
-    color: var(--green);
-  }
-  .sp-footer { display: flex; gap: 10px; }
-  .sp-btn-save {
-    flex: 2; padding: 12px;
-    background: var(--gold); color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
-    border: none; border-radius: 8px;
-    cursor: pointer; touch-action: manipulation;
-  }
-  .sp-btn-skip {
-    flex: 1; padding: 12px;
-    background: transparent; border: 1px solid var(--border2);
-    border-radius: 8px; color: var(--text3);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 600;
-    letter-spacing: .08em; text-transform: uppercase;
-    cursor: pointer; touch-action: manipulation;
-  }
-  .sp-learned-time {
-    text-align: center; font-size: 11px;
-    color: var(--text3); margin-top: 10px;
-    letter-spacing: .04em;
-  }
-
-  /* ── SHAREABLE NEAR MISS CARD ───────────────────────── */
-  .share-card-modal {
-    position: fixed; inset: 0;
-    background: rgba(8,10,15,.92);
-    z-index: 8400;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .share-card-modal.hidden { display: none; }
-  .share-card-wrap {
-    max-width: 400px; width: 100%;
-    display: flex; flex-direction: column; gap: 14px;
-  }
-  .share-card {
-    background: linear-gradient(135deg, #0f1320 0%, #1a2040 100%);
-    border: 1px solid rgba(245,200,66,.3);
-    border-radius: 16px; padding: 28px;
-    text-align: center; position: relative;
-    overflow: hidden;
-  }
-  .share-card::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(circle at 50% 0%, rgba(245,200,66,.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .sc-logo {
-    font-size: 11px; font-weight: 700; letter-spacing: .2em;
-    text-transform: uppercase; color: rgba(245,200,66,.6);
-    margin-bottom: 20px;
-  }
-  .sc-shield { font-size: 40px; margin-bottom: 12px; display: block; }
-  .sc-headline {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 13px; letter-spacing: .15em;
-    color: rgba(245,200,66,.7); text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .sc-item {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px; letter-spacing: .06em;
-    color: #f0eef8; margin-bottom: 6px; line-height: 1.1;
-  }
-  .sc-days {
-    font-size: 15px; color: var(--red); font-weight: 700;
-    margin-bottom: 20px;
-  }
-  .sc-tagline {
-    font-size: 11px; color: rgba(240,238,248,.4);
-    letter-spacing: .08em; text-transform: uppercase;
-    border-top: 1px solid rgba(255,255,255,.08);
-    padding-top: 14px; margin-top: 4px;
-  }
-  .sc-tagline strong { color: rgba(245,200,66,.6); }
-  .share-actions { display: flex; gap: 10px; }
-  .sc-btn-copy {
-    flex: 1; padding: 12px;
-    background: var(--gold); color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
-    border: none; border-radius: 7px;
-    cursor: pointer; touch-action: manipulation;
-  }
-  .sc-btn-close {
-    flex: 1; padding: 12px;
-    background: transparent; border: 1px solid var(--border2);
-    border-radius: 7px; color: var(--text2);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 600;
-    letter-spacing: .08em; text-transform: uppercase;
-    cursor: pointer; touch-action: manipulation;
-  }
-
-  /* ── NEAR MISS NOTIFICATION ──────────────────────────── */
-  .near-miss-modal {
-    position: fixed; inset: 0;
-    background: rgba(8,10,15,.9);
-    z-index: 8200;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .near-miss-modal.hidden { display: none; }
-  .near-miss-box {
-    background: var(--dark2);
-    border: 1px solid rgba(255,68,68,.3);
-    border-radius: 16px; padding: 28px;
-    max-width: 380px; width: 100%;
-    text-align: center;
-  }
-  .nm-urgent {
-    background: rgba(255,68,68,.1);
-    border: 1px solid rgba(255,68,68,.25);
-    border-radius: 8px; padding: 12px 16px;
-    margin-bottom: 20px;
-  }
-  .nm-item-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px; letter-spacing: .08em;
-    color: var(--text); margin-bottom: 4px;
-  }
-  .nm-days {
-    font-size: 13px; color: var(--red);
-    font-weight: 600;
-  }
-  .nm-action {
-    font-size: 14px; color: var(--text2);
-    line-height: 1.7; margin-bottom: 20px;
-  }
-  .nm-action strong { color: var(--text); }
-  .nm-btns { display: flex; gap: 10px; }
-  .nm-btn-primary {
-    flex: 1; padding: 11px;
-    background: var(--gold); color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
-    border: none; border-radius: 7px;
-    cursor: pointer; touch-action: manipulation;
-    transition: all .15s;
-    text-decoration: none; display: flex;
-    align-items: center; justify-content: center;
-  }
-  .nm-btn-primary:hover { background: var(--gold3); }
-  .nm-btn-secondary {
-    flex: 1; padding: 11px;
-    background: transparent;
-    border: 1px solid var(--border2);
-    border-radius: 7px; color: var(--text2);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 600;
-    letter-spacing: .08em; text-transform: uppercase;
-    cursor: pointer; touch-action: manipulation;
-    transition: all .15s;
-  }
-  .nm-btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
-
-  /* ── FIRST SAVE WIN MODAL ────────────────────────────── */
-  .first-win-modal {
-    position: fixed; inset: 0;
-    background: rgba(8,10,15,.92);
-    z-index: 8300;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .first-win-modal.hidden { display: none; }
-  .first-win-box {
-    background: var(--dark2);
-    border: 1px solid rgba(245,200,66,.25);
-    border-radius: 16px; padding: 28px;
-    max-width: 380px; width: 100%;
-    text-align: center;
-  }
-  .fw-icon { font-size: 48px; margin-bottom: 14px; display: block; }
-  .fw-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px; letter-spacing: .08em;
-    color: var(--gold); margin-bottom: 8px;
-  }
-  .fw-value {
-    font-size: 32px; font-weight: 600;
-    color: var(--text); margin-bottom: 4px;
-  }
-  .fw-sub { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
-  .fw-wins { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-  .fw-win-item {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--black); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 14px;
-    font-size: 13px; color: var(--text2); text-align: left;
-  }
-  .fw-win-item strong { color: var(--text); }
-  .fw-btn {
-    width: 100%; padding: 13px;
-    background: var(--gold); color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px; font-weight: 700;
-    letter-spacing: .1em; text-transform: uppercase;
-    border: none; border-radius: 8px;
-    cursor: pointer; touch-action: manipulation;
-  }
-
-  /* ── DELETE BUTTON ───────────────────────────────────── */
-  .delete-btn {
-    background: transparent; border: none;
-    color: var(--text3); cursor: pointer;
-    font-size: 14px; padding: 4px 6px;
-    border-radius: 4px; transition: all .15s;
-    touch-action: manipulation;
-    opacity: 0; transition: opacity .15s;
-  }
-  .vault-row:hover .delete-btn { opacity: 1; }
-  .delete-btn:hover { color: var(--red); background: rgba(255,68,68,.1); }
-
-  /* ── DELETE CONFIRM MODAL ────────────────────────────── */
-  .delete-modal {
-    position: fixed; inset: 0;
-    background: rgba(8,10,15,.85);
-    z-index: 8000;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .delete-modal.hidden { display: none; }
-  .delete-box {
-    background: var(--dark2);
-    border: 1px solid rgba(255,68,68,.3);
-    border-radius: 14px; padding: 28px;
-    max-width: 360px; width: 100%;
-    text-align: center;
-  }
-  .delete-box-icon { font-size: 36px; margin-bottom: 14px; display: block; }
-  .delete-box-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 24px; letter-spacing: .08em;
-    color: var(--text); margin-bottom: 8px;
-  }
-  .delete-box-sub {
-    font-size: 13px; color: var(--text2);
-    line-height: 1.6; margin-bottom: 20px;
-  }
-  .delete-box-item {
-    font-weight: 600; color: var(--text);
-  }
-  .delete-actions {
-    display: flex; gap: 10px;
-  }
-  .btn-cancel {
-    flex: 1; padding: 11px;
-    background: transparent;
-    border: 1px solid var(--border2);
-    border-radius: 7px; color: var(--text2);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 600;
-    letter-spacing: .08em; text-transform: uppercase;
-    cursor: pointer; touch-action: manipulation;
-    transition: all .15s;
-  }
-  .btn-cancel:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
-  .btn-delete-confirm {
-    flex: 1; padding: 11px;
-    background: var(--red);
-    border: none; border-radius: 7px;
-    color: #fff;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
-    cursor: pointer; touch-action: manipulation;
-    transition: all .15s;
-  }
-  .btn-delete-confirm:hover { background: #cc3333; }
-
-  /* ── ONBOARDING ─────────────────────────────────────── */
-  .onboarding-screen {
-    position: fixed; inset: 0;
-    background: var(--black);
-    z-index: 8000;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    text-align: center; padding: 32px;
-  }
-  .ob-shield {
-    width: 80px; height: 80px;
-    background: var(--gold);
-    clip-path: polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);
-    margin-bottom: 28px;
-    animation: obPulse 1.5s ease-in-out infinite;
-  }
-  @keyframes obPulse {
-    0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,200,66,.4); }
-    50% { transform: scale(1.06); box-shadow: 0 0 0 20px rgba(245,200,66,0); }
-  }
-  .ob-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 42px; letter-spacing: .12em;
-    color: var(--text); margin-bottom: 8px;
-  }
-  .ob-sub {
-    font-size: 16px; font-weight: 300;
-    color: var(--text2); line-height: 1.7;
-    max-width: 400px; margin: 0 auto 32px;
-  }
-  .ob-sub strong { color: var(--text); font-weight: 500; }
-  .ob-btn {
-    background: var(--gold); color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase;
-    padding: 16px 40px; border-radius: 8px;
-    border: none; cursor: pointer;
-    box-shadow: 0 8px 32px rgba(245,200,66,.25);
-    transition: all .15s; margin-bottom: 12px;
-    display: block; width: 100%; max-width: 320px;
-    touch-action: manipulation;
-  }
-  .ob-btn:hover { background: var(--gold3); transform: translateY(-2px); }
-  .ob-skip {
-    font-size: 12px; color: var(--text3);
-    letter-spacing: .08em; cursor: pointer;
-    background: none; border: none;
-    touch-action: manipulation;
-  }
-  .ob-skip:hover { color: var(--text2); }
-  .ob-steps {
-    display: flex; gap: 24px; margin-bottom: 36px;
-    flex-wrap: wrap; justify-content: center;
-  }
-  .ob-step {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 8px;
-    max-width: 100px;
-  }
-  .ob-step-icon {
-    width: 48px; height: 48px;
-    background: var(--dark2); border: 1px solid var(--border2);
-    border-radius: 50%; display: flex;
-    align-items: center; justify-content: center;
-    font-size: 22px;
-  }
-  .ob-step-label {
-    font-size: 11px; color: var(--text3);
-    text-align: center; line-height: 1.4;
-    letter-spacing: .04em;
-  }
-
-  /* ── SAVE REMINDER BANNER ───────────────────────────── */
-  .save-reminder {
-    background: rgba(245,200,66,.1);
-    border: 1px solid rgba(245,200,66,.3);
-    border-radius: 8px; padding: 10px 14px;
-    margin-bottom: 14px;
-    display: flex; align-items: center; gap: 10px;
-    font-size: 13px; color: var(--gold);
-    font-weight: 500;
-  }
-  .save-reminder.hidden { display: none; }
-
-  /* ── FIRST SAVE CELEBRATION ─────────────────────────── */
-  .celebration-modal {
-    position: fixed; inset: 0;
-    background: rgba(8,10,15,.9);
-    z-index: 8500;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .celebration-modal.hidden { display: none; }
-  .celebration-box {
-    background: var(--dark2);
-    border: 1px solid rgba(245,200,66,.3);
-    border-radius: 16px; padding: 32px;
-    max-width: 400px; width: 100%;
-    text-align: center;
-  }
-  .cel-icon { font-size: 48px; margin-bottom: 16px; display: block; }
-  .cel-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px; letter-spacing: .1em;
-    color: var(--gold); margin-bottom: 8px;
-  }
-  .cel-sub {
-    font-size: 14px; color: var(--text2);
-    line-height: 1.7; margin-bottom: 20px;
-  }
-  .cel-stats {
-    display: grid; grid-template-columns: repeat(3,1fr);
-    gap: 10px; margin-bottom: 24px;
-  }
-  .cel-stat {
-    background: var(--black);
-    border: 1px solid var(--border);
-    border-radius: 8px; padding: 12px 8px;
-  }
-  .cel-stat-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px; color: var(--gold);
-    line-height: 1;
-  }
-  .cel-stat-label {
-    font-size: 10px; color: var(--text3);
-    letter-spacing: .08em; text-transform: uppercase;
-    margin-top: 3px;
-  }
-  .cel-btn {
-    background: var(--gold); color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px; font-weight: 700;
-    letter-spacing: .1em; text-transform: uppercase;
-    padding: 12px 28px; border-radius: 7px;
-    border: none; cursor: pointer; width: 100%;
-    touch-action: manipulation;
-  }
-
-  /* ═══════════════════════════════════════
-     MOBILE BOTTOM NAVIGATION
-  ═══════════════════════════════════════ */
-  .mobile-header {
-    display: none;
-    background: var(--dark);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 16px;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky; top: 0; z-index: 200;
-    flex-shrink: 0;
-  }
-  .mobile-header-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px; letter-spacing: .15em; color: var(--gold);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .mobile-header-shield {
-    width: 22px; height: 22px; background: var(--gold);
-    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
-    flex-shrink: 0;
-  }
-  .mobile-xp-bar {
-    display: none;
-    background: var(--dark2);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 16px;
-    flex-shrink: 0;
-  }
-  .mobile-xp-row {
-    display: flex; align-items: center;
-    justify-content: space-between; margin-bottom: 5px;
-  }
-  .mobile-level {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 700;
-    color: var(--gold); letter-spacing: .08em;
-  }
-  .mobile-credits {
-    font-size: 11px; color: var(--text3);
-    display: flex; align-items: center; gap: 4px;
-  }
-  .mobile-xp-track {
-    height: 3px; background: var(--dark);
-    border-radius: 2px; overflow: hidden;
-  }
-  .mobile-xp-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--gold2), var(--gold3));
-    border-radius: 2px; transition: width .6s ease;
-  }
-  .bottom-nav {
-    display: none;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--dark);
-    border-top: 1px solid var(--border);
-    z-index: 1000;
-    padding: 0 0 env(safe-area-inset-bottom, 0);
-  }
-  .bottom-nav-inner {
-    display: flex; align-items: stretch;
-    height: 60px;
-  }
-  .bottom-nav-item {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 3px; cursor: pointer;
-    color: var(--text3); transition: color .15s;
-    border: none; background: transparent;
-    padding: 0; position: relative;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    min-height: 44px;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .bottom-nav-item.active { color: var(--gold); }
-  .bottom-nav-item.active .bn-icon { opacity: 1; }
-  .bottom-nav-item svg { width: 22px; height: 22px; opacity: .5; transition: opacity .15s; }
-  .bottom-nav-item.active svg { opacity: 1; }
-  .bn-label {
-    font-size: 9px; font-weight: 600;
-    letter-spacing: .06em; text-transform: uppercase;
-  }
-  .bn-scan {
-    width: 52px; height: 52px;
-    background: var(--gold); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin-top: -16px;
-    box-shadow: 0 4px 20px rgba(245,200,66,.4);
-    transition: transform .15s;
-  }
-  .bn-scan:active { transform: scale(.94); }
-  .bn-scan svg { width: 24px; height: 24px; color: var(--black); opacity: 1 !important; }
-  .bottom-nav-item.scan-btn { flex: 1.2; }
-  .bn-badge {
-    position: absolute; top: 6px; right: calc(50% - 18px);
-    background: var(--red); color: #fff;
-    font-size: 8px; font-weight: 700;
-    padding: 1px 4px; border-radius: 8px;
-    min-width: 14px; text-align: center;
-  }
-
-  /* ═══════════════════════════════════════
-     MOBILE RESPONSIVE — max-width 768px
-  ═══════════════════════════════════════ */
-  @media (max-width: 768px) {
-    /* Hide desktop sidebar */
-    .sidebar { display: none !important; }
-
-    /* Show mobile elements */
-    .mobile-header { display: flex !important; }
-    .mobile-xp-bar { display: block !important; }
-    .bottom-nav    { display: block !important; }
-
-    /* Main layout */
-    .main { min-height: 100vh; padding-bottom: 70px; width: 100%; max-width: 100vw; }
-    .app  { flex-direction: column; width: 100%; }
-
-    /* Topbar */
-    .topbar {
-      height: 48px; padding: 0 16px;
-    }
-    .topbar-title { font-size: 16px; }
-    .topbar-right .status-dot { display: none; }
-    .topbar-right .btn { padding: 7px 12px; font-size: 11px; }
-    .topbar-right span:not(.status-dot):not(.btn) { display: none; }
-    .topbar { display: none; }
-
-    /* Content */
-    .content { padding: 14px 14px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
-    /* Grid fixes */
-    .grid2 { grid-template-columns: 1fr; }
-    .grid3 { grid-template-columns: 1fr; }
-    .scanner-grid { grid-template-columns: 1fr; }
-
-    /* Stat rows — 2 columns on mobile */
-    .stat-row.cols4 { grid-template-columns: 1fr 1fr; }
-    .stat-row.cols3 { grid-template-columns: 1fr 1fr; }
-    .stat-row.cols5 { grid-template-columns: 1fr 1fr; }
-    .sc-num { font-size: 24px; }
-
-    /* Grids stack vertically */
-    .grid2 { grid-template-columns: 1fr; }
-    .grid3 { grid-template-columns: 1fr; }
-
-    /* Vault rows simplify on mobile */
-    .vault-header { display: none; }
-    .vault-row {
-      grid-template-columns: 36px 1fr auto !important;
-      padding: 10px 14px;
-      gap: 10px;
-    }
-    .vault-row > div:nth-child(3),
-    .vault-row > div:nth-child(4) { display: none; }
-
-    /* Alert items */
-    .alert-item { padding: 10px 0; gap: 8px; }
-    .alert-name  { font-size: 13px; }
-
-    /* Manifest grid — 2 cols on mobile */
-    .manifest-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-    .manifest-card { padding: 10px; }
-    .mc-name { font-size: 12px; }
-
-    /* Remove decorative overlay on mobile - can block touches */
-    body::before { display: none; }
-
-    /* Scan zone */
-    .scan-zone { padding: 24px 16px; }
-    .scan-title { font-size: 16px; }
-
-    /* PDF zone */
-    .pdf-zone { padding: 24px 16px; }
-
-    /* Auth box */
-    .auth-box { border-radius: 0; min-height: 100vh; border: none; }
-    #screen-auth { padding: 0; align-items: flex-start; }
-    .auth-body { padding: 20px; }
-    .auth-header { padding: 24px 20px 18px; }
-
-    /* Scan overlay */
-    .scan-overlay { padding: 16px; pointer-events: none; }
-  .scan-overlay:not(.hidden) { pointer-events: all; }
-    .scan-receipt-preview { width: 100px; height: 65px; }
-
-    /* Panel headers */
-    .panel-header { padding: 12px 14px; }
-    .panel-body   { padding: 12px 14px; }
-
-    /* Tabs */
-    .tabs { overflow-x: auto; width: 100%; }
-    .tab  { font-size: 10px; padding: 5px 10px; white-space: nowrap; }
-
-    /* Loading overlay */
-    .loading-text { font-size: 16px; }
-  }
-
-  /* SCAN ANIMATION */
-  .scan-overlay {
-    position: fixed; inset: 0;
-    background: rgba(8,10,15,.92);
-    z-index: 5000;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 0; padding: 24px;
-  }
-  .scan-shield {
-    width: 64px; height: 64px;
-    background: var(--gold);
-    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
-    margin-bottom: 24px;
-    animation: shieldPulse 1.5s ease-in-out infinite;
-    position: relative;
-  }
-  .scan-shield::after {
-    content: '🛡️';
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-  }
-  @keyframes shieldPulse {
-    0%,100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.08); opacity: .85; }
-  }
-  .scan-status {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px; letter-spacing: .2em;
-    color: var(--gold); margin-bottom: 8px;
-    text-align: center;
-  }
-  .scan-substatus {
-    font-size: 12px; color: var(--text3);
-    letter-spacing: .1em; margin-bottom: 24px;
-    text-align: center; min-height: 18px;
-  }
-  .scan-progress-track {
-    width: 280px; height: 3px;
-    background: var(--surface2);
-    border-radius: 2px; overflow: hidden;
-    margin-bottom: 32px;
-  }
-  .scan-progress-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--gold2), var(--gold3));
-    border-radius: 2px;
-    transition: width .6s ease;
-  }
-  .scan-steps {
-    display: flex; flex-direction: column;
-    gap: 10px; width: 280px;
-  }
-  .scan-step {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 12px; color: var(--text3);
-    transition: color .3s;
-  }
-  .scan-step.active { color: var(--text); }
-  .scan-step.done   { color: var(--green); }
-  .scan-step-icon {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    border: 1px solid var(--border2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; flex-shrink: 0;
-    transition: all .3s;
-  }
-  .scan-step.active .scan-step-icon {
-    border-color: var(--gold);
-    background: rgba(245,200,66,.15);
-    animation: spin .8s linear infinite;
-  }
-  .scan-step.done .scan-step-icon {
-    border-color: var(--green);
-    background: rgba(68,204,136,.15);
-    color: var(--green);
-  }
-  .scan-receipt-preview {
-    width: 120px; height: 80px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 24px;
-    position: relative;
-  }
-  .scan-receipt-preview img {
-    width: 100%; height: 100%;
-    object-fit: cover; opacity: .6;
-  }
-  .scan-line {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    animation: scanLineAnim 1.5s linear infinite;
-  }
-  @keyframes scanLineAnim {
-    from { top: 0; }
-    to   { top: 100%; }
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#06080D;--dark:#0f1320;--dark2:#141926;
+  --gold:#f5c842;--gold2:#e6b800;--red:#ff4444;
+  --text:#f0eef8;--text2:#8890a8;--text3:#3a4258;
+  --border:rgba(255,255,255,.07);
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--black);color:var(--text);
+  font-family:'Barlow',sans-serif;font-weight:400;
+  line-height:1.6;overflow-x:hidden;
+}
+
+/* ── NAV ──────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:rgba(6,8,13,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:.15em;color:var(--gold);
+}
+.nav-cta{
+  background:var(--gold);color:var(--black);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:9px 22px;
+  border-radius:6px;text-decoration:none;
+  transition:all .15s;
+}
+.nav-cta:hover{background:var(--gold2);transform:translateY(-1px)}
+
+/* ── HERO ─────────────────────────────────────────── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:120px 24px 80px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 40%, rgba(245,200,66,.06) 0%, transparent 65%);
+  pointer-events:none;
+}
+.hero-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:20px;opacity:.8;
+}
+.hero-headline{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(52px,9vw,108px);
+  letter-spacing:.06em;line-height:.95;
+  margin-bottom:28px;
+}
+.hero-headline span{color:var(--gold)}
+.hero-sub{
+  font-size:clamp(16px,2.2vw,20px);font-weight:300;
+  color:var(--text2);max-width:540px;
+  margin:0 auto 40px;line-height:1.75;
+}
+.hero-sub strong{color:var(--text);font-weight:500}
+.hero-cta-group{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-primary{
+  background:var(--gold);color:var(--black);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:15px 36px;
+  border-radius:8px;text-decoration:none;
+  box-shadow:0 8px 32px rgba(245,200,66,.2);
+  transition:all .15s;
+}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-2px)}
+.btn-secondary{
+  background:transparent;color:var(--text2);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;padding:15px 36px;
+  border-radius:8px;text-decoration:none;
+  border:1px solid rgba(255,255,255,.12);
+  transition:all .15s;
+}
+.btn-secondary:hover{color:var(--text);border-color:rgba(255,255,255,.25)}
+.hero-proof{
+  margin-top:56px;font-size:12px;color:var(--text3);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+
+/* ── MOMENT SECTION ───────────────────────────────── */
+.moment{
+  padding:100px 24px;max-width:760px;
+  margin:0 auto;text-align:center;
+}
+.moment-label{
+  font-size:11px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--red);
+  margin-bottom:20px;
+}
+.moment-headline{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(36px,6vw,64px);
+  letter-spacing:.05em;line-height:1.05;
+  margin-bottom:24px;
+}
+.moment-body{
+  font-size:17px;font-weight:300;color:var(--text2);
+  line-height:1.85;margin-bottom:16px;
+}
+.moment-body strong{color:var(--text);font-weight:500}
+
+/* ── SCENARIO CARDS ───────────────────────────────── */
+.scenarios{
+  padding:0 24px 100px;
+  max-width:1100px;margin:0 auto;
+}
+.scenarios-label{
+  text-align:center;font-size:11px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:48px;
+}
+.scenario-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:20px;
+}
+.scenario-card{
+  background:var(--dark);border:1px solid var(--border);
+  border-radius:14px;padding:28px;
+  transition:border-color .2s;
+}
+.scenario-card:hover{border-color:rgba(245,200,66,.2)}
+.sc-emoji{font-size:32px;margin-bottom:16px;display:block}
+.sc-before{
+  font-size:12px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--red);
+  margin-bottom:8px;
+}
+.sc-after{
+  font-size:12px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:#44cc88;
+  margin-bottom:8px;
+}
+.sc-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:20px;font-weight:700;letter-spacing:.04em;
+  margin-bottom:8px;color:var(--text);
+}
+.sc-body{font-size:14px;color:var(--text2);line-height:1.7}
+
+/* ── NEAR MISS FEATURE ────────────────────────────── */
+.near-miss-section{
+  padding:100px 24px;
+  background:linear-gradient(180deg,var(--black) 0%,var(--dark) 50%,var(--black) 100%);
+}
+.near-miss-inner{
+  max-width:900px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:60px;align-items:center;
+}
+.nm-content-label{
+  font-size:11px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:16px;
+}
+.nm-content-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px,5vw,52px);letter-spacing:.05em;
+  line-height:1.05;margin-bottom:20px;
+}
+.nm-content-body{
+  font-size:16px;font-weight:300;color:var(--text2);
+  line-height:1.8;margin-bottom:16px;
+}
+.nm-content-body strong{color:var(--text);font-weight:500}
+.nm-mock{
+  background:var(--dark2);
+  border:1px solid rgba(255,68,68,.25);
+  border-radius:16px;padding:24px;
+}
+.nm-mock-badge{
+  display:inline-block;
+  background:rgba(255,68,68,.1);
+  border:1px solid rgba(255,68,68,.25);
+  border-radius:6px;padding:4px 10px;
+  font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--red);
+  margin-bottom:14px;
+}
+.nm-mock-item{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:24px;letter-spacing:.06em;
+  color:var(--text);margin-bottom:4px;
+}
+.nm-mock-days{
+  font-size:14px;color:var(--red);
+  font-weight:600;margin-bottom:16px;
+}
+.nm-mock-action{
+  font-size:13px;color:var(--text2);
+  line-height:1.6;margin-bottom:16px;
+}
+.nm-mock-btn{
+  display:block;width:100%;padding:10px;
+  background:var(--gold);color:var(--black);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;border-radius:7px;
+  text-align:center;text-decoration:none;
+  margin-bottom:8px;
+}
+.nm-mock-dismiss{
+  display:block;text-align:center;
+  font-size:11px;color:var(--text3);
+  cursor:default;
+}
+
+/* ── HOW IT WORKS ─────────────────────────────────── */
+.how{padding:100px 24px;max-width:900px;margin:0 auto}
+.how-label{
+  text-align:center;font-size:11px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:48px;
+}
+.how-steps{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:32px;
+}
+.how-step{text-align:center}
+.how-step-num{
+  width:48px;height:48px;border-radius:50%;
+  background:rgba(245,200,66,.1);
+  border:1px solid rgba(245,200,66,.25);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;color:var(--gold);letter-spacing:.05em;
+}
+.how-step-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:16px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;margin-bottom:8px;color:var(--text);
+}
+.how-step-body{font-size:14px;color:var(--text2);line-height:1.7}
+
+/* ── STATS ────────────────────────────────────────── */
+.stats{
+  padding:80px 24px;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.stats-inner{
+  max-width:900px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:40px;text-align:center;
+}
+.stat-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;letter-spacing:.04em;color:var(--gold);
+  line-height:1;margin-bottom:8px;
+}
+.stat-label{font-size:13px;color:var(--text2);line-height:1.5}
+
+/* ── WEEKLY EMAIL FEATURE ─────────────────────────── */
+.weekly{padding:100px 24px;max-width:760px;margin:0 auto;text-align:center}
+.weekly-label{
+  font-size:11px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:20px;
+}
+.weekly-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px,5vw,56px);letter-spacing:.05em;
+  line-height:1.05;margin-bottom:20px;
+}
+.weekly-body{
+  font-size:16px;font-weight:300;color:var(--text2);
+  line-height:1.8;margin-bottom:32px;
+}
+.email-mock{
+  background:var(--dark);border:1px solid var(--border);
+  border-radius:14px;padding:28px;text-align:left;
+  max-width:480px;margin:0 auto 48px;
+}
+.em-subject{
+  font-size:13px;color:var(--text2);margin-bottom:16px;
+  padding-bottom:12px;border-bottom:1px solid var(--border);
+}
+.em-subject strong{color:var(--red)}
+.em-body{font-size:13px;color:var(--text2);line-height:1.8}
+.em-body strong{color:var(--text)}
+.em-highlight{
+  background:rgba(255,68,68,.08);
+  border:1px solid rgba(255,68,68,.2);
+  border-radius:8px;padding:12px 14px;
+  margin:12px 0;font-size:13px;color:var(--text2);
+}
+.em-highlight strong{color:var(--red)}
+.em-cta{
+  display:inline-block;margin-top:16px;
+  background:var(--gold);color:var(--black);
+  font-size:12px;font-weight:700;padding:10px 20px;
+  border-radius:6px;letter-spacing:.06em;
+  text-transform:uppercase;text-decoration:none;
+}
+
+/* ── TESTIMONIAL ──────────────────────────────────── */
+.testimonial{
+  padding:80px 24px;
+  background:var(--dark);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.testimonial-inner{max-width:640px;margin:0 auto;text-align:center}
+.testimonial-quote{
+  font-size:clamp(18px,3vw,24px);font-weight:300;
+  font-style:italic;color:var(--text);
+  line-height:1.7;margin-bottom:24px;
+}
+.testimonial-quote strong{color:var(--gold);font-style:normal}
+.testimonial-attr{font-size:13px;color:var(--text2)}
+
+/* ── FINAL CTA ────────────────────────────────────── */
+.final-cta{
+  padding:120px 24px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.final-cta::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(245,200,66,.05) 0%,transparent 70%);
+  pointer-events:none;
+}
+.final-cta-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(48px,8vw,96px);
+  letter-spacing:.06em;line-height:.95;
+  margin-bottom:24px;
+}
+.final-cta-sub{
+  font-size:17px;font-weight:300;color:var(--text2);
+  margin-bottom:40px;
+}
+
+/* ── FOOTER ───────────────────────────────────────── */
+footer{
+  padding:40px 24px;text-align:center;
+  border-top:1px solid var(--border);
+  font-size:12px;color:var(--text3);
+  letter-spacing:.06em;
+}
+footer a{color:var(--text3);text-decoration:none}
+footer a:hover{color:var(--text2)}
+
+/* ── MOBILE ───────────────────────────────────────── */
+@media(max-width:768px){
+  nav{padding:16px 20px}
+  .near-miss-inner{grid-template-columns:1fr;gap:40px}
+  .hero{padding:100px 20px 60px}
+}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
-     LOADING OVERLAY
-═══════════════════════════════════════════ -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">AEGIS</div>
-  <div class="loading-sub" id="loadingMsg">INITIALIZING SYSTEM...</div>
-</div>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🛡️ GuardNest</div>
+  <a href="https://guardnest.app/" class="nav-cta">Try It Free →</a>
+</nav>
 
-<!-- ═══════════════════════════════════════════
-     AUTH SCREEN
-═══════════════════════════════════════════ -->
-<div id="screen-auth" class="hidden">
-  <div class="auth-box">
-    <div class="auth-header">
-      <div class="auth-shield"></div>
-      <div class="auth-logo">AEGIS</div>
-      <div class="auth-tagline">Nothing slips through.</div>
-    </div>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin"    onclick="switchAuthTab('login')">Sign In</button>
-      <button class="auth-tab"        id="tabRegister" onclick="switchAuthTab('register')">Create Account</button>
-    </div>
-
-    <div class="auth-body">
-      <div id="authMsg"></div>
-
-      <!-- LOGIN FORM -->
-      <div id="formLogin">
-        <div class="field">
-          <label class="label">Email Address</label>
-          <input class="input" type="email" id="loginEmail" placeholder="operator@aegis.app">
-        </div>
-        <div class="field">
-          <label class="label">Password</label>
-          <input class="input" type="password" id="loginPassword" placeholder="••••••••"
-                 onkeydown="if(event.key==='Enter') doLogin()">
-        </div>
-        <button class="btn btn-gold btn-full" onclick="doLogin()" id="btnLogin">
-          ⚡ Access Vault
-        </button>
-        <div class="divider-text">or</div>
-        <button class="btn-google" onclick="doGoogleLogin()">
-          <svg class="google-icon" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Google
-        </button>
-      </div>
-
-      <!-- REGISTER FORM -->
-      <div id="formRegister" class="hidden">
-        <div class="field">
-          <label class="label">Email Address</label>
-          <input class="input" type="email" id="regEmail" placeholder="operator@aegis.app">
-        </div>
-        <div class="field">
-          <label class="label">Password</label>
-          <input class="input" type="password" id="regPassword" placeholder="Minimum 6 characters">
-        </div>
-        <div class="field">
-          <label class="label">Confirm Password</label>
-          <input class="input" type="password" id="regConfirm" placeholder="••••••••"
-                 onkeydown="if(event.key==='Enter') doRegister()">
-        </div>
-        <button class="btn btn-gold btn-full" onclick="doRegister()" id="btnRegister">
-          🛡️ Create Account
-        </button>
-        <div class="divider-text">or</div>
-        <button class="btn-google" onclick="doGoogleLogin()">
-          <svg class="google-icon" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Sign up with Google
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     MAIN APP
-═══════════════════════════════════════════ -->
-<div id="screen-app">
-
-  <!-- MOBILE HEADER -->
-  <div class="mobile-header" id="mobileHeader">
-    <div class="mobile-header-logo">
-      <div class="mobile-header-shield"></div>
-      AEGIS
-    </div>
-    <div style="font-size:11px;color:var(--text3)" id="mobilePageTitle">DASHBOARD</div>
-    <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 14px;font-size:12px;min-height:36px">⚡ Scan</button>
-  </div>
-
-  <!-- MOBILE XP BAR -->
-  <div class="mobile-xp-bar" id="mobileXpBar">
-    <div class="mobile-xp-row">
-      <div class="mobile-level" id="mobileLevelText">Lvl 1 — Recruit</div>
-      <div class="mobile-credits">⚡ <span id="mobileCredits">0</span> XP</div>
-    </div>
-    <div class="mobile-xp-track">
-      <div class="mobile-xp-fill" id="mobileXpFill"></div>
-    </div>
-  </div>
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-shield"></div>
-      <div>
-        <div class="logo-text">AEGIS</div>
-        <div class="logo-tag">Nothing slips through.</div>
-      </div>
-    </div>
-
-    <div class="op-card">
-      <div class="op-rank">Clearance Level</div>
-      <div class="op-level" id="sideLevel">1 <span>/ 8</span></div>
-      <div class="op-title" id="sideTitle">Recruit</div>
-      <div class="xp-row">
-        <span id="sideCredits">0 XP</span>
-        <span id="sideNext">500 to Operative</span>
-      </div>
-      <div class="xp-track"><div class="xp-fill" id="xpBar" style="width:0%"></div></div>
-      <div class="xp-next" id="xpUnlock">Keep scanning to level up</div>
-      <div class="credits-row">
-        <div class="credits-icon">⚡</div>
-        <div>
-          <div class="credits-num" id="sideCreditsNum">0</div>
-          <div class="credits-label">System Credits</div>
-        </div>
-      </div>
-    </div>
-
-    <nav class="nav">
-      <a class="nav-item active" href="javascript:void(0)" onclick="showPage('dashboard')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Dashboard
-      </a>
-      <a class="nav-item" href="javascript:void(0)" onclick="showPage('scanner')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
-        Scanner
-      </a>
-      <a class="nav-item" href="javascript:void(0)" onclick="showPage('alerts')" id="navAlerts">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-        Expiry Alerts
-        <span class="nav-badge hidden" id="alertBadge">0</span>
-      </a>
-      <a class="nav-item" href="javascript:void(0)" onclick="showPage('vault')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
-        The Vault
-      </a>
-      <a class="nav-item" href="javascript:void(0)" onclick="showPage('pdf')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        PDF Scanner
-        <span class="nav-new">NEW</span>
-      </a>
-    </nav>
-
-    <div class="badges-section">
-      <div class="badges-heading">Badges</div>
-      <div class="badges-grid" id="badgesGrid">
-        <div class="badge-chip locked" title="First Acquisition">🎯</div>
-        <div class="badge-chip locked" title="High Roller">💎</div>
-        <div class="badge-chip locked" title="Operational">⚙️</div>
-        <div class="badge-chip locked" title="Asset Manager">📊</div>
-        <div class="badge-chip locked" title="Quartermaster">🏆</div>
-      </div>
-    </div>
-
-    <div class="sidebar-footer">
-      <button class="btn btn-ghost btn-full" onclick="doSignOut()" style="font-size:11px;padding:8px">
-        Sign Out
-      </button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-    <div class="topbar">
-      <div class="topbar-title" id="topbarTitle">OPERATOR DASHBOARD</div>
-      <div class="topbar-right">
-        <div class="status-dot"><div class="dot" style="background:var(--green)"></div>Database</div>
-        <div class="status-dot"><div class="dot" style="background:var(--gold)"></div>AI Ready</div>
-        <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 16px;font-size:12px">⚡ New Scan</button>
-      </div>
-    </div>
-
-    <div class="content">
-
-      <!-- ─── DASHBOARD: MISSION BOARD ─── -->
-      <div class="page active" id="page-dashboard">
-
-        <!-- STREAK + LEVEL HEADER -->
-        <div class="mission-header">
-          <div class="mission-streak" id="missionStreak">
-            <span class="streak-fire">🔥</span>
-            <span class="streak-num" id="streakNum">0</span>
-            <span class="streak-label">week streak</span>
-          </div>
-          <div class="mission-level-wrap">
-            <div class="mission-level-title" id="missionLevelTitle">Recruit · Level 1</div>
-            <div class="mission-xp-track">
-              <div class="mission-xp-fill" id="missionXpFill" style="width:0%"></div>
-            </div>
-            <div class="mission-xp-label" id="missionXpLabel">0 XP · 500 to next level</div>
-          </div>
-        </div>
-
-        <!-- RIGHT NOW: Most urgent item -->
-        <div class="panel mission-urgent-panel" id="urgentPanel">
-          <div class="panel-header">
-            <div class="panel-title">⚡ Right Now</div>
-            <div class="panel-action" onclick="showPage('alerts')">All Alerts →</div>
-          </div>
-          <div id="urgentContent">
-            <div class="empty-state" style="padding:28px">
-              <span class="empty-icon">✅</span>
-              <div class="empty-title">Nothing Needs Attention</div>
-              <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- THIS WEEK'S MISSIONS -->
-        <div class="panel" style="margin-top:18px">
-          <div class="panel-header">
-            <div class="panel-title">🎯 This Week's Missions</div>
-            <div class="panel-action" id="missionXpPool"></div>
-          </div>
-          <div id="missionsList" class="panel-body"></div>
-        </div>
-
-        <!-- VAULT SUMMARY (collapsed stats) -->
-        <div class="mission-summary" id="missionSummary">
-          <div class="ms-stat">
-            <div class="ms-num" id="msTotal">0</div>
-            <div class="ms-label">Items</div>
-          </div>
-          <div class="ms-divider"></div>
-          <div class="ms-stat">
-            <div class="ms-num" id="msProtected">$0</div>
-            <div class="ms-label">Protected</div>
-          </div>
-          <div class="ms-divider"></div>
-          <div class="ms-stat">
-            <div class="ms-num" id="msAlerts" style="color:var(--red)">0</div>
-            <div class="ms-label">Alerts</div>
-          </div>
-          <div class="ms-divider"></div>
-          <div class="ms-stat">
-            <div class="ms-num" id="msCredits" style="color:var(--gold)">0</div>
-            <div class="ms-label">XP</div>
-          </div>
-        </div>
-
-        <!-- hidden elements still needed by other functions -->
-        <div style="display:none">
-          <span id="dashTotal">0</span>
-          <span id="dashRisk">$0</span>
-          <span id="dashProtected">$0</span>
-          <span id="dashCredits">0</span>
-          <div id="dashAlerts"></div>
-          <div id="dashRecent"></div>
-          <div id="dashTopAssets"></div>
-        </div>
-
-      </div>
-
-      <!-- ─── SCANNER ─── -->
-      <div class="page" id="page-scanner">
-        <div class="grid2 scanner-grid" style="margin-bottom:0">
-          <div>
-            <div class="scan-zone" id="scanZone" onclick="document.getElementById('scanFileInput').click()" style="cursor:pointer">
-              <input type="file" accept="image/*,application/pdf" id="scanFileInput" onchange="handleImageScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
-              <span class="scan-icon" id="scanIcon">📷</span>
-              <div class="scan-title" id="scanTitle">Drop Receipt Here</div>
-              <div class="scan-sub" id="scanSub">JPG, PNG, or JPEG · AI extracts items, warranties & expiry dates<br>Credits awarded for every scan</div>
-            </div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <button class="btn btn-gold" style="flex:1;justify-content:center;position:relative;z-index:4" onclick="document.getElementById('scanFileInput').click()">
-                ⚡ Select Receipt
-              </button>
-              <button class="btn btn-outline" onclick="showPage('pdf')">📄 PDF Mode</button>
-            </div>
-          </div>
-
-          <div>
-            <div class="panel" style="margin-bottom:14px">
-              <div class="panel-header"><div class="panel-title">📊 Your Stats</div></div>
-              <div class="panel-body">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statTotalScans">0</div>
-                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Scans</div>
-                  </div>
-                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statTotalItems">0</div>
-                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Items</div>
-                  </div>
-                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statCredits">0</div>
-                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Credits</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="panel">
-              <div class="panel-header"><div class="panel-title">🕐 Recent Scans</div></div>
-              <div class="panel-body" id="scannerRecent">
-                <div class="empty-state" style="padding:16px">
-                  <div class="empty-sub">No scans yet</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SCAN RESULTS -->
-        <div id="scanResults" class="hidden" style="margin-top:18px">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title" id="resultsTitle">📦 Inventory Manifest</div>
-              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px">
-                💾 Save to Vault
-              </button>
-            </div>
-            <div class="panel-body">
-              <div class="manifest-grid" id="manifestGrid"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ─── ALERTS ─── -->
-      <div class="page" id="page-alerts">
-        <div class="stat-row cols5" id="alertStats">
-          <div class="stat-card c-red"><div class="sc-label">Expired</div><div class="sc-num" id="aExpired">0</div></div>
-          <div class="stat-card c-orange"><div class="sc-label">Critical</div><div class="sc-num" id="aCritical">0</div></div>
-          <div class="stat-card" style="border-top:2px solid var(--yellow)"><div class="sc-label">Warning</div><div class="sc-num" style="color:var(--yellow)" id="aWarning">0</div></div>
-          <div class="stat-card c-blue"><div class="sc-label">Monitor</div><div class="sc-num" id="aMonitor">0</div></div>
-          <div class="stat-card c-gold"><div class="sc-label">At Risk $</div><div class="sc-num" id="aRisk">$0</div></div>
-        </div>
-        <div class="panel">
-          <div class="panel-header"><div class="panel-title">⚠️ All Active Alerts</div></div>
-          <div class="panel-body" id="alertsList">
-            <div class="empty-state">
-              <span class="empty-icon">✅</span>
-              <div class="empty-title">All Clear</div>
-              <div class="empty-sub">Nothing expiring in the next 30 days</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ─── VAULT ─── -->
-      <div class="page" id="page-vault">
-        <div class="stat-row cols3" style="margin-bottom:20px">
-          <div class="stat-card c-gold"><div class="sc-label">Total Assets</div><div class="sc-num" id="vTotal">0</div></div>
-          <div class="stat-card c-green"><div class="sc-label">Total Value</div><div class="sc-num" id="vValue">$0</div></div>
-          <div class="stat-card c-blue"><div class="sc-label">Under Warranty</div><div class="sc-num" id="vWarranty">0</div></div>
-        </div>
-
-        <!-- SMART ROW: Expiring This Week -->
-        <div class="panel" style="margin-bottom:18px" id="rowExpiring">
-          <div class="panel-header">
-            <div class="panel-title">🔴 Expiring This Week</div>
-            <div class="panel-action" onclick="showPage('alerts')">View Alerts →</div>
-          </div>
-          <div id="rowExpiringBody">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">✅</span>
-              <div class="empty-sub">Nothing expiring this week</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SMART ROW: High Value Assets -->
-        <div class="panel" style="margin-bottom:18px">
-          <div class="panel-header">
-            <div class="panel-title">💎 High Value Assets</div>
-            <div class="panel-action" id="highValueCount"></div>
-          </div>
-          <div class="vault-header">
-            <div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
-          </div>
-          <div id="rowHighValue">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">🛡️</span>
-              <div class="empty-sub">No high value items yet</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SMART ROW: Recently Added -->
-        <div class="panel" style="margin-bottom:18px">
-          <div class="panel-header">
-            <div class="panel-title">⚡ Recently Added</div>
-            <div class="panel-action" id="recentCount"></div>
-          </div>
-          <div class="vault-header">
-            <div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
-          </div>
-          <div id="rowRecent">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">📦</span>
-              <div class="empty-sub">No items yet — scan a receipt to get started</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SMART ROW: Perishables -->
-        <div class="panel" style="margin-bottom:18px" id="rowPerishables">
-          <div class="panel-header">
-            <div class="panel-title">🥗 Perishables</div>
-            <div class="panel-action" id="perishableCount"></div>
-          </div>
-          <div id="rowPerishablesBody">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">🥬</span>
-              <div class="empty-sub">No perishables tracked yet</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- FULL REGISTRY -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">🗄️ Full Registry</div>
-            <div id="fullRegistryCount" class="panel-action"></div>
-          </div>
-          <div class="vault-header" style="grid-template-columns:40px 2fr 1.2fr 1.2fr 32px">
-            <div></div><div>Item</div><div>Price</div><div>Status</div><div></div>
-          </div>
-          <div id="vaultList">
-            <div class="empty-state">
-              <span class="empty-icon">🗄️</span>
-              <div class="empty-title">Vault Empty</div>
-              <div class="empty-sub">Scan a receipt to add your first asset</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ─── PDF SCANNER ─── -->
-      <div class="page" id="page-pdf">
-        <div class="grid2">
-          <div>
-            <div class="pdf-zone" id="pdfZone" onclick="document.getElementById('pdfFileInput').click()" style="cursor:pointer">
-              <input type="file" accept=".pdf,application/pdf" id="pdfFileInput" onchange="handlePdfScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
-              <span class="scan-icon" id="pdfIcon">📄</span>
-              <div class="scan-title" id="pdfTitle" style="color:var(--purple)">Drop PDF Here</div>
-              <div class="scan-sub" id="pdfSub">Warranty certificates · Insurance policies<br>Old invoices · Emailed receipts<br>Recover warranties from years ago.</div>
-            </div>
-            <div style="margin-top:10px">
-              <button class="btn btn-purple btn-full" onclick="document.getElementById('pdfFileInput').click()">
-                ⚡ Select Document
-              </button>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header"><div class="panel-title">💡 Why PDF Scanning?</div></div>
-            <div class="panel-body">
-              <div style="font-size:13px;color:var(--text2);line-height:1.9">
-                <div style="margin-bottom:10px">📧 <strong style="color:var(--text)">Email receipts</strong><br><span style="font-size:11px;color:var(--text3)">Forward any receipt email as PDF, Aegis extracts everything</span></div>
-                <div style="margin-bottom:10px">🛡️ <strong style="color:var(--text)">Warranty certificates</strong><br><span style="font-size:11px;color:var(--text3)">Scan the PDF that came in the box</span></div>
-                <div style="margin-bottom:10px">🏠 <strong style="color:var(--text)">Insurance policies</strong><br><span style="font-size:11px;color:var(--text3)">Know exactly what's covered and when</span></div>
-                <div style="margin-bottom:14px">🚗 <strong style="color:var(--text)">Service records</strong><br><span style="font-size:11px;color:var(--text3)">Track car maintenance and extended coverage</span></div>
-                <div style="padding:12px;background:rgba(136,102,255,.1);border-radius:8px;border:1px solid rgba(136,102,255,.2);color:var(--purple);font-size:12px;line-height:1.6">
-                  💡 Most people have $500–$1,100 in active warranties sitting in old emails right now. Scan them before they expire.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="pdfResults" class="hidden" style="margin-top:18px">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title" id="pdfResultsTitle">📦 Document Manifest</div>
-              <button class="btn btn-purple" onclick="savePdfResults()" style="padding:7px 14px;font-size:11px">
-                💾 Save to Vault
-              </button>
-            </div>
-            <div class="panel-body">
-              <div class="manifest-grid" id="pdfManifestGrid"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
-</div>
-
-<!-- BOTTOM NAV -->
-<div class="bottom-nav" id="bottomNav">
-  <div class="bottom-nav-inner">
-    <button class="bottom-nav-item active" id="bn-dashboard" onclick="showPage('dashboard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-      <span class="bn-label">Home</span>
-    </button>
-    <button class="bottom-nav-item" id="bn-alerts" onclick="showPage('alerts')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 01-3.46 0"/>
-      </svg>
-      <span class="bn-label">Alerts</span>
-      <span class="bn-badge hidden" id="bnAlertBadge">0</span>
-    </button>
-    <button class="bottom-nav-item scan-btn" onclick="showPage('scanner')">
-      <div class="bn-scan">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
-          <line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/>
-        </svg>
-      </div>
-      <span class="bn-label" style="margin-top:4px">Scan</span>
-    </button>
-    <button class="bottom-nav-item" id="bn-vault" onclick="showPage('vault')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="3" y="11" width="18" height="11" rx="2"/>
-        <path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/>
-      </svg>
-      <span class="bn-label">Vault</span>
-    </button>
-    <button class="bottom-nav-item" id="bn-pdf" onclick="showPage('pdf')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-      </svg>
-      <span class="bn-label">PDF</span>
-    </button>
-    <button class="bottom-nav-item" id="bn-receipts" onclick="showPage('receipts')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-        <rect x="9" y="3" width="6" height="4" rx="1"/>
-        <line x1="9" y1="12" x2="15" y2="12"/>
-        <line x1="9" y1="16" x2="13" y2="16"/>
-      </svg>
-      <span class="bn-label">History</span>
-    </button>
-  </div>
-</div>
-
-<!-- SHOPPING PROMPT MODAL -->
-<div class="shop-prompt-modal hidden" id="shopPromptModal">
-  <div class="shop-prompt-box">
-    <div class="sp-header">
-      <span class="sp-icon">🛒</span>
-      <div class="sp-title">Did you go shopping?</div>
-      <p class="sp-sub" id="spSubText">Based on your history, you usually pick these up. Tap what you bought and we'll track it automatically.</p>
-    </div>
-    <div class="sp-items" id="spItemsList"></div>
-    <div class="sp-footer">
-      <button class="sp-btn-save" onclick="saveShoppingPrompt()" ontouchend="this.onclick()">
-        ✅ Add to Vault
-      </button>
-      <button class="sp-btn-skip" onclick="skipShoppingPrompt()" ontouchend="this.onclick()">
-        Not yet
-      </button>
-    </div>
-    <div class="sp-learned-time" id="spLearnedTime"></div>
-  </div>
-</div>
-
-<!-- SHAREABLE NEAR MISS CARD -->
-<div class="share-card-modal hidden" id="shareCardModal">
-  <div class="share-card-wrap">
-    <div class="share-card" id="shareCardInner">
-      <div class="sc-logo">🛡️ GuardNest</div>
-      <span class="sc-shield">⚠️</span>
-      <div class="sc-headline">Nothing slipped through</div>
-      <div class="sc-item" id="scItemName">Samsung TV</div>
-      <div class="sc-days" id="scDaysText">Warranty expires in 7 days</div>
-      <div class="sc-tagline">Caught by <strong>guardnest.app</strong></div>
-    </div>
-    <div class="share-actions">
-      <button class="sc-btn-copy" onclick="copyShareText()" ontouchend="this.onclick()">
-        📋 Copy to Share
-      </button>
-      <button class="sc-btn-close" onclick="closeShareCard()" ontouchend="this.onclick()">
-        Close
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- NEAR MISS MODAL -->
-<div class="near-miss-modal hidden" id="nearMissModal">
-  <div class="near-miss-box">
-    <div class="nm-urgent">
-      <div class="nm-item-name" id="nmItemName">Samsung TV</div>
-      <div class="nm-days" id="nmDaysText">Warranty expires in 7 days</div>
-    </div>
-    <p class="nm-action" id="nmActionText">
-      Your warranty is expiring soon. <strong>Now is the time to file a claim</strong> if anything needs attention — before coverage runs out.
-    </p>
-    <div class="nm-btns">
-      <a href="#" id="nmSearchLink" target="_blank" class="nm-btn-primary">
-        🔍 Find Claim Info
-      </a>
-      <button class="nm-btn-secondary" onclick="shareNearMiss()" ontouchend="this.onclick()">
-        📤 Share
-      </button>
-    </div>
-    <div style="text-align:center;margin-top:10px">
-      <button onclick="closeNearMiss()" ontouchend="this.onclick()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;touch-action:manipulation">
-        Got it, dismiss
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- FIRST WIN MODAL -->
-<div class="first-win-modal hidden" id="firstWinModal">
-  <div class="first-win-box">
-    <span class="fw-icon">🛡️</span>
-    <div class="fw-title">NOTHING SLIPS THROUGH.</div>
-    <div class="fw-value" id="fwProtectedValue">$0</div>
-    <p class="fw-sub">in purchases now protected by GuardNest</p>
-    <div class="fw-wins" id="fwWinsList"></div>
-    <button class="fw-btn" onclick="closeFirstWin()" ontouchend="this.onclick()">
-      🚀 Go to My Vault
-    </button>
-  </div>
-</div>
-
-<!-- DELETE CONFIRM MODAL -->
-<div class="delete-modal hidden" id="deleteModal">
-  <div class="delete-box">
-    <span class="delete-box-icon">🗑️</span>
-    <div class="delete-box-title">DELETE ITEM?</div>
-    <p class="delete-box-sub">
-      This will permanently remove<br>
-      <span class="delete-box-item" id="deleteItemName"></span><br>
-      from your vault. This cannot be undone.
-    </p>
-    <div class="delete-actions">
-      <button class="btn-cancel" onclick="cancelDelete()" ontouchend="this.onclick()">
-        Cancel
-      </button>
-      <button class="btn-delete-confirm" onclick="confirmDelete()" ontouchend="this.onclick()">
-        🗑️ Delete
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ONBOARDING SCREEN -->
-<div class="onboarding-screen hidden" id="onboardingScreen">
-  <div class="ob-shield"></div>
-  <div class="ob-title">WELCOME TO AEGIS</div>
-  <p class="ob-sub">
-    <strong>Nothing slips through.</strong><br>
-    Scan a receipt and Aegis tracks every warranty and expiry date — so nothing slips through the cracks.
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Warranty & Expiry Tracking — Built for Real Life</div>
+  <h1 class="hero-headline">
+    Nothing<br><span>Slips</span><br>Through.
+  </h1>
+  <p class="hero-sub">
+    GuardNest scans your receipts and <strong>watches every warranty and expiry date</strong> — so you never pay for a repair you already covered, or throw out groceries you could have used.
   </p>
-  <div class="ob-steps">
-    <div class="ob-step">
-      <div class="ob-step-icon">📷</div>
-      <div class="ob-step-label">Scan a receipt</div>
+  <div class="hero-cta-group">
+    <a href="https://guardnest.app/" class="btn-primary">Scan Your First Receipt →</a>
+    <a href="#how" class="btn-secondary">See How It Works</a>
+  </div>
+  <p class="hero-proof">Free to use · No credit card · Works on any phone</p>
+</section>
+
+<!-- THE MOMENT -->
+<section class="moment">
+  <div class="moment-label">The $340 Moment</div>
+  <h2 class="moment-headline">You Had the Warranty.<br>You Just Forgot.</h2>
+  <p class="moment-body">
+    Thirteen months after buying a TV, the screen starts flickering. You call Best Buy. <strong>Warranty expired last month.</strong> You pay $340 for a repair that should have been free.
+  </p>
+  <p class="moment-body">
+    It's not that you didn't care. It's that nobody was watching. <strong>GuardNest watches.</strong>
+  </p>
+</section>
+
+<!-- SCENARIO CARDS -->
+<section class="scenarios">
+  <div class="scenarios-label">Without GuardNest vs. With GuardNest</div>
+  <div class="scenario-grid">
+
+    <div class="scenario-card">
+      <span class="sc-emoji">📺</span>
+      <div class="sc-before">Without GuardNest</div>
+      <div class="sc-title">$340 repair bill</div>
+      <p class="sc-body">TV warranty expired last month. You had no idea. Best Buy can't help you. You pay out of pocket for something you already paid to protect.</p>
     </div>
-    <div class="ob-step">
-      <div class="ob-step-icon">🧠</div>
-      <div class="ob-step-label">Aegis learns everything</div>
+
+    <div class="scenario-card">
+      <span class="sc-emoji">🛡️</span>
+      <div class="sc-after">With GuardNest</div>
+      <div class="sc-title">"Your TV warranty expires in 7 days"</div>
+      <p class="sc-body">GuardNest alerts you before the window closes. You check the TV, everything's fine — but you knew. Nothing slipped through.</p>
     </div>
-    <div class="ob-step">
-      <div class="ob-step-icon">⚡</div>
-      <div class="ob-step-label">Get alerted before it's too late</div>
+
+    <div class="scenario-card">
+      <span class="sc-emoji">🍗</span>
+      <div class="sc-before">Without GuardNest</div>
+      <div class="sc-title">Chicken in the back of the fridge</div>
+      <p class="sc-body">You bought it Tuesday. It's now Sunday. You find it expired at the back of the fridge. $11 in the trash. Again.</p>
+    </div>
+
+    <div class="scenario-card">
+      <span class="sc-emoji">⏰</span>
+      <div class="sc-after">With GuardNest</div>
+      <div class="sc-title">"Use your chicken tonight — expires tomorrow"</div>
+      <p class="sc-body">GuardNest reminds you before it goes bad. You make dinner. Nothing wasted. The small wins add up to real money saved.</p>
+    </div>
+
+    <div class="scenario-card">
+      <span class="sc-emoji">🌹</span>
+      <div class="sc-before">Without GuardNest</div>
+      <div class="sc-title">Roses wilting on the counter</div>
+      <p class="sc-body">You bought roses Friday. By Wednesday they're dead. You didn't think about them until it was too late.</p>
+    </div>
+
+    <div class="scenario-card">
+      <span class="sc-emoji">💐</span>
+      <div class="sc-after">With GuardNest</div>
+      <div class="sc-title">"Your roses have 2 days left"</div>
+      <p class="sc-body">Move them to fresh water. Trim the stems. Get two more days out of them. Small thing. Real difference.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- NEAR MISS FEATURE -->
+<section class="near-miss-section">
+  <div class="near-miss-inner">
+    <div class="nm-content">
+      <div class="nm-content-label">⚡ The Alert That Changes Everything</div>
+      <h2 class="nm-content-title">The Near-Miss<br>Notification</h2>
+      <p class="nm-content-body">
+        When something is about to expire, GuardNest doesn't just add it to a list. It surfaces it — with <strong>exactly what to do next.</strong>
+      </p>
+      <p class="nm-content-body">
+        File the warranty claim. Cook the chicken tonight. Move the flowers to fresh water. <strong>One specific action. One tap.</strong>
+      </p>
+      <p class="nm-content-body">
+        This is the moment the app earns its place on your phone.
+      </p>
+    </div>
+    <div class="nm-mock">
+      <div class="nm-mock-badge">⚠️ Action Required</div>
+      <div class="nm-mock-item">Samsung 65" TV</div>
+      <div class="nm-mock-days">Warranty expires in 7 days</div>
+      <p class="nm-mock-action">
+        This is your window. File a claim now if anything needs attention — before your coverage runs out completely.
+      </p>
+      <a href="https://guardnest.app/" class="nm-mock-btn">🔍 Find Claim Info</a>
+      <span class="nm-mock-dismiss">Got it, dismiss →</span>
     </div>
   </div>
-  <button class="ob-btn" onclick="startOnboarding()" ontouchend="this.onclick()">
-    📷 Scan My First Receipt
-  </button>
-  <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
-    Skip for now →
-  </button>
-</div>
+</section>
 
-<!-- FIRST SAVE CELEBRATION -->
-<div class="celebration-modal hidden" id="celebrationModal">
-  <div class="celebration-box">
-    <span class="cel-icon">🛡️</span>
-    <div class="cel-title">VAULT IS LIVE!</div>
-    <p class="cel-sub">Aegis is now protecting your purchases. Here's what we're tracking:</p>
-    <div class="cel-stats">
-      <div class="cel-stat">
-        <div class="cel-stat-num" id="celItems">0</div>
-        <div class="cel-stat-label">Items</div>
-      </div>
-      <div class="cel-stat">
-        <div class="cel-stat-num" id="celWarranties">0</div>
-        <div class="cel-stat-label">Warranties</div>
-      </div>
-      <div class="cel-stat">
-        <div class="cel-stat-num" id="celAlerts">0</div>
-        <div class="cel-stat-label">Alerts</div>
-      </div>
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-label">How GuardNest Works</div>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-step-num">1</div>
+      <div class="how-step-title">Scan a Receipt</div>
+      <p class="how-step-body">Take a photo of any receipt — grocery, electronics, appliances. GuardNest reads it in seconds and identifies every item worth tracking.</p>
     </div>
-    <button class="cel-btn" onclick="dismissCelebration()" ontouchend="this.onclick()">
-      🚀 Explore My Vault
-    </button>
-  </div>
-</div>
-
-<!-- SCAN OVERLAY -->
-<div class="scan-overlay hidden" id="scanOverlay">
-  <div class="scan-receipt-preview" id="scanPreview">
-    <img id="scanPreviewImg" src="" alt="">
-    <div class="scan-line"></div>
-  </div>
-  <div class="scan-shield"></div>
-  <div class="scan-status" id="scanStatusText">INITIALIZING</div>
-  <div class="scan-substatus" id="scanSubText">Preparing analysis...</div>
-  <div class="scan-progress-track">
-    <div class="scan-progress-fill" id="scanProgressFill"></div>
-  </div>
-  <div class="scan-steps">
-    <div class="scan-step" id="step1">
-      <div class="scan-step-icon">⟳</div>
-      <span>Reading receipt image</span>
+    <div class="how-step">
+      <div class="how-step-num">2</div>
+      <div class="how-step-title">GuardNest Learns</div>
+      <p class="how-step-body">Every warranty period, expiry date, and spoil timeline is calculated automatically. Nothing to fill in. Nothing to remember.</p>
     </div>
-    <div class="scan-step" id="step2">
-      <div class="scan-step-icon">⟳</div>
-      <span>Identifying items and prices</span>
-    </div>
-    <div class="scan-step" id="step3">
-      <div class="scan-step-icon">⟳</div>
-      <span>Cross-referencing 547 products</span>
-    </div>
-    <div class="scan-step" id="step4">
-      <div class="scan-step-icon">⟳</div>
-      <span>Calculating warranty and expiry dates</span>
-    </div>
-    <div class="scan-step" id="step5">
-      <div class="scan-step-icon">⟳</div>
-      <span>Building your inventory manifest</span>
+    <div class="how-step">
+      <div class="how-step-num">3</div>
+      <div class="how-step-title">Get Alerted in Time</div>
+      <p class="how-step-body">Before warranties expire or food goes bad, GuardNest tells you — with exactly what to do next. File a claim. Cook tonight. Nothing slips through.</p>
     </div>
   </div>
-</div>
-
-<!-- TOAST CONTAINER -->
-<div class="toast-container" id="toastContainer"></div>
-
-<!-- ═══════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════ -->
-<script>
-// ─── CONFIG — REPLACE WITH YOUR KEYS ──────────────────────────
-const SUPABASE_URL     = 'https://eeizfajopbpmjsxykgmz.supabase.co';
-const SUPABASE_ANON    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlaXpmYWpvcGJwbWpzeHlrZ216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzU0NzQsImV4cCI6MjA5MDIxMTQ3NH0.pxnBz7yFfw69l5qR9RoW8rDmvKAkXvs8for_XaS05N0';
-const SUPABASE_FUNCTION_URL = 'https://eeizfajopbpmjsxykgmz.supabase.co/functions/v1/gemini-proxy';
-// ───────────────────────────────────────────────────────────────
-
-const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-// ─── STATE ────────────────────────────────────────────────────
-let currentUser  = null;
-let allItems     = [];
-let pendingItems = [];
-let totalCredits = 0;
-let scanCount    = 0;
-
-const LEVELS = [
-  [0,    'Recruit'],
-  [500,  'Operative'],
-  [1000, 'Specialist'],
-  [2000, 'Agent'],
-  [3500, 'Commander'],
-  [5000, 'Director'],
-  [7500, 'Executive'],
-  [10000,'Sovereign'],
-];
-
-const UNLOCK_HINTS = [
-  'Keep scanning to level up',
-  'Unlock Document Scanner at Level 4',
-  'Scan 10 items for Asset Manager badge',
-  'Scan $500 in items for High Roller badge',
-  'Scan 25 items for Quartermaster badge',
-];
-
-// ─── INIT ─────────────────────────────────────────────────────
-(async () => {
-  setLoadingMsg('CHECKING CREDENTIALS...');
-  const { data: { session } } = await supa.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    await bootApp();
-  } else {
-    hideLoading();
-    showAuth();
-  }
-
-  supa.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user) {
-      currentUser = session.user;
-      await bootApp();
-    } else if (event === 'SIGNED_OUT') {
-      currentUser = null;
-      showAuth();
-    }
-  });
-})();
-
-async function bootApp() {
-  setLoadingMsg('LOADING VAULT...');
-  await loadItems();
-  await loadReceipts();
-  hideLoading();
-  showApp();
-  applyMobileLayout();
-  refreshDashboard();
-  refreshAlerts();
-  refreshVault();
-  updateSidebar();
-  checkOnboarding();
-  // Check for near-miss alerts on app load
-  if (allItems.length > 0) {
-    const shownToday = localStorage.getItem('guardnest_nearmiss_' + new Date().toDateString());
-    if (!shownToday) {
-      setTimeout(() => {
-        checkNearMiss(allItems);
-        localStorage.setItem('guardnest_nearmiss_' + new Date().toDateString(), 'true');
-      }, 1500);
-    }
-  }
-  // Learn patterns and show shopping prompt if due
-  if (allItems.length >= 5) {
-    learnShoppingPatterns();
-    setTimeout(() => showShoppingPrompt(), 3000);
-  }
-}
-
-// ─── AUTH ─────────────────────────────────────────────────────
-function showAuth() {
-  document.getElementById('screen-auth').classList.remove('hidden');
-  document.getElementById('screen-app').classList.remove('visible');
-}
-
-function isMobile() {
-  return window.innerWidth <= 768;
-}
-
-function applyMobileLayout() {
-  const sidebar = document.querySelector('.sidebar');
-  const mobileHeader = document.getElementById('mobileHeader');
-  const mobileXpBar = document.getElementById('mobileXpBar');
-  const bottomNav = document.getElementById('bottomNav');
-  const topbar = document.querySelector('.topbar');
-
-  if (isMobile()) {
-    if (sidebar)      sidebar.style.display = 'none';
-    if (mobileHeader) mobileHeader.style.display = 'flex';
-    if (mobileXpBar)  mobileXpBar.style.display = 'block';
-    if (bottomNav)    bottomNav.style.display = 'block';
-    if (topbar)       topbar.style.display = 'none';
-  } else {
-    if (sidebar)      sidebar.style.display = '';
-    if (mobileHeader) mobileHeader.style.display = 'none';
-    if (mobileXpBar)  mobileXpBar.style.display = 'none';
-    if (bottomNav)    bottomNav.style.display = 'none';
-    if (topbar)       topbar.style.display = '';
-  }
-}
-
-window.addEventListener('resize', applyMobileLayout);
-
-function showApp() {
-  document.getElementById('screen-auth').classList.add('hidden');
-  document.getElementById('screen-app').classList.add('visible');
-  applyMobileLayout();
-}
-
-function switchAuthTab(tab) {
-  document.getElementById('formLogin').classList.toggle('hidden',    tab !== 'login');
-  document.getElementById('formRegister').classList.toggle('hidden', tab !== 'register');
-  document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
-  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
-  document.getElementById('authMsg').innerHTML = '';
-}
-
-function setAuthMsg(msg, type) {
-  const el = document.getElementById('authMsg');
-  el.className = `alert-msg ${type}`;
-  el.textContent = msg;
-}
-
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPassword').value;
-  if (!email || !pass) return setAuthMsg('Please fill in all fields.', 'error');
-
-  const btn = document.getElementById('btnLogin');
-  btn.disabled = true; btn.textContent = 'Signing in...';
-
-  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = '⚡ Access Vault';
-  if (error) setAuthMsg(error.message, 'error');
-}
-
-async function doRegister() {
-  const email   = document.getElementById('regEmail').value.trim();
-  const pass    = document.getElementById('regPassword').value;
-  const confirm = document.getElementById('regConfirm').value;
-  if (!email || !pass) return setAuthMsg('Please fill in all fields.', 'error');
-  if (pass !== confirm) return setAuthMsg('Passwords do not match.', 'error');
-  if (pass.length < 6)  return setAuthMsg('Password must be at least 6 characters.', 'error');
-
-  const btn = document.getElementById('btnRegister');
-  btn.disabled = true; btn.textContent = 'Creating account...';
-
-  const { error } = await supa.auth.signUp({ email, password: pass });
-  btn.disabled = false; btn.textContent = '🛡️ Create Account';
-  if (error) setAuthMsg(error.message, 'error');
-  else setAuthMsg('Account created! Check your email to confirm, then sign in.', 'success');
-}
-
-async function doGoogleLogin() {
-  await supa.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.href }
-  });
-}
-
-async function doSignOut() {
-  await supa.auth.signOut();
-  showAuth();
-}
-
-// ─── DATA ─────────────────────────────────────────────────────
-async function loadItems() {
-  if (!currentUser) return;
-  const { data, error } = await supa
-    .from('items')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('id', { ascending: false });
-  if (!error) {
-    allItems     = data || [];
-    totalCredits = allItems.reduce((s, i) => s + (10 + Math.max(0, Math.floor((i.price || 0) - 50))), 0);
-    scanCount    = new Set(allItems.map(i => i.image_url)).size;
-  }
-}
-
-let allReceipts = [];
-
-async function loadReceipts() {
-  if (!currentUser) return;
-  const { data, error } = await supa
-    .from('receipts')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: false });
-  if (!error) allReceipts = data || [];
-}
-
-// ─── LEVEL SYSTEM ─────────────────────────────────────────────
-function getLevelInfo(credits) {
-  let level = 1, title = 'Recruit', min = 0, nextMin = 500;
-  for (let i = 0; i < LEVELS.length; i++) {
-    if (credits >= LEVELS[i][0]) { level = i + 1; title = LEVELS[i][1]; min = LEVELS[i][0]; nextMin = LEVELS[i+1] ? LEVELS[i+1][0] : null; }
-  }
-  const atMax    = nextMin === null;
-  const progress = atMax ? 1 : (credits - min) / (nextMin - min);
-  const toNext   = atMax ? 0 : nextMin - credits;
-  const nextTitle= LEVELS[level] ? LEVELS[level][1] : null;
-  return { level, title, progress, toNext, atMax, nextTitle };
-}
-
-function updateSidebar() {
-  const info = getLevelInfo(totalCredits);
-  document.getElementById('sideLevel').innerHTML       = `${info.level} <span>/ 8</span>`;
-  document.getElementById('sideTitle').textContent     = info.title;
-  document.getElementById('sideCredits').textContent   = `${totalCredits.toLocaleString()} XP`;
-  document.getElementById('sideCreditsNum').textContent= totalCredits.toLocaleString();
-
-  // Animate XP bar smoothly
-  const xpBar = document.getElementById('xpBar');
-  const targetWidth = (info.progress * 100).toFixed(1) + '%';
-  if (xpBar && xpBar.style.width !== targetWidth) {
-    requestAnimationFrame(() => { xpBar.style.width = targetWidth; });
-  }
-
-  document.getElementById('sideNext').textContent     = info.atMax ? 'MAX LEVEL' : `${info.toNext} to ${info.nextTitle}`;
-  document.getElementById('xpUnlock').textContent     = info.atMax ? '🏆 Maximum clearance achieved' : UNLOCK_HINTS[Math.min(info.level - 1, UNLOCK_HINTS.length - 1)];
-  document.getElementById('dashCredits').textContent  = totalCredits.toLocaleString();
-  document.getElementById('statCredits').textContent  = totalCredits.toLocaleString();
-  updateBadges();
-
-  // Update mobile XP bar
-  const mobileXpFill = document.getElementById('mobileXpFill');
-  const mobileLevelText = document.getElementById('mobileLevelText');
-  const mobileCreditsEl = document.getElementById('mobileCredits');
-  if (mobileXpFill) mobileXpFill.style.width = (info.progress * 100).toFixed(1) + '%';
-  if (mobileLevelText) mobileLevelText.textContent = `Lvl ${info.level} — ${info.title}`;
-  if (mobileCreditsEl) mobileCreditsEl.textContent = totalCredits.toLocaleString();
-
-  // Update mobile alert badge
-  const bnBadge = document.getElementById('bnAlertBadge');
-  const alerts  = buildAlerts();
-  if (bnBadge) {
-    if (alerts.length > 0) {
-      bnBadge.textContent = alerts.length;
-      bnBadge.classList.remove('hidden');
-    } else {
-      bnBadge.classList.add('hidden');
-    }
-  }
-
-  // Show level up toast if leveled up
-  const prevLevel = parseInt(localStorage.getItem('aegis_level') || '1');
-  if (info.level > prevLevel) {
-    showToast(`🎉 Level Up! You are now ${info.title}`, 'success');
-    localStorage.setItem('aegis_level', info.level);
-  } else {
-    localStorage.setItem('aegis_level', info.level);
-  }
-}
-
-function updateBadges() {
-  const totalValue = allItems.reduce((s, i) => s + (i.price || 0), 0);
-  const hasRare    = allItems.some(i => ['RARE','LEGENDARY','EXOTIC'].includes(i.rarity));
-  const badges     = [
-    allItems.length >= 1,
-    totalValue >= 500,
-    hasRare,
-    allItems.length >= 10,
-    allItems.length >= 25,
-  ];
-  const chips = document.querySelectorAll('.badge-chip');
-  const labels= ['First Acquisition','High Roller','Operational','Asset Manager','Quartermaster'];
-  badges.forEach((earned, i) => {
-    if (chips[i]) {
-      chips[i].className = `badge-chip ${earned ? 'earned' : 'locked'}`;
-    }
-  });
-}
-
-// ─── PAGE NAVIGATION ──────────────────────────────────────────
-const PAGE_TITLES = {
-  dashboard: 'OPERATOR DASHBOARD',
-  scanner:   'ACQUISITION SCANNER',
-  alerts:    'EXPIRY ALERTS',
-  vault:     'THE VAULT',
-  pdf:       'DOCUMENT SCANNER',
-};
-
-// Prevent 300ms tap delay on mobile
-document.addEventListener('touchstart', function(){}, {passive: true});
-
-function showPage(id) {
-  applyMobileLayout();
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-
-  const navItems = document.querySelectorAll('.nav-item');
-  const order = ['dashboard','scanner','alerts','vault','pdf'];
-  const idx = order.indexOf(id);
-  if (navItems[idx]) navItems[idx].classList.add('active');
-
-  // Update desktop topbar
-  document.getElementById('topbarTitle').textContent = PAGE_TITLES[id] || id.toUpperCase();
-
-  // Update mobile header title
-  const mobileTitle = document.getElementById('mobilePageTitle');
-  if (mobileTitle) mobileTitle.textContent = PAGE_TITLES[id] || id.toUpperCase();
-
-  // Update bottom nav active state
-  ['dashboard','alerts','vault','pdf'].forEach(p => {
-    const btn = document.getElementById('bn-' + p);
-    if (btn) btn.classList.toggle('active', p === id);
-  });
-
-  // Scroll to top on mobile
-  if (window.innerWidth <= 768) {
-    document.querySelector('.content')?.scrollTo(0, 0);
-    window.scrollTo(0, 0);
-  }
-
-  if (id === 'dashboard') { refreshDashboard(); }
-  if (id === 'alerts')    { refreshAlerts(); }
-  if (id === 'vault')     { refreshVault(); }
-  if (id === 'receipts')  { refreshReceipts(); }
-}
-
-// ─── MISSION BOARD DASHBOARD ──────────────────────────────────
-function getStreak() {
-  const streak = parseInt(localStorage.getItem('guardnest_streak') || '0');
-  const lastScan = localStorage.getItem('guardnest_last_scan_week');
-  const thisWeek = getWeekKey();
-  return { streak, lastScan, thisWeek };
-}
-
-function getWeekKey() {
-  const d = new Date();
-  const startOfYear = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
-  return `${d.getFullYear()}-W${week}`;
-}
-
-function updateStreak() {
-  const { streak, lastScan, thisWeek } = getStreak();
-  const lastWeek = getPrevWeekKey();
-  let newStreak = streak;
-
-  if (allItems.length > 0) {
-    if (lastScan === thisWeek) {
-      // Already scanned this week — streak maintained
-      newStreak = streak;
-    } else if (lastScan === lastWeek) {
-      // Scanned last week — increment
-      newStreak = streak + 1;
-      localStorage.setItem('guardnest_streak', newStreak);
-      localStorage.setItem('guardnest_last_scan_week', thisWeek);
-    } else if (!lastScan) {
-      // First scan ever
-      newStreak = 1;
-      localStorage.setItem('guardnest_streak', 1);
-      localStorage.setItem('guardnest_last_scan_week', thisWeek);
-    }
-    // else: missed a week — streak stays as is (they can see it)
-  }
-  return newStreak;
-}
-
-function getPrevWeekKey() {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  const startOfYear = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
-  return `${d.getFullYear()}-W${week}`;
-}
-
-function buildMissions() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const weekKey = getWeekKey();
-  const completedKey = `guardnest_missions_${weekKey}`;
-  const completed = JSON.parse(localStorage.getItem(completedKey) || '[]');
-
-  const missions = [];
-
-  // Mission 1: Scan a receipt this week
-  const scannedThisWeek = allItems.some(i => {
-    if (!i.purchase_date) return false;
-    const d = new Date(i.purchase_date);
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
-    return d >= startOfWeek;
-  });
-  missions.push({
-    id: 'scan_week',
-    icon: '📷',
-    title: 'Scan a receipt this week',
-    desc: 'Keep your vault up to date',
-    xp: 10,
-    done: scannedThisWeek || completed.includes('scan_week'),
-    action: () => showPage('scanner'),
-    actionLabel: 'Go Scan →',
-  });
-
-  // Mission 2: Use a perishable item (if any exist)
-  const perishables = allItems.filter(i => (i.days_until_spoil||0) > 0 && (i.status||'active') === 'active');
-  if (perishables.length > 0) {
-    const mostUrgent = perishables.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
-    missions.push({
-      id: 'use_perishable',
-      icon: '🥗',
-      title: `Use your ${mostUrgent.item_name || 'perishable'}`,
-      desc: `${mostUrgent.days_until_spoil} day${mostUrgent.days_until_spoil !== 1 ? 's' : ''} left — don't let it go to waste`,
-      xp: mostUrgent.days_until_spoil <= 1 ? 50 : 25,
-      done: completed.includes('use_perishable'),
-      action: () => showPage('vault'),
-      actionLabel: 'View Vault →',
-    });
-  }
-
-  // Mission 3: File a warranty claim (if any expiring within 30 days)
-  const expiringWarranty = allItems.filter(i => {
-    if (!(i.warranty_days||0) || !i.purchase_date || (i.status||'active') !== 'active') return false;
-    const exp = new Date(i.purchase_date);
-    exp.setDate(exp.getDate() + i.warranty_days);
-    const left = Math.round((exp - today) / 86400000);
-    return left >= 0 && left <= 30;
-  });
-  if (expiringWarranty.length > 0) {
-    const urgent = expiringWarranty.sort((a,b) => {
-      const expA = new Date(a.purchase_date); expA.setDate(expA.getDate() + a.warranty_days);
-      const expB = new Date(b.purchase_date); expB.setDate(expB.getDate() + b.warranty_days);
-      return expA - expB;
-    })[0];
-    const exp = new Date(urgent.purchase_date);
-    exp.setDate(exp.getDate() + urgent.warranty_days);
-    const daysLeft = Math.round((exp - today) / 86400000);
-    missions.push({
-      id: 'check_warranty',
-      icon: '🛡️',
-      title: `Check ${urgent.item_name || 'warranty'} coverage`,
-      desc: `Warranty expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — file a claim if needed`,
-      xp: 200,
-      done: completed.includes('check_warranty'),
-      action: () => {
-        const url = `https://www.google.com/search?q=${encodeURIComponent((urgent.merchant||'') + ' ' + (urgent.item_name||'') + ' warranty claim')}`;
-        window.open(url, '_blank');
-      },
-      actionLabel: 'Find Claim Info →',
-    });
-  }
-
-  // Mission 4: Clean week bonus (nothing expired this week)
-  const nothingExpired = allItems.every(i => {
-    if ((i.days_until_spoil||0) > 0 && i.days_until_spoil <= 0) return false;
-    return true;
-  });
-  missions.push({
-    id: 'clean_week',
-    icon: '✅',
-    title: 'Achieve a clean week',
-    desc: 'Nothing expires without your knowledge',
-    xp: 100,
-    done: nothingExpired && allItems.length > 0,
-    auto: true,
-  });
-
-  return { missions, completed, completedKey };
-}
-
-function completeMission(missionId, xp) {
-  const weekKey = getWeekKey();
-  const completedKey = `guardnest_missions_${weekKey}`;
-  const completed = JSON.parse(localStorage.getItem(completedKey) || '[]');
-  if (!completed.includes(missionId)) {
-    completed.push(missionId);
-    localStorage.setItem(completedKey, JSON.stringify(completed));
-    showToast(`✅ Mission complete! +${xp} XP`, 'success');
-    totalCredits += xp;
-    updateSidebar();
-    refreshDashboard();
-  }
-}
-
-function refreshDashboard() {
-  const alerts = buildAlerts();
-  const total = allItems.length;
-  const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
-  const protectedVal = allItems.filter(i => (i.warranty_days||0) > 0).reduce((s,i) => s + (i.price||0), 0);
-  const atRisk = alerts.reduce((s,a) => s + (a.price||0), 0);
-
-  // Update hidden fields (used by other functions)
-  const dashTotal = document.getElementById('dashTotal');
-  const dashProtected = document.getElementById('dashProtected');
-  const dashRisk = document.getElementById('dashRisk');
-  const dashCredits = document.getElementById('dashCredits');
-  if (dashTotal) dashTotal.textContent = total;
-  if (dashProtected) dashProtected.textContent = '$' + protectedVal.toFixed(0);
-  if (dashRisk) dashRisk.textContent = '$' + atRisk.toFixed(0);
-  if (dashCredits) dashCredits.textContent = totalCredits.toLocaleString();
-
-  // Update scanner stats
-  document.getElementById('statTotalScans').textContent = scanCount;
-  document.getElementById('statTotalItems').textContent = total;
-
-  // Update alert badge
-  if (alerts.length > 0) {
-    document.getElementById('alertBadge').textContent = alerts.length;
-    document.getElementById('alertBadge').classList.remove('hidden');
-  }
-
-  // ── STREAK ────────────────────────────────────────────────
-  const streak = updateStreak();
-  const streakEl = document.getElementById('missionStreak');
-  if (streakEl) {
-    streakEl.className = `mission-streak${streak === 0 ? ' streak-zero' : ''}`;
-  }
-  const streakNum = document.getElementById('streakNum');
-  if (streakNum) streakNum.textContent = streak;
-
-  // ── LEVEL HEADER ──────────────────────────────────────────
-  const info = getLevelInfo(totalCredits);
-  const levelTitle = document.getElementById('missionLevelTitle');
-  const xpFill = document.getElementById('missionXpFill');
-  const xpLabel = document.getElementById('missionXpLabel');
-  if (levelTitle) levelTitle.textContent = `${info.title} · Level ${info.level}`;
-  if (xpFill) xpFill.style.width = (info.progress * 100).toFixed(1) + '%';
-  if (xpLabel) xpLabel.textContent = info.atMax
-    ? `${totalCredits.toLocaleString()} XP · Max Level 🏆`
-    : `${totalCredits.toLocaleString()} XP · ${info.toNext} to ${info.nextTitle}`;
-
-  // ── RIGHT NOW: Most urgent item ───────────────────────────
-  const urgentContent = document.getElementById('urgentContent');
-  if (urgentContent) {
-    if (alerts.length === 0) {
-      urgentContent.innerHTML = `<div class="empty-state" style="padding:28px">
-        <span class="empty-icon">✅</span>
-        <div class="empty-title">All Clear</div>
-        <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
-      </div>`;
-    } else {
-      const most = alerts[0];
-      const isSpoil = most.alertType === 'Perishable';
-      const [cls,,label] = urgencyClass(most.days);
-      const [emoji] = getItemEmoji(most.item_name, most.category);
-      const actionText = isSpoil
-        ? `Use tonight — ${most.days <= 0 ? 'already expired' : most.days + ' day' + (most.days !== 1 ? 's' : '') + ' left'}`
-        : `File a warranty claim — ${most.days <= 0 ? 'expired' : most.days + ' day' + (most.days !== 1 ? 's' : '') + ' remaining'}`;
-      const searchUrl = isSpoil
-        ? `https://www.google.com/search?q=recipe+with+${encodeURIComponent(most.item_name||'')}`
-        : `https://www.google.com/search?q=${encodeURIComponent((most.merchant||'') + ' ' + (most.item_name||'') + ' warranty claim')}`;
-
-      urgentContent.innerHTML = `<div class="urgent-item">
-        <div class="urgent-emoji">${emoji}</div>
-        <div class="urgent-info">
-          <div class="urgent-name">${most.item_name || 'Unknown'}</div>
-          <div class="urgent-detail">${most.merchant || '—'} · ${isSpoil ? '🥗 Perishable' : '🛡️ Warranty'}</div>
-          <div class="urgent-action">${actionText}</div>
-        </div>
-        <div class="urgent-badge">
-          <span class="alert-badge ${cls}">${label}</span>
-          ${alerts.length > 1 ? `<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px">+${alerts.length-1} more</div>` : ''}
-        </div>
-      </div>
-      <div style="padding:0 20px 14px">
-        <a href="${searchUrl}" target="_blank" style="display:block;text-align:center;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);border-radius:7px;padding:8px;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.06em;text-decoration:none;text-transform:uppercase">
-          ${isSpoil ? '🍳 Find a Recipe' : '🔍 Find Claim Info'}
-        </a>
-      </div>`;
-    }
-  }
-
-  // ── MISSIONS ──────────────────────────────────────────────
-  const { missions } = buildMissions();
-  const missionsEl = document.getElementById('missionsList');
-  const xpPool = document.getElementById('missionXpPool');
-  const remainingXp = missions.filter(m => !m.done).reduce((s,m) => s + m.xp, 0);
-  if (xpPool) xpPool.textContent = remainingXp > 0 ? `+${remainingXp} XP available` : '✅ All done';
-
-  if (missionsEl) {
-    if (missions.length === 0 || total === 0) {
-      missionsEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🎯</span><div class="empty-title">No Missions Yet</div><div class="empty-sub">Scan your first receipt to unlock missions</div></div>`;
-    } else {
-      missionsEl.innerHTML = missions.map(m => {
-        const doneClass = m.done ? ' done' : '';
-        const checkContent = m.done ? '✓' : '';
-        const checkClick = m.done || m.auto ? '' : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
-        return `<div class="mission-item${doneClass}">
-          <div class="mission-icon">${m.icon}</div>
-          <div class="mission-body">
-            <div class="mission-title">${m.title}</div>
-            <div class="mission-desc">${m.desc}</div>
-          </div>
-          <div class="mission-xp-badge">${m.done ? '✓' : '+' + m.xp + ' XP'}</div>
-          ${!m.auto ? `<button class="mission-check" ${checkClick}>${checkContent}</button>` : ''}
-        </div>`;
-      }).join('');
-    }
-  }
-
-  // ── SUMMARY BAR ───────────────────────────────────────────
-  const msTotal = document.getElementById('msTotal');
-  const msProtected = document.getElementById('msProtected');
-  const msAlerts = document.getElementById('msAlerts');
-  const msCredits = document.getElementById('msCredits');
-  if (msTotal) msTotal.textContent = total;
-  if (msProtected) msProtected.textContent = '$' + protectedVal.toFixed(0);
-  if (msAlerts) msAlerts.textContent = alerts.length;
-  if (msCredits) msCredits.textContent = totalCredits.toLocaleString();
-
-  // Update scanner recent
-  const scannerRecentEl = document.getElementById('scannerRecent');
-  if (scannerRecentEl && total > 0) {
-    const sources = [...new Set(allItems.map(i => i.image_url).filter(Boolean))].slice(0,3);
-    scannerRecentEl.innerHTML = sources.map(src => {
-      const count = allItems.filter(i => i.image_url === src).length;
-      return `<div class="recent-item">
-        <div class="recent-thumb">${src.toLowerCase().endsWith('.pdf') ? '📄' : '🧾'}</div>
-        <div class="recent-info"><div class="recent-name">${src}</div><div class="recent-time">${count} item${count!==1?'s':''}</div></div>
-        <div class="recent-xp">+${count*10} XP</div>
-      </div>`;
-    }).join('');
-  }
-}
-
-// ─── ALERTS ───────────────────────────────────────────────────
-function buildAlerts() {
-  const alerts = [];
-  const today  = new Date(); today.setHours(0,0,0,0);
-
-  allItems.forEach(item => {
-    const warranty = item.warranty_days || 0;
-    const spoil    = item.days_until_spoil || 0;
-
-    if (warranty > 0 && item.purchase_date) {
-      const purchased = new Date(item.purchase_date);
-      const expiry    = new Date(purchased);
-      expiry.setDate(expiry.getDate() + warranty);
-      const daysLeft  = Math.round((expiry - today) / 86400000);
-      if (daysLeft <= 30) alerts.push({ ...item, alertType: 'Warranty', days: daysLeft, category: item.category || '' });
-    }
-
-    if (spoil > 0 && spoil <= 7) {
-      alerts.push({ ...item, alertType: 'Perishable', days: spoil, category: item.category || '' });
-    }
-  });
-
-  return alerts.sort((a, b) => a.days - b.days);
-}
-
-function urgencyClass(days) {
-  if (days <= 0)  return ['ab-red',    'var(--red)',    'EXPIRED'];
-  if (days <= 3)  return ['ab-orange', 'var(--orange)', days + 'D LEFT'];
-  if (days <= 7)  return ['ab-yellow', 'var(--yellow)', days + 'D LEFT'];
-  if (days <= 30) return ['ab-blue',   'var(--blue)',   days + 'D LEFT'];
-  return ['ab-green', 'var(--green)', days + 'D LEFT'];
-}
-
-function renderAlertItem(a) {
-  const [cls, color, label] = urgencyClass(a.days);
-  const icon = a.alertType === 'Warranty' ? '🛡️' : '🥗';
-  return `<div class="alert-item">
-    ${emojiAvatar(a.item_name, a.category || '')}
-    <div class="alert-info">
-      <div class="alert-name">${a.item_name || 'Unknown'}</div>
-      <div class="alert-meta">${a.merchant || '—'} · ${icon} ${a.alertType}</div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-num">90%</div>
+      <div class="stat-label">of paper receipts are thrown away — even ones people meant to keep</div>
     </div>
-    <span class="alert-badge ${cls}">${label}</span>
-  </div>`;
-}
+    <div>
+      <div class="stat-num">5×</div>
+      <div class="stat-label">per month the average person loses a receipt they intended to keep</div>
+    </div>
+    <div>
+      <div class="stat-num">$1,500</div>
+      <div class="stat-label">the average American household wastes annually on food that goes bad</div>
+    </div>
+    <div>
+      <div class="stat-num">547</div>
+      <div class="stat-label">items in GuardNest's knowledge base — from chicken to 4K TVs</div>
+    </div>
+  </div>
+</section>
 
-function refreshAlerts() {
-  const alerts = buildAlerts();
-  const expired  = alerts.filter(a => a.days <= 0).length;
-  const critical = alerts.filter(a => a.days > 0 && a.days <= 3).length;
-  const warning  = alerts.filter(a => a.days > 3 && a.days <= 7).length;
-  const monitor  = alerts.filter(a => a.days > 7 && a.days <= 30).length;
-  const atRisk   = alerts.reduce((s, a) => s + (a.price || 0), 0);
-
-  document.getElementById('aExpired').textContent  = expired;
-  document.getElementById('aCritical').textContent = critical;
-  document.getElementById('aWarning').textContent  = warning;
-  document.getElementById('aMonitor').textContent  = monitor;
-  document.getElementById('aRisk').textContent     = '$' + atRisk.toFixed(0);
-
-  const el = document.getElementById('alertsList');
-  if (alerts.length === 0) {
-    el.innerHTML = `<div class="empty-state"><span class="empty-icon">✅</span><div class="empty-title">All Clear</div><div class="empty-sub">Nothing expiring in the next 30 days</div></div>`;
-  } else {
-    el.innerHTML = alerts.map(a => renderAlertItem(a)).join('');
-  }
-}
-
-// ─── VAULT ────────────────────────────────────────────────────
-let currentVaultFilter = 'all';
-
-function renderVaultRow(item) {
-  const price   = item.price || 0;
-  const rarity  = (item.rarity || 'COMMON').toUpperCase();
-  // rarity vars kept for dashboard compatibility
-
-  let statusBadge = '<span class="alert-badge ab-green">—</span>';
-  if ((item.warranty_days || 0) > 0 && item.purchase_date) {
-    const today     = new Date(); today.setHours(0,0,0,0);
-    const purchased = new Date(item.purchase_date);
-    const expiry    = new Date(purchased);
-    expiry.setDate(expiry.getDate() + (item.warranty_days || 0));
-    const daysLeft  = Math.round((expiry - today) / 86400000);
-    const [cls,,label] = urgencyClass(daysLeft);
-    statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
-  }
-
-  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
-    <div>${emojiAvatar(item.item_name, item.category)}</div>
-    <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
-    <div class="vi-price">$${price.toFixed(2)}</div>
-    <div>${statusBadge}</div>
-    <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
-  </div>`;
-}
-
-function filterVault(filter, btn) {
-  currentVaultFilter = filter;
-  document.querySelectorAll('#vaultTabs .tab').forEach(t => t.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  refreshVault();
-}
-
-function refreshVault() {
-  const total    = allItems.length;
-  const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
-  const warranted= allItems.filter(i => (i.warranty_days||0) > 0).length;
-
-  document.getElementById('vTotal').textContent    = total;
-  document.getElementById('vValue').textContent    = '$' + totalVal.toFixed(0);
-  document.getElementById('vWarranty').textContent = warranted;
-
-  const today = new Date(); today.setHours(0,0,0,0);
-
-  // ── SMART ROW: Expiring This Week ──────────────────────────
-  const expiringThisWeek = allItems.filter(item => {
-    const warranty = item.warranty_days || 0;
-    const spoil    = item.days_until_spoil || 0;
-    if (warranty > 0 && item.purchase_date) {
-      const purchased = new Date(item.purchase_date);
-      const expiry    = new Date(purchased);
-      expiry.setDate(expiry.getDate() + warranty);
-      const daysLeft  = Math.round((expiry - today) / 86400000);
-      if (daysLeft >= 0 && daysLeft <= 7) return true;
-    }
-    if (spoil > 0 && spoil <= 7) return true;
-    return false;
-  }).sort((a,b) => (a.days_until_spoil||999) - (b.days_until_spoil||999));
-
-  const expiringEl = document.getElementById('rowExpiringBody');
-  if (expiringThisWeek.length === 0) {
-    expiringEl.innerHTML = `<div class="empty-state" style="padding:16px"><span class="empty-icon" style="font-size:20px">✅</span><div class="empty-sub">Nothing expiring this week</div></div>`;
-  } else {
-    expiringEl.innerHTML = expiringThisWeek.map(item => {
-      const spoil   = item.days_until_spoil || 0;
-      const warranty= item.warranty_days || 0;
-      let days = spoil > 0 ? spoil : 0;
-      if (warranty > 0 && item.purchase_date) {
-        const purchased = new Date(item.purchase_date);
-        const expiry    = new Date(purchased);
-        expiry.setDate(expiry.getDate() + warranty);
-        days = Math.round((expiry - today) / 86400000);
-      }
-      const [cls,,label] = urgencyClass(days);
-      const icon = spoil > 0 ? '🥗' : '🛡️';
-      return `<div class="alert-item">
-        <div class="alert-info"><div class="alert-name">${item.item_name||'Unknown'}</div><div class="alert-meta">📍 ${item.merchant||'—'} · $${(item.price||0).toFixed(2)}</div></div>
-        <div style="font-size:11px;color:var(--text3);margin-right:8px">${icon}</div>
-        <span class="alert-badge ${cls}">${label}</span>
-      </div>`;
-    }).join('');
-  }
-
-  // ── SMART ROW: High Value Assets (over $50) ─────────────────
-  const highValue = [...allItems]
-    .filter(i => (i.price||0) >= 50)
-    .sort((a,b) => (b.price||0) - (a.price||0))
-    .slice(0, 5);
-
-  const hvEl = document.getElementById('rowHighValue');
-  document.getElementById('highValueCount').textContent = highValue.length > 0 ? `${highValue.length} asset${highValue.length!==1?'s':''}` : '';
-  hvEl.innerHTML = highValue.length === 0
-    ? `<div class="empty-state" style="padding:16px"><div class="empty-sub">No high value items yet</div></div>`
-    : highValue.map(item => renderVaultRow(item)).join('');
-
-  // ── SMART ROW: Recently Added (last 5) ──────────────────────
-  const recent = [...allItems].slice(0, 5);
-  const recentEl = document.getElementById('rowRecent');
-  document.getElementById('recentCount').textContent = recent.length > 0 ? `Last ${recent.length} scan${recent.length!==1?'s':''}` : '';
-  recentEl.innerHTML = recent.length === 0
-    ? `<div class="empty-state" style="padding:16px"><div class="empty-sub">No items yet</div></div>`
-    : recent.map(item => renderVaultRow(item)).join('');
-
-  // ── SMART ROW: Perishables ──────────────────────────────────
-  const perishables = allItems.filter(i => (i.days_until_spoil||0) > 0)
-    .sort((a,b) => (a.days_until_spoil||0) - (b.days_until_spoil||0));
-  const perEl = document.getElementById('rowPerishablesBody');
-  document.getElementById('perishableCount').textContent = perishables.length > 0 ? `${perishables.length} item${perishables.length!==1?'s':''}` : '';
-  perEl.innerHTML = perishables.length === 0
-    ? `<div class="empty-state" style="padding:16px"><div class="empty-sub">No perishables tracked</div></div>`
-    : perishables.map(item => {
-        const days = item.days_until_spoil || 0;
-        const [cls,,label] = urgencyClass(days);
-        return `<div class="alert-item">
-          <div class="alert-info"><div class="alert-name">${item.item_name||'Unknown'}</div><div class="alert-meta">📍 ${item.merchant||'—'} · $${(item.price||0).toFixed(2)}</div></div>
-          <span class="alert-badge ${cls}">${label}</span>
-        </div>`;
-      }).join('');
-
-  // ── FULL REGISTRY ───────────────────────────────────────────
-  const rarityOrder = { EXOTIC:0, LEGENDARY:1, RARE:2, COMMON:3 };
-  const sorted = [...allItems].sort((a,b) =>
-    (rarityOrder[a.rarity?.toUpperCase()]??3) - (rarityOrder[b.rarity?.toUpperCase()]??3)
-  );
-  document.getElementById('fullRegistryCount').textContent = `${sorted.length} total`;
-  const el = document.getElementById('vaultList');
-  el.innerHTML = sorted.length === 0
-    ? `<div class="empty-state"><span class="empty-icon">🗄️</span><div class="empty-title">Vault Empty</div><div class="empty-sub">Scan a receipt to add your first asset</div></div>`
-    : sorted.map(item => renderVaultRow(item)).join('');
-}
-
-// ─── SCAN — IMAGE ─────────────────────────────────────────────
-async function handleImageScan(input) {
-  if (!input.files[0]) return;
-  const file = input.files[0];
-
-  document.getElementById('scanResults').classList.add('hidden');
-
-  // Show preview in overlay
-  const previewUrl = URL.createObjectURL(file);
-  showScanOverlay(previewUrl);
-
-  const b64    = await fileToBase64(file);
-  const result = await callGemini(b64, file.type || 'image/jpeg', 'image');
-
-  hideScanOverlay();
-
-  document.getElementById('scanIcon').textContent  = '✅';
-  document.getElementById('scanTitle').textContent = `${result.length} item(s) found`;
-  document.getElementById('scanSub').textContent   = 'Review below and save to vault';
-
-  pendingItems = result.map(i => ({ ...i, image_url: file.name }));
-  renderManifest(result, 'manifestGrid', 'resultsTitle');
-  document.getElementById('scanResults').classList.remove('hidden');
-}
-
-// ─── SCAN — PDF ───────────────────────────────────────────────
-async function handlePdfScan(input) {
-  if (!input.files[0]) return;
-  const file = input.files[0];
-
-  document.getElementById('pdfResults').classList.add('hidden');
-  showScanOverlay(null);
-
-  document.getElementById('scanStatusText').textContent = 'READING';
-  document.getElementById('scanSubText').textContent    = 'Parsing PDF document...';
-
-  const b64    = await fileToBase64(file);
-  const result = await callGemini(b64, 'application/pdf', 'pdf');
-
-  hideScanOverlay();
-
-  document.getElementById('pdfIcon').textContent  = '✅';
-  document.getElementById('pdfTitle').textContent = `${result.length} item(s) found`;
-  document.getElementById('pdfSub').textContent   = 'Review below and save to vault';
-
-  pendingItems = result.map(i => ({ ...i, image_url: file.name }));
-  renderManifest(result, 'pdfManifestGrid', 'pdfResultsTitle');
-  document.getElementById('pdfResults').classList.remove('hidden');
-}
-
-// ─── EMOJI SYSTEM ─────────────────────────────────────────────
-function getItemEmoji(itemName, category) {
-  const name = (itemName || '').toLowerCase();
-  const cat  = (category || '').toLowerCase();
-
-  const keywords = {
-    // Flowers
-    'rose': ['🌹','#8B1A1A'], 'tulip': ['🌷','#C2185B'],
-    'sunflower': ['🌻','#F57F17'], 'orchid': ['🌸','#880E4F'],
-    'lily': ['💐','#6A1B9A'], 'daisy': ['🌼','#F9A825'],
-    'lavender': ['💜','#6A1B9A'], 'bouquet': ['💐','#AD1457'],
-    'carnation': ['🌸','#C2185B'], 'peony': ['🌺','#AD1457'],
-    'hydrangea': ['🌸','#1565C0'], 'flower': ['🌸','#AD1457'],
-    'floral': ['💐','#AD1457'], 'wreath': ['🌿','#2E7D32'],
-    // Produce
-    'banana': ['🍌','#F57F17'], 'apple': ['🍎','#B71C1C'],
-    'orange': ['🍊','#E65100'], 'lemon': ['🍋','#F9A825'],
-    'lime': ['🍋','#2E7D32'], 'strawberr': ['🍓','#B71C1C'],
-    'blueberr': ['🫐','#1565C0'], 'raspberr': ['🍓','#C62828'],
-    'blackberr': ['🍇','#4A148C'], 'grape': ['🍇','#6A1B9A'],
-    'watermelon': ['🍉','#2E7D32'], 'pineapple': ['🍍','#F57F17'],
-    'mango': ['🥭','#E65100'], 'avocado': ['🥑','#2E7D32'],
-    'broccoli': ['🥦','#2E7D32'], 'carrot': ['🥕','#E65100'],
-    'tomato': ['🍅','#B71C1C'], 'corn': ['🌽','#F9A825'],
-    'spinach': ['🥬','#2E7D32'], 'lettuce': ['🥬','#2E7D32'],
-    'kale': ['🥬','#1B5E20'], 'pepper': ['🫑','#2E7D32'],
-    'mushroom': ['🍄','#795548'], 'onion': ['🧅','#795548'],
-    'garlic': ['🧄','#795548'], 'potato': ['🥔','#795548'],
-    'cucumber': ['🥒','#2E7D32'], 'celery': ['🥬','#2E7D32'],
-    'asparagus': ['🥦','#2E7D32'], 'cabbage': ['🥬','#2E7D32'],
-    'cauliflower': ['🥦','#E0E0E0'], 'cherry': ['🍒','#B71C1C'],
-    'peach': ['🍑','#FF8A65'], 'pear': ['🍐','#8BC34A'],
-    'kiwi': ['🥝','#558B2F'], 'mango': ['🥭','#E65100'],
-    // Dairy
-    'milk': ['🥛','#1565C0'], 'egg': ['🥚','#F9A825'],
-    'butter': ['🧈','#F9A825'], 'yogurt': ['🥛','#1565C0'],
-    'cheese': ['🧀','#F57F17'], 'cream': ['🥛','#1565C0'],
-    // Meat
-    'chicken': ['🍗','#E65100'], 'beef': ['🥩','#B71C1C'],
-    'steak': ['🥩','#B71C1C'], 'pork': ['🥩','#C62828'],
-    'bacon': ['🥓','#B71C1C'], 'salmon': ['🐟','#E65100'],
-    'shrimp': ['🍤','#E65100'], 'fish': ['🐟','#1565C0'],
-    'turkey': ['🦃','#795548'], 'sausage': ['🌭','#C62828'],
-    'lamb': ['🥩','#795548'],
-    // Bread
-    'bread': ['🍞','#795548'], 'bagel': ['🥯','#795548'],
-    'muffin': ['🧁','#AD1457'], 'donut': ['🍩','#AD1457'],
-    'croissant': ['🥐','#F57F17'], 'cake': ['🎂','#AD1457'],
-    'cookie': ['🍪','#795548'], 'tortilla': ['🫓','#F9A825'],
-    'pizza': ['🍕','#E65100'], 'pastry': ['🥐','#F57F17'],
-    // Electronics
-    'iphone': ['📱','#1565C0'], 'samsung': ['📱','#1565C0'],
-    'phone': ['📱','#1565C0'], 'laptop': ['💻','#263238'],
-    'macbook': ['💻','#263238'], 'computer': ['🖥️','#263238'],
-    'tv': ['📺','#1565C0'], 'television': ['📺','#1565C0'],
-    'ipad': ['📱','#1565C0'], 'tablet': ['📱','#1565C0'],
-    'airpods': ['🎧','#263238'], 'headphone': ['🎧','#263238'],
-    'earbud': ['🎧','#263238'], 'speaker': ['🔊','#1565C0'],
-    'soundbar': ['🔊','#263238'], 'camera': ['📷','#263238'],
-    'playstation': ['🎮','#1565C0'], 'xbox': ['🎮','#2E7D32'],
-    'nintendo': ['🎮','#B71C1C'], 'watch': ['⌚','#263238'],
-    'printer': ['🖨️','#455A64'], 'router': ['📡','#1565C0'],
-    'kindle': ['📖','#263238'], 'charger': ['🔌','#455A64'],
-    'keyboard': ['⌨️','#455A64'], 'mouse': ['🖱️','#455A64'],
-    'drone': ['🚁','#455A64'], 'monitor': ['🖥️','#1565C0'],
-    'echo': ['🔊','#232F3E'], 'alexa': ['🔊','#232F3E'],
-    'nest': ['🌡️','#43A047'], 'ring': ['🔔','#1565C0'],
-    // Appliances
-    'refrigerator': ['🧊','#1565C0'], 'fridge': ['🧊','#1565C0'],
-    'washer': ['🫧','#1565C0'], 'dryer': ['🌀','#455A64'],
-    'dishwasher': ['🫧','#1565C0'], 'microwave': ['📦','#455A64'],
-    'air fryer': ['🍳','#E65100'], 'blender': ['🫙','#1565C0'],
-    'coffee': ['☕','#795548'], 'keurig': ['☕','#795548'],
-    'toaster': ['🍞','#E65100'], 'vacuum': ['🌀','#455A64'],
-    'roomba': ['🤖','#1565C0'], 'iron': ['👔','#455A64'],
-    'hair dryer': ['💨','#E65100'], 'instant pot': ['🍲','#E65100'],
-    'vitamix': ['🫙','#B71C1C'], 'kitchenaid': ['🍰','#E91E63'],
-    'dyson': ['🌀','#9C27B0'], 'nespresso': ['☕','#37474F'],
-    // Home
-    'mattress': ['🛏️','#455A64'], 'sofa': ['🛋️','#795548'],
-    'couch': ['🛋️','#795548'], 'desk': ['🪑','#795548'],
-    'chair': ['🪑','#795548'], 'lamp': ['💡','#F9A825'],
-    'rug': ['🪄','#795548'], 'curtain': ['🪟','#1565C0'],
-    'mirror': ['🪞','#455A64'], 'bedding': ['🛏️','#1565C0'],
-    'towel': ['🧺','#1565C0'], 'bookshelf': ['📚','#795548'],
-    'dresser': ['🗄️','#795548'], 'fan': ['💨','#1565C0'],
-    // Clothing
-    'shoes': ['👟','#263238'], 'sneakers': ['👟','#263238'],
-    'boots': ['👢','#795548'], 'jacket': ['🧥','#263238'],
-    'coat': ['🧥','#263238'], 'jeans': ['👖','#1565C0'],
-    'shirt': ['👕','#1565C0'], 'dress': ['👗','#AD1457'],
-    'hat': ['🧢','#263238'], 'socks': ['🧦','#263238'],
-    'gloves': ['🧤','#263238'], 'scarf': ['🧣','#B71C1C'],
-    'suit': ['👔','#263238'], 'sweater': ['🧶','#795548'],
-    'hoodie': ['👕','#263238'], 'backpack': ['🎒','#263238'],
-    'purse': ['👜','#795548'], 'wallet': ['👛','#795548'],
-    'sunglasses': ['🕶️','#263238'], 'belt': ['👔','#795548'],
-    // Auto
-    'tire': ['🔧','#263238'], 'battery': ['🔋','#263238'],
-    'wiper': ['🚗','#263238'], 'car seat': ['💺','#263238'],
-    'motor oil': ['🛢️','#263238'],
-    // Health
-    'vitamin': ['💊','#2E7D32'], 'supplement': ['💊','#2E7D32'],
-    'medicine': ['💊','#B71C1C'], 'sunscreen': ['🧴','#E65100'],
-    'massage': ['💆','#795548'],
-    // Sports
-    'yoga': ['🧘','#9C27B0'], 'dumbbell': ['🏋️','#455A64'],
-    'treadmill': ['🏃','#1565C0'], 'bicycle': ['🚲','#E65100'],
-    'helmet': ['⛑️','#E65100'], 'golf': ['⛳','#2E7D32'],
-    'tennis': ['🎾','#F9A825'], 'kayak': ['🚣','#1565C0'],
-    // Baby
-    'stroller': ['👶','#1565C0'], 'diaper': ['🍼','#1565C0'],
-    'formula': ['🍼','#1565C0'], 'toy': ['🧸','#FF8A65'],
-    'lego': ['🧱','#F9A825'], 'puzzle': ['🧩','#9C27B0'],
-    'board game': ['🎲','#E65100'],
-    // Tools
-    'drill': ['🔧','#F9A825'], 'saw': ['🪚','#455A64'],
-    'hammer': ['🔨','#795548'], 'screwdriver': ['🪛','#455A64'],
-    'ladder': ['🪜','#795548'], 'toolbox': ['🧰','#E65100'],
-    'generator': ['⚡','#F9A825'],
-    // Garden
-    'lawn mower': ['🌿','#2E7D32'], 'grill': ['🔥','#E65100'],
-    'garden': ['🌱','#2E7D32'], 'hose': ['🌊','#1565C0'],
-    // Food/Beverages
-    'wine': ['🍷','#6A1B9A'], 'beer': ['🍺','#F57F17'],
-    'juice': ['🧃','#E65100'], 'water': ['💧','#1565C0'],
-    'soda': ['🥤','#B71C1C'], 'tea': ['🍵','#2E7D32'],
-    'kombucha': ['🍵','#795548'], 'soup': ['🍲','#E65100'],
-    'chocolate': ['🍫','#4E342E'], 'candy': ['🍬','#E91E63'],
-    'chips': ['🥨','#F57F17'], 'cereal': ['🥣','#F9A825'],
-    'oats': ['🥣','#795548'], 'pasta': ['🍝','#F57F17'],
-    'rice': ['🍚','#FFFFFF'], 'salsa': ['🌶️','#B71C1C'],
-    'hummus': ['🫙','#F57F17'], 'guacamole': ['🥑','#2E7D32'],
-    'household': ['🧺','#455A64'],
-  };
-
-  for (const [keyword, [emoji, color]] of Object.entries(keywords)) {
-    if (name.includes(keyword)) return [emoji, color];
-  }
-
-  const categoryDefaults = {
-    'electronics': ['📱','#1565C0'], 'appliances': ['⚡','#E65100'],
-    'groceries': ['🛒','#2E7D32'], 'flowers': ['🌸','#AD1457'],
-    'food': ['🍽️','#E65100'], 'clothing': ['👕','#263238'],
-    'home': ['🏠','#795548'], 'auto': ['🚗','#263238'],
-    'health': ['💊','#2E7D32'], 'household': ['🧺','#455A64'],
-    'other': ['📦','#455A64'],
-  };
-
-  for (const [key, val] of Object.entries(categoryDefaults)) {
-    if (cat.includes(key)) return val;
-  }
-
-  return ['📦','#455A64'];
-}
-
-function emojiAvatar(itemName, category) {
-  const [emoji, color] = getItemEmoji(itemName, category);
-  return `<div style="width:38px;height:38px;background:${color}22;border:1px solid ${color}55;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${emoji}</div>`;
-}
-
-// ─── GEMINI API CALL — routed through Supabase Edge Function ──
-// Your Gemini key never touches the browser — it lives in Supabase secrets
-async function callGemini(b64data, mimeType, sourceType) {
-  try {
-    const res = await fetch(SUPABASE_FUNCTION_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        imageData:  b64data,
-        mimeType:   mimeType,
-        sourceType: sourceType,
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      showToast('AI error: ' + (err.error || res.statusText), 'error');
-      return [];
-    }
-
-    const json = await res.json();
-    return json.items || [];
-  } catch (err) {
-    showToast('AI error: ' + err.message, 'error');
-    return [];
-  }
-}
-
-function parseJSON(raw) {
-  const cleaned = raw.replace(/```json/g,'').replace(/```/g,'').trim();
-  for (const [s,e] of [['[',']'],['{','}']]) {
-    const si = cleaned.indexOf(s), ei = cleaned.lastIndexOf(e);
-    if (si !== -1 && ei > si) {
-      try {
-        const r = JSON.parse(cleaned.slice(si, ei+1));
-        return Array.isArray(r) ? r : [r];
-      } catch {}
-    }
-  }
-  try { const r = JSON.parse(cleaned); return Array.isArray(r) ? r : [r]; } catch {}
-  return [];
-}
-
-// ─── RENDER MANIFEST ──────────────────────────────────────────
-function warrantyText(days) {
-  if (!days || days <= 0) return null;
-  if (days >= 730)  return '🛡️ Protected for ' + Math.round(days/365) + ' years';
-  if (days >= 365)  return '🛡️ Protected for 1 year';
-  if (days >= 60)   return '🛡️ Protected for ' + Math.round(days/30) + ' months';
-  if (days >= 30)   return '🛡️ Protected for 1 month';
-  return '🛡️ Protected for ' + days + ' days';
-}
-
-function spoilText(days) {
-  if (!days || days <= 0) return null;
-  if (days === 1) return '⏰ Use today — expires tomorrow';
-  if (days <= 3)  return '⏰ Use within ' + days + ' days — expires soon';
-  if (days <= 7)  return '📅 Best used within ' + days + ' days';
-  return '📅 Fresh for ' + days + ' more days';
-}
-
-function purchaseText(dateStr) {
-  if (!dateStr) return null;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(dateStr);
-  const diff = Math.round((today - d) / 86400000);
-  if (diff === 0) return '📅 Purchased today';
-  if (diff === 1) return '📅 Purchased yesterday';
-  if (diff < 7)   return '📅 Purchased ' + diff + ' days ago';
-  return '📅 ' + d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-}
-
-function renderManifest(items, gridId, titleId) {
-  document.getElementById(titleId).textContent =
-    items.length === 1
-      ? '✅ 1 item found — review and save'
-      : `✅ ${items.length} items found — review and save`;
-
-  document.getElementById(gridId).innerHTML = items.map((item, i) => {
-    const price   = parseFloat(item.price || 0);
-    const warranty= parseInt(item.warranty_days || 0);
-    const spoil   = parseInt(item.days_until_spoil || 0);
-    const [emoji] = getItemEmoji(item.item_name, item.category);
-    const wText   = warrantyText(warranty);
-    const sText   = spoilText(spoil);
-    const pText   = purchaseText(item.purchase_date);
-    const xp      = 10 + Math.max(0, Math.floor(price - 50));
-
-    let protectionBadge = '';
-    if (warranty > 0)    protectionBadge = `<span class="mc-prot mc-prot-warranty">🛡️ Warranty tracked</span>`;
-    else if (spoil > 0)  protectionBadge = `<span class="mc-prot mc-prot-spoil">⏰ Expiry tracked</span>`;
-    else                 protectionBadge = `<span class="mc-prot mc-prot-basic">📦 Item tracked</span>`;
-
-    return `<div class="manifest-card" style="animation-delay:${i*0.06}s">
-      <div class="mc-top-row">
-        <span style="font-size:26px">${emoji}</span>
-        ${protectionBadge}
+<!-- WEEKLY EMAIL -->
+<section class="weekly">
+  <div class="weekly-label">Every Monday Morning</div>
+  <h2 class="weekly-title">Your Weekly<br>Intelligence Report</h2>
+  <p class="weekly-body">
+    Every Monday at 8am, GuardNest sends you a personal summary of everything in your vault — what's expiring, what needs action, and how close you are to your next level.
+  </p>
+  <div class="email-mock">
+    <div class="em-subject">
+      📬 Subject: <strong>⚠️ 1 item needs attention</strong> — Your GuardNest Weekly Report
+    </div>
+    <div class="em-body">
+      GuardNest is watching <strong>34 items worth $2,847</strong> for you this week.<br><br>
+      <div class="em-highlight">
+        <strong>⚠️ Samsung 65" TV</strong> — Warranty expires in 12 days. File a claim if anything needs attention.
       </div>
-      <div class="mc-name">${item.item_name || 'Unknown'}</div>
-      <div class="mc-sub">📍 ${item.merchant || '—'} &nbsp;·&nbsp; $${price.toFixed(2)}</div>
-      <div class="mc-info-list">
-        ${wText ? `<div class="mc-info-row">${wText}</div>` : ''}
-        ${sText ? `<div class="mc-info-row">${sText}</div>` : ''}
-        ${pText ? `<div class="mc-info-row">${pText}</div>` : ''}
-        ${!wText && !sText ? '<div class="mc-info-row" style="color:var(--text3)">No expiry for this item</div>' : ''}
-      </div>
-      <div class="mc-footer">
-        <button class="mc-thumbsdown" onclick="flagBadScan(this,this.dataset.name,event)" data-name="${(item.item_name||'Unknown').replace(/['"]/g,'')}" ontouchend="this.onclick(event)" title="This scan looks wrong">
-          👎 Wrong item?
-        </button>
-        <span class="mc-badge" style="background:rgba(245,200,66,.1);color:var(--gold)">+${xp} XP</span>
-      </div>
-    </div>`;
-  }).join('');
-}
+      Your chicken breast expires tomorrow — <strong>use it tonight.</strong><br><br>
+      You're <strong>340 XP from Level 7.</strong> Scan 2 more receipts this week to get there.<br><br>
+      <a href="https://guardnest.app/" class="em-cta">Open GuardNest →</a>
+    </div>
+  </div>
+  <a href="https://guardnest.app/" class="btn-primary">Start Getting Weekly Reports →</a>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial">
+  <div class="testimonial-inner">
+    <p class="testimonial-quote">
+      "I missed a warranty claim on my TV last year. Cost me $340 for a repair that should have been free. <strong>I had the warranty. I just forgot it existed.</strong> That's why I built GuardNest."
+    </p>
+    <div class="testimonial-attr">— Kyle Miller, Co-founder · Worcester, MA</div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2 class="final-cta-title">Nothing<br>Slips<br>Through.</h2>
+  <p class="final-cta-sub">Free to use. Scan your first receipt in 30 seconds.</p>
+  <a href="https://guardnest.app/" class="btn-primary">Get Started Free →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    🛡️ GuardNest · Built in Massachusetts ·
+    <a href="https://guardnest.app/">guardnest.app</a> ·
+    <a href="https://guardnest.app/">Privacy</a>
+  </p>
+</footer>
 
-// ─── SAVE TO VAULT ────────────────────────────────────────────
-function refreshReceipts() {
-  const el = document.getElementById('receiptList');
-  const countEl = document.getElementById('receiptCount');
-  if (!el) return;
-
-  if (!allReceipts.length) {
-    el.innerHTML = `<div class="empty-state">
-      <span class="empty-icon">🧾</span>
-      <div class="empty-title">No Receipts Yet</div>
-      <div class="empty-sub">Scan a receipt to start building your history</div>
-    </div>`;
-    if (countEl) countEl.textContent = '';
-    return;
-  }
-
-  if (countEl) countEl.textContent = `${allReceipts.length} scan${allReceipts.length !== 1 ? 's' : ''}`;
-
-  el.innerHTML = allReceipts.map(r => {
-    const date     = new Date(r.scan_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const icon     = r.source_type === 'pdf' ? '📄' : '🧾';
-    const items    = allItems.filter(i => i.receipt_id === r.id);
-    const expiring = items.filter(i => {
-      const today = new Date(); today.setHours(0,0,0,0);
-      if ((i.warranty_days || 0) > 0 && i.purchase_date) {
-        const exp = new Date(i.purchase_date);
-        exp.setDate(exp.getDate() + i.warranty_days);
-        return Math.round((exp - today) / 86400000) <= 30;
-      }
-      return (i.days_until_spoil || 0) > 0 && (i.days_until_spoil || 0) <= 7;
-    }).length;
-
-    return `<div class="alert-item" style="padding:14px 0;cursor:pointer" onclick="filterVaultByReceipt('${r.id}')">
-      <div style="font-size:24px;margin-right:4px">${icon}</div>
-      <div class="alert-info">
-        <div class="alert-name">${r.merchant || 'Unknown Merchant'}</div>
-        <div class="alert-meta">📅 ${date} · ${r.item_count} item${r.item_count !== 1 ? 's' : ''} · $${parseFloat(r.total_value || 0).toFixed(2)}</div>
-        ${expiring > 0 ? `<div style="font-size:11px;color:var(--red);margin-top:3px">⚠️ ${expiring} item${expiring !== 1 ? 's' : ''} expiring soon</div>` : ''}
-      </div>
-      <span style="font-size:11px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">${r.source_type === 'pdf' ? 'PDF' : 'Image'}</span>
-    </div>`;
-  }).join('<div style="border-top:1px solid var(--border)"></div>');
-}
-
-function filterVaultByReceipt(receiptId) {
-  showPage('vault');
-  // Highlight items from this receipt in the vault
-  const receipt = allReceipts.find(r => r.id === receiptId);
-  if (receipt) {
-    showToast(`Showing items from ${receipt.merchant} · ${new Date(receipt.scan_date).toLocaleDateString()}`, 'info');
-  }
-}
-
-async function saveScanResults() { await saveItems('btnSave', 'scanResults'); }
-async function savePdfResults()  { await saveItems('btnSavePdf', 'pdfResults'); }
-
-async function saveItems(btnId, resultsId) {
-  if (!currentUser || !pendingItems.length) return;
-
-  const btn = document.getElementById(btnId);
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-
-  // ── Step 1: Create receipt session record ──────────────────
-  const merchant    = pendingItems[0]?.merchant || 'Unknown';
-  const totalValue  = pendingItems.reduce((s,i) => s + parseFloat(i.price || 0), 0);
-  const sourceType  = resultsId === 'pdfResults' ? 'pdf' : 'image';
-  const today       = new Date().toISOString().split('T')[0];
-
-  const { data: receiptData, error: receiptError } = await supa
-    .from('receipts')
-    .insert({
-      user_id:     currentUser.id,
-      merchant:    merchant,
-      scan_date:   today,
-      item_count:  pendingItems.length,
-      total_value: totalValue.toFixed(2),
-      source_type: sourceType,
-    })
-    .select()
-    .single();
-
-  const receiptId = receiptData?.id || null;
-
-  // ── Step 2: Save items linked to receipt session ───────────
-  const rows = pendingItems.map(item => ({
-    user_id:         currentUser.id,
-    receipt_id:      receiptId,
-    item_name:       item.item_name   || 'Unknown',
-    merchant:        item.merchant    || null,
-    price:           parseFloat(item.price || 0),
-    purchase_date:   item.purchase_date || today,
-    category:        item.category    || 'General',
-    rarity:          rarityWord(parseFloat(item.price || 0)),
-    warranty_days:   parseInt(item.warranty_days   || 0),
-    days_until_spoil:parseInt(item.days_until_spoil || 0),
-    image_url:       item.image_url   || null,
-  }));
-
-  const { error } = await supa.from('items').insert(rows);
-
-  if (btn) { btn.disabled = false; btn.textContent = '💾 Save to Vault'; }
-
-  if (error) {
-    showToast('Save failed: ' + error.message, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = '💾 Save to Vault'; }
-  } else {
-    showToast(`✅ ${rows.length} item(s) saved to Vault`, 'success');
-    pendingItems = [];
-    document.getElementById(resultsId)?.classList.add('hidden');
-    document.getElementById('saveReminder')?.classList.add('hidden');
-    document.getElementById('pdfSaveReminder')?.classList.add('hidden');
-    // Update streak
-    const wk = getWeekKey();
-    localStorage.setItem('guardnest_last_scan_week', wk);
-    if (!parseInt(localStorage.getItem('guardnest_streak')||'0')) localStorage.setItem('guardnest_streak','1');
-    await loadItems();
-    await loadReceipts();
-    refreshDashboard();
-    refreshAlerts();
-    refreshVault();
-    updateSidebar();
-    checkBadges();
-    // Show first win modal (first time only)
-    showFirstWin(allItems);
-    // Check for near-miss alerts (after first win clears)
-    setTimeout(() => checkNearMiss(allItems), 2000);
-    const xpBar = document.getElementById('xpBar');
-    if (xpBar) {
-      xpBar.style.transition = 'width 1s ease';
-      setTimeout(() => { xpBar.style.transition = 'width .6s ease'; }, 1100);
-    }
-  }
-}
-
-function rarityWord(price) {
-  if (price > 1000) return 'EXOTIC';
-  if (price > 200)  return 'LEGENDARY';
-  if (price > 50)   return 'RARE';
-  return 'COMMON';
-}
-
-function checkBadges() {
-  const totalValue = allItems.reduce((s, i) => s + (i.price || 0), 0);
-  const messages   = [];
-  if (allItems.length === 1) messages.push('🏅 Badge: First Acquisition!');
-  if (totalValue >= 500 && allItems.length > 0 && allItems.length <= 5) messages.push('🏅 Badge: High Roller!');
-  if (allItems.length === 10) messages.push('🏅 Badge: Asset Manager!');
-  if (allItems.length === 25) messages.push('🏅 Badge: Quartermaster!');
-  messages.forEach(m => showToast(m, 'success'));
-}
-
-// ─── HELPERS ──────────────────────────────────────────────────
-function fileToBase64(file) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload  = () => res(r.result.split(',')[1]);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-}
-
-function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
-function hideLoading() {
-  const overlay = document.getElementById('loadingOverlay');
-  overlay.style.display = 'none';
-  overlay.style.visibility = 'hidden';
-  overlay.style.pointerEvents = 'none';
-  overlay.style.zIndex = '-1';
-}
-
-function showToast(msg, type = 'info') {
-  const c    = document.getElementById('toastContainer');
-  const el   = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => el.remove(), 4000);
-}
-
-// ─── DELETE ITEM ──────────────────────────────────────────────
-let pendingDeleteId = null;
-
-function promptDelete(itemId, itemName, event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
-  pendingDeleteId = itemId;
-  document.getElementById('deleteItemName').textContent = itemName;
-  document.getElementById('deleteModal').classList.remove('hidden');
-}
-
-function cancelDelete() {
-  pendingDeleteId = null;
-  document.getElementById('deleteModal').classList.add('hidden');
-}
-
-async function confirmDelete() {
-  if (!pendingDeleteId) return;
-
-  const { error } = await supa
-    .from('items')
-    .delete()
-    .eq('id', pendingDeleteId)
-    .eq('user_id', currentUser.id);
-
-  document.getElementById('deleteModal').classList.add('hidden');
-
-  if (error) {
-    showToast('Delete failed: ' + error.message, 'error');
-  } else {
-    showToast('Item removed from vault', 'info');
-    pendingDeleteId = null;
-    await loadItems();
-    refreshDashboard();
-    refreshAlerts();
-    refreshVault();
-    updateSidebar();
-  }
-}
-
-// Close modal on background tap
-document.addEventListener('DOMContentLoaded', () => {
-  const deleteModal = document.getElementById('deleteModal');
-  if (deleteModal) {
-    deleteModal.addEventListener('click', function(e) {
-      if (e.target === this) cancelDelete();
-    });
-  }
-});
-
-// ─── SHOPPING PATTERN ENGINE ──────────────────────────────────
-let shoppingPromptItems = [];
-
-function learnShoppingPatterns() {
-  if (allItems.length < 5) return null;
-
-  // Learn scan timing — what day of week user usually scans
-  const scanDays = allItems
-    .filter(i => i.purchase_date)
-    .map(i => new Date(i.purchase_date).getDay());
-
-  const dayCounts = [0,0,0,0,0,0,0];
-  scanDays.forEach(d => dayCounts[d]++);
-  const peakDay = dayCounts.indexOf(Math.max(...dayCounts));
-  localStorage.setItem('guardnest_peak_scan_day', peakDay);
-
-  // Find items that appear 2+ times
-  const itemFrequency = {};
-  allItems.forEach(item => {
-    const key = (item.item_name || '').toLowerCase().trim();
-    if (!key || key === 'unknown') return;
-    if (!itemFrequency[key]) {
-      itemFrequency[key] = {
-        name: item.item_name,
-        category: item.category,
-        count: 0,
-        totalPrice: 0,
-        days_until_spoil: item.days_until_spoil || 0,
-        warranty_days: item.warranty_days || 0,
-        lastSeen: item.purchase_date,
-        merchant: item.merchant,
-      };
-    }
-    itemFrequency[key].count++;
-    itemFrequency[key].totalPrice += parseFloat(item.price || 0);
-    if (item.purchase_date > (itemFrequency[key].lastSeen || '')) {
-      itemFrequency[key].lastSeen = item.purchase_date;
-    }
-  });
-
-  // Return items bought 2+ times, sorted by frequency
-  return Object.values(itemFrequency)
-    .filter(i => i.count >= 2)
-    .sort((a,b) => b.count - a.count)
-    .slice(0, 8);
-}
-
-function shouldShowShoppingPrompt() {
-  if (allItems.length < 5) return false;
-
-  const lastPrompt = localStorage.getItem('guardnest_last_prompt');
-  const today = new Date();
-  const todayStr = today.toDateString();
-
-  // Don't show more than once per day
-  if (lastPrompt === todayStr) return false;
-
-  // Check if today matches their learned shopping day
-  const peakDay = parseInt(localStorage.getItem('guardnest_peak_scan_day') || '-1');
-  const todayDay = today.getDay();
-
-  // Show on their peak day OR if it's been 7+ days since last prompt
-  const lastPromptDate = localStorage.getItem('guardnest_last_prompt_date');
-  const daysSincePrompt = lastPromptDate
-    ? Math.round((today - new Date(lastPromptDate)) / 86400000)
-    : 999;
-
-  return todayDay === peakDay || daysSincePrompt >= 7;
-}
-
-function showShoppingPrompt() {
-  if (!shouldShowShoppingPrompt()) return;
-
-  const patterns = learnShoppingPatterns();
-  if (!patterns || patterns.length === 0) return;
-
-  shoppingPromptItems = patterns;
-
-  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const peakDay = parseInt(localStorage.getItem('guardnest_peak_scan_day') || '0');
-  const learnedEl = document.getElementById('spLearnedTime');
-  if (learnedEl) learnedEl.textContent = `GuardNest learned you usually shop on ${dayNames[peakDay]}s`;
-
-  const subEl = document.getElementById('spSubText');
-  if (subEl) subEl.textContent = `Based on your history, you usually pick these up. Tap what you bought and we'll track it automatically.`;
-
-  // Render items as checkboxes
-  const listEl = document.getElementById('spItemsList');
-  if (listEl) {
-    listEl.innerHTML = patterns.map((item, i) => {
-      const [emoji] = getItemEmoji(item.name, item.category);
-      const avgPrice = (item.totalPrice / item.count).toFixed(2);
-      const spoilText = item.days_until_spoil > 0
-        ? `Tracked for ${item.days_until_spoil} days`
-        : item.warranty_days > 0
-        ? `${item.warranty_days}d warranty`
-        : 'Item tracked';
-      return `<div class="sp-item" id="spItem${i}" onclick="toggleSpItem(${i})">
-        <div class="sp-item-emoji">${emoji}</div>
-        <div class="sp-item-info">
-          <div class="sp-item-name">${item.name}</div>
-          <div class="sp-item-detail">Bought ${item.count}x · ~$${avgPrice} · ${spoilText}</div>
-        </div>
-        <div class="sp-item-check" id="spCheck${i}"></div>
-      </div>`;
-    }).join('');
-  }
-
-  // Mark as shown today
-  localStorage.setItem('guardnest_last_prompt', new Date().toDateString());
-  localStorage.setItem('guardnest_last_prompt_date', new Date().toISOString());
-
-  // Add touch handlers after render
-  setTimeout(() => {
-    document.getElementById('shopPromptModal').classList.remove('hidden');
-    // Add touch listeners to prevent double-fire on mobile
-    patterns.forEach((_, i) => {
-      const el = document.getElementById('spItem' + i);
-      if (el) {
-        el.addEventListener('touchend', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          toggleSpItem(i);
-        }, {passive: false});
-      }
-    });
-  }, 800);
-}
-
-function toggleSpItem(i) {
-  const item = document.getElementById('spItem' + i);
-  const check = document.getElementById('spCheck' + i);
-  if (!item || !check) return;
-  if (item.classList.contains('checked')) {
-    item.classList.remove('checked');
-    check.textContent = '';
-  } else {
-    item.classList.add('checked');
-    check.textContent = '✓';
-  }
-}
-
-async function saveShoppingPrompt() {
-  if (!currentUser) return;
-
-  const checked = shoppingPromptItems.filter((_, i) => {
-    const el = document.getElementById(`spItem${i}`);
-    return el && el.classList.contains('checked');
-  });
-
-  if (checked.length === 0) {
-    showToast('Tap at least one item you bought', 'info');
-    return;
-  }
-
-  document.getElementById('shopPromptModal').classList.add('hidden');
-
-  const today = new Date().toISOString().split('T')[0];
-  const rows = checked.map(item => ({
-    user_id:          currentUser.id,
-    item_name:        item.name,
-    merchant:         item.merchant || 'Quick Add',
-    price:            parseFloat((item.totalPrice / item.count).toFixed(2)),
-    purchase_date:    today,
-    category:         item.category || 'General',
-    rarity:           'COMMON',
-    warranty_days:    parseInt(item.warranty_days || 0),
-    days_until_spoil: parseInt(item.days_until_spoil || 0),
-    image_url:        'quick-add',
-    status:           'active',
-  }));
-
-  // Create receipt session
-  const { data: receiptData } = await supa.from('receipts').insert({
-    user_id:     currentUser.id,
-    merchant:    'Quick Add',
-    scan_date:   today,
-    item_count:  rows.length,
-    total_value: rows.reduce((s,r) => s + r.price, 0).toFixed(2),
-    source_type: 'quick-add',
-  }).select().single();
-
-  if (receiptData?.id) {
-    rows.forEach(r => r.receipt_id = receiptData.id);
-  }
-
-  const { error } = await supa.from('items').insert(rows);
-
-  if (error) {
-    showToast('Save failed: ' + error.message, 'error');
-  } else {
-    showToast(`✅ ${rows.length} item${rows.length !== 1 ? 's' : ''} added to vault · +${rows.length * 10} XP`, 'success');
-    // Update streak
-    const wk = getWeekKey();
-    localStorage.setItem('guardnest_last_scan_week', wk);
-    if (!parseInt(localStorage.getItem('guardnest_streak') || '0')) {
-      localStorage.setItem('guardnest_streak', '1');
-    }
-    await loadItems();
-    refreshDashboard();
-    refreshAlerts();
-    refreshVault();
-    updateSidebar();
-  }
-}
-
-function skipShoppingPrompt() {
-  document.getElementById('shopPromptModal').classList.add('hidden');
-  showToast("No problem — we'll check in again next week", "info");
-}
-
-// ─── SHAREABLE NEAR MISS CARD ─────────────────────────────────
-let currentShareItem = null;
-let currentShareDays = null;
-let currentShareIsSpoil = false;
-
-function showShareCard(itemName, daysText, isSpoil) {
-  currentShareItem = itemName;
-  currentShareDays = daysText;
-  currentShareIsSpoil = isSpoil;
-  document.getElementById('scItemName').textContent = itemName;
-  document.getElementById('scDaysText').textContent = daysText;
-  document.getElementById('shareCardModal').classList.remove('hidden');
-}
-
-function closeShareCard() {
-  document.getElementById('shareCardModal').classList.add('hidden');
-}
-
-function copyShareText() {
-  const text = currentShareIsSpoil
-    ? `GuardNest just reminded me to use my ${currentShareItem} before it goes bad. Nothing slips through. guardnest.app`
-    : `GuardNest caught my ${currentShareItem} with ${currentShareDays.replace('Warranty expires in ', '')} left on the warranty. Nothing slips through. guardnest.app`;
-
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('Copied — ready to share!', 'success');
-      closeShareCard();
-    });
-  } else {
-    // Fallback for older browsers
-    const el = document.createElement('textarea');
-    el.value = text;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    showToast('Copied — ready to share!', 'success');
-    closeShareCard();
-  }
-}
-
-// ─── THUMBS DOWN / BAD SCAN FLAG ─────────────────────────────
-async function flagBadScan(btn, itemName, event) {
-  if (event) { event.stopPropagation(); event.preventDefault(); }
-  btn.textContent = '✓ Flagged — thanks';
-  btn.classList.add('flagged');
-  btn.disabled = true;
-  showToast(`Thanks — we'll improve scanning for "${itemName}"`, 'info');
-
-  // Log to Supabase for model improvement
-  if (currentUser) {
-    try {
-      await supa.from('flagged_scans').insert({
-        user_id:   currentUser.id,
-        item_name: itemName,
-        flagged_at: new Date().toISOString(),
-      });
-    } catch(e) {
-      // Silent fail — don't interrupt user experience
-    }
-  }
-}
-
-// ─── NEAR MISS NOTIFICATION ────────────────────────────────────
-function checkNearMiss(items) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const urgent = items.filter(item => {
-    if ((item.warranty_days||0) > 0 && item.purchase_date) {
-      const exp = new Date(item.purchase_date);
-      exp.setDate(exp.getDate() + item.warranty_days);
-      const left = Math.round((exp - today) / 86400000);
-      return left >= 0 && left <= 7;
-    }
-    if ((item.days_until_spoil||0) > 0 && item.days_until_spoil <= 1) return true;
-    return false;
-  });
-
-  if (urgent.length === 0) return;
-
-  // Sort by most urgent first
-  urgent.sort((a,b) => {
-    const daysA = (a.days_until_spoil||0) > 0 ? a.days_until_spoil : (() => {
-      const exp = new Date(a.purchase_date);
-      exp.setDate(exp.getDate() + a.warranty_days);
-      return Math.round((exp - today) / 86400000);
-    })();
-    const daysB = (b.days_until_spoil||0) > 0 ? b.days_until_spoil : (() => {
-      const exp = new Date(b.purchase_date);
-      exp.setDate(exp.getDate() + b.warranty_days);
-      return Math.round((exp - today) / 86400000);
-    })();
-    return daysA - daysB;
-  });
-
-  const item   = urgent[0];
-  const isSpoil= (item.days_until_spoil||0) > 0;
-  const days   = isSpoil ? item.days_until_spoil : (() => {
-    const exp = new Date(item.purchase_date);
-    exp.setDate(exp.getDate() + item.warranty_days);
-    return Math.round((exp - today) / 86400000);
-  })();
-
-  document.getElementById('nmItemName').textContent = item.item_name || 'Unknown Item';
-
-  if (isSpoil) {
-    document.getElementById('nmDaysText').textContent =
-      days <= 0 ? 'Use today — expires now' :
-      days === 1 ? 'Use tomorrow — expires soon' :
-      `Use within ${days} days`;
-    document.getElementById('nmActionText').innerHTML =
-      `Don't let this go to waste. <strong>Use it tonight</strong> or move it to the front of your fridge so you don't forget.`;
-    document.getElementById('nmSearchLink').href =
-      `https://www.google.com/search?q=recipe+with+${encodeURIComponent(item.item_name||'')}`;
-    document.getElementById('nmSearchLink').textContent = '🍳 Find a Recipe';
-  } else {
-    document.getElementById('nmDaysText').textContent =
-      days === 0 ? 'Warranty expires TODAY' :
-      days === 1 ? 'Warranty expires tomorrow' :
-      `Warranty expires in ${days} days`;
-    document.getElementById('nmActionText').innerHTML =
-      `This is your window. <strong>File a claim now</strong> if anything needs attention — before your coverage runs out completely.`;
-    document.getElementById('nmSearchLink').href =
-      `https://www.google.com/search?q=${encodeURIComponent((item.merchant||'') + ' ' + (item.item_name||'') + ' warranty claim')}`;
-    document.getElementById('nmSearchLink').textContent = '🔍 Find Claim Info';
-  }
-
-  setTimeout(() => {
-    document.getElementById('nearMissModal').classList.remove('hidden');
-  }, 1200);
-}
-
-function closeNearMiss() {
-  document.getElementById('nearMissModal').classList.add('hidden');
-}
-
-function shareNearMiss() {
-  const itemName = document.getElementById('nmItemName').textContent;
-  const daysText = document.getElementById('nmDaysText').textContent;
-  const isSpoil  = daysText.toLowerCase().includes('use');
-  closeNearMiss();
-  showShareCard(itemName, daysText, isSpoil);
-}
-
-// ─── FIRST WIN MODAL ───────────────────────────────────────────
-function showFirstWin(items) {
-  const hasSeenWin = localStorage.getItem('guardnest_first_win');
-  if (hasSeenWin) return;
-
-  const totalValue    = items.reduce((s,i) => s + (parseFloat(i.price)||0), 0);
-  const warrantyItems = items.filter(i => (i.warranty_days||0) > 0);
-  const spoilItems    = items.filter(i => (i.days_until_spoil||0) > 0);
-
-  document.getElementById('fwProtectedValue').textContent = '$' + totalValue.toFixed(0);
-
-  const wins = [];
-
-  if (warrantyItems.length > 0) {
-    const warrantyValue = warrantyItems.reduce((s,i) => s + (parseFloat(i.price)||0), 0);
-    wins.push(`🛡️ <strong>${warrantyItems.length} warranty${warrantyItems.length>1?'s':''}</strong> now tracked — $${warrantyValue.toFixed(0)} protected`);
-  }
-
-  if (spoilItems.length > 0) {
-    const mostUrgent = spoilItems.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
-    wins.push(`⏰ <strong>${mostUrgent.item_name}</strong> expires in ${mostUrgent.days_until_spoil} day${mostUrgent.days_until_spoil!==1?'s':''} — we'll remind you`);
-  }
-
-  if (wins.length === 0) {
-    wins.push(`📦 <strong>${items.length} item${items.length>1?'s':''}</strong> added to your vault`);
-  }
-
-  wins.push(`⚡ You'll get a heads up every Monday on everything expiring`);
-
-  document.getElementById('fwWinsList').innerHTML = wins.map(w =>
-    `<div class="fw-win-item">${w}</div>`
-  ).join('');
-
-  document.getElementById('firstWinModal').classList.remove('hidden');
-  localStorage.setItem('guardnest_first_win', 'true');
-}
-
-function closeFirstWin() {
-  document.getElementById('firstWinModal').classList.add('hidden');
-  showPage('vault');
-}
-
-// ─── ONBOARDING ───────────────────────────────────────────────
-function checkOnboarding() {
-  const hasSeenOnboarding = localStorage.getItem('aegis_onboarded');
-  const hasItems = allItems.length > 0;
-  if (!hasSeenOnboarding && !hasItems) {
-    document.getElementById('onboardingScreen').classList.remove('hidden');
-  }
-}
-
-function startOnboarding() {
-  dismissOnboarding();
-  showPage('scanner');
-}
-
-function dismissOnboarding() {
-  document.getElementById('onboardingScreen').classList.add('hidden');
-  localStorage.setItem('aegis_onboarded', 'true');
-}
-
-function showCelebration(items) {
-  const hasSeenCelebration = localStorage.getItem('aegis_celebrated');
-  if (hasSeenCelebration) return;
-
-  const warrantyCount = items.filter(i => (i.warranty_days || 0) > 0).length;
-  const alertCount    = items.filter(i => {
-    if ((i.days_until_spoil || 0) > 0 && (i.days_until_spoil || 0) <= 7) return true;
-    if ((i.warranty_days || 0) > 0 && i.purchase_date) {
-      const today = new Date(); today.setHours(0,0,0,0);
-      const exp   = new Date(i.purchase_date);
-      exp.setDate(exp.getDate() + i.warranty_days);
-      return Math.round((exp - today) / 86400000) <= 30;
-    }
-    return false;
-  }).length;
-
-  document.getElementById('celItems').textContent     = items.length;
-  document.getElementById('celWarranties').textContent = warrantyCount;
-  document.getElementById('celAlerts').textContent     = alertCount;
-  document.getElementById('celebrationModal').classList.remove('hidden');
-  localStorage.setItem('aegis_celebrated', 'true');
-}
-
-function dismissCelebration() {
-  document.getElementById('celebrationModal').classList.add('hidden');
-  showPage('vault');
-}
-
-// ─── SCAN ANIMATION ───────────────────────────────────────────
-let scanTimer = null;
-
-function showScanOverlay(imageDataUrl) {
-  const overlay = document.getElementById('scanOverlay');
-  const img     = document.getElementById('scanPreviewImg');
-  if (imageDataUrl) img.src = imageDataUrl;
-  overlay.classList.remove('hidden');
-
-  // Reset all steps
-  [1,2,3,4,5].forEach(i => {
-    const step = document.getElementById(`step${i}`);
-    step.className = 'scan-step';
-    step.querySelector('.scan-step-icon').textContent = '⟳';
-  });
-
-  document.getElementById('scanProgressFill').style.width = '0%';
-
-  // Animate through steps
-  const steps = [
-    { id: 1, status: 'SCANNING',      sub: 'Reading receipt image...', progress: '15%', delay: 0 },
-    { id: 2, status: 'IDENTIFYING',   sub: 'Identifying items and prices...', progress: '35%', delay: 1800 },
-    { id: 3, status: 'CROSS-REF',     sub: 'Cross-referencing 547 known products...', progress: '55%', delay: 3500 },
-    { id: 4, status: 'CALCULATING',   sub: 'Calculating warranty and expiry dates...', progress: '75%', delay: 5200 },
-    { id: 5, status: 'BUILDING',      sub: 'Building your inventory manifest...', progress: '90%', delay: 6800 },
-  ];
-
-  steps.forEach(({ id, status, sub, progress, delay }) => {
-    setTimeout(() => {
-      // Mark previous step done
-      if (id > 1) {
-        const prev = document.getElementById(`step${id-1}`);
-        prev.className = 'scan-step done';
-        prev.querySelector('.scan-step-icon').textContent = '✓';
-      }
-      // Activate current step
-      const current = document.getElementById(`step${id}`);
-      current.className = 'scan-step active';
-
-      document.getElementById('scanStatusText').textContent  = status;
-      document.getElementById('scanSubText').textContent     = sub;
-      document.getElementById('scanProgressFill').style.width = progress;
-    }, delay);
-  });
-}
-
-function hideScanOverlay() {
-  // Complete all steps
-  [1,2,3,4,5].forEach(i => {
-    const step = document.getElementById(`step${i}`);
-    step.className = 'scan-step done';
-    step.querySelector('.scan-step-icon').textContent = '✓';
-  });
-  document.getElementById('scanProgressFill').style.width = '100%';
-  document.getElementById('scanStatusText').textContent   = 'COMPLETE';
-  document.getElementById('scanSubText').textContent      = 'Assets cataloged successfully';
-
-  setTimeout(() => {
-    document.getElementById('scanOverlay').classList.add('hidden');
-  }, 800);
-}
-
-// ─── PDF SAVE BUTTON ID FIX ───────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const pdfSaveBtn = document.querySelector('#pdfResults button');
-  if (pdfSaveBtn) pdfSaveBtn.id = 'btnSavePdf';
-  applyMobileLayout();
-
-  // Mobile Safari touch fix - add touchend as fallback for all interactive elements
-  function addTouchFallback(selector, handler) {
-    document.querySelectorAll(selector).forEach(el => {
-      el.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        handler(el);
-      }, {passive: false});
-    });
-  }
-
-  // Bottom nav touch handlers
-  const bnMap = {
-    'bn-dashboard': 'dashboard',
-    'bn-alerts':    'alerts',
-    'bn-vault':     'vault',
-    'bn-pdf':       'pdf',
-    'bn-receipts':  'receipts',
-  };
-  Object.entries(bnMap).forEach(([id, page]) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        showPage(page);
-      }, {passive: false});
-    }
-  });
-
-  // Scan zone touch handler
-  const scanZone = document.getElementById('scanZone');
-  if (scanZone) {
-    scanZone.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      document.getElementById('scanFileInput').click();
-    }, {passive: false});
-  }
-
-  // PDF zone touch handler
-  const pdfZone = document.getElementById('pdfZone');
-  if (pdfZone) {
-    pdfZone.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      document.getElementById('pdfFileInput').click();
-    }, {passive: false});
-  }
-
-  // Bottom nav scan button (center)
-  document.querySelectorAll('.scan-btn').forEach(btn => {
-    btn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      showPage('scanner');
-    }, {passive: false});
-  });
-
-  // Nav items
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      const onclick = item.getAttribute('onclick');
-      if (onclick) {
-        const match = onclick.match(/showPage\('([^']+)'\)/);
-        if (match) showPage(match[1]);
-      }
-    }, {passive: false});
-  });
-});
-</script>
 </body>
 </html>
