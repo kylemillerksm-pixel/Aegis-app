@@ -526,6 +526,80 @@
   ::-webkit-scrollbar-track { background: var(--dark); }
   ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
 
+  /* ── SHAREABLE NEAR MISS CARD ───────────────────────── */
+  .share-card-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.92);
+    z-index: 8400;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .share-card-modal.hidden { display: none; }
+  .share-card-wrap {
+    max-width: 400px; width: 100%;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .share-card {
+    background: linear-gradient(135deg, #0f1320 0%, #1a2040 100%);
+    border: 1px solid rgba(245,200,66,.3);
+    border-radius: 16px; padding: 28px;
+    text-align: center; position: relative;
+    overflow: hidden;
+  }
+  .share-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(245,200,66,.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .sc-logo {
+    font-size: 11px; font-weight: 700; letter-spacing: .2em;
+    text-transform: uppercase; color: rgba(245,200,66,.6);
+    margin-bottom: 20px;
+  }
+  .sc-shield { font-size: 40px; margin-bottom: 12px; display: block; }
+  .sc-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px; letter-spacing: .15em;
+    color: rgba(245,200,66,.7); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .sc-item {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: .06em;
+    color: #f0eef8; margin-bottom: 6px; line-height: 1.1;
+  }
+  .sc-days {
+    font-size: 15px; color: var(--red); font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .sc-tagline {
+    font-size: 11px; color: rgba(240,238,248,.4);
+    letter-spacing: .08em; text-transform: uppercase;
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding-top: 14px; margin-top: 4px;
+  }
+  .sc-tagline strong { color: rgba(245,200,66,.6); }
+  .share-actions { display: flex; gap: 10px; }
+  .sc-btn-copy {
+    flex: 1; padding: 12px;
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    border: none; border-radius: 7px;
+    cursor: pointer; touch-action: manipulation;
+  }
+  .sc-btn-close {
+    flex: 1; padding: 12px;
+    background: transparent; border: 1px solid var(--border2);
+    border-radius: 7px; color: var(--text2);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; touch-action: manipulation;
+  }
+
   /* ── NEAR MISS NOTIFICATION ──────────────────────────── */
   .near-miss-modal {
     position: fixed; inset: 0;
@@ -1702,6 +1776,28 @@
   </div>
 </div>
 
+<!-- SHAREABLE NEAR MISS CARD -->
+<div class="share-card-modal hidden" id="shareCardModal">
+  <div class="share-card-wrap">
+    <div class="share-card" id="shareCardInner">
+      <div class="sc-logo">🛡️ GuardNest</div>
+      <span class="sc-shield">⚠️</span>
+      <div class="sc-headline">Nothing slipped through</div>
+      <div class="sc-item" id="scItemName">Samsung TV</div>
+      <div class="sc-days" id="scDaysText">Warranty expires in 7 days</div>
+      <div class="sc-tagline">Caught by <strong>guardnest.app</strong></div>
+    </div>
+    <div class="share-actions">
+      <button class="sc-btn-copy" onclick="copyShareText()" ontouchend="this.onclick()">
+        📋 Copy to Share
+      </button>
+      <button class="sc-btn-close" onclick="closeShareCard()" ontouchend="this.onclick()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- NEAR MISS MODAL -->
 <div class="near-miss-modal hidden" id="nearMissModal">
   <div class="near-miss-box">
@@ -1716,8 +1812,13 @@
       <a href="#" id="nmSearchLink" target="_blank" class="nm-btn-primary">
         🔍 Find Claim Info
       </a>
-      <button class="nm-btn-secondary" onclick="closeNearMiss()" ontouchend="this.onclick()">
-        Got it
+      <button class="nm-btn-secondary" onclick="shareNearMiss()" ontouchend="this.onclick()">
+        📤 Share
+      </button>
+    </div>
+    <div style="text-align:center;margin-top:10px">
+      <button onclick="closeNearMiss()" ontouchend="this.onclick()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;touch-action:manipulation">
+        Got it, dismiss
       </button>
     </div>
   </div>
@@ -3002,14 +3103,67 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ─── SHAREABLE NEAR MISS CARD ─────────────────────────────────
+let currentShareItem = null;
+let currentShareDays = null;
+let currentShareIsSpoil = false;
+
+function showShareCard(itemName, daysText, isSpoil) {
+  currentShareItem = itemName;
+  currentShareDays = daysText;
+  currentShareIsSpoil = isSpoil;
+  document.getElementById('scItemName').textContent = itemName;
+  document.getElementById('scDaysText').textContent = daysText;
+  document.getElementById('shareCardModal').classList.remove('hidden');
+}
+
+function closeShareCard() {
+  document.getElementById('shareCardModal').classList.add('hidden');
+}
+
+function copyShareText() {
+  const text = currentShareIsSpoil
+    ? `GuardNest just reminded me to use my ${currentShareItem} before it goes bad. Nothing slips through. guardnest.app`
+    : `GuardNest caught my ${currentShareItem} with ${currentShareDays.replace('Warranty expires in ', '')} left on the warranty. Nothing slips through. guardnest.app`;
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Copied — ready to share!', 'success');
+      closeShareCard();
+    });
+  } else {
+    // Fallback for older browsers
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('Copied — ready to share!', 'success');
+    closeShareCard();
+  }
+}
+
 // ─── THUMBS DOWN / BAD SCAN FLAG ─────────────────────────────
-function flagBadScan(btn, itemName, event) {
+async function flagBadScan(btn, itemName, event) {
   if (event) { event.stopPropagation(); event.preventDefault(); }
   btn.textContent = '✓ Flagged — thanks';
   btn.classList.add('flagged');
   btn.disabled = true;
   showToast(`Thanks — we'll improve scanning for "${itemName}"`, 'info');
-  // In future: log to Supabase for model improvement
+
+  // Log to Supabase for model improvement
+  if (currentUser) {
+    try {
+      await supa.from('flagged_scans').insert({
+        user_id:   currentUser.id,
+        item_name: itemName,
+        flagged_at: new Date().toISOString(),
+      });
+    } catch(e) {
+      // Silent fail — don't interrupt user experience
+    }
+  }
 }
 
 // ─── NEAR MISS NOTIFICATION ────────────────────────────────────
@@ -3082,6 +3236,14 @@ function checkNearMiss(items) {
 
 function closeNearMiss() {
   document.getElementById('nearMissModal').classList.add('hidden');
+}
+
+function shareNearMiss() {
+  const itemName = document.getElementById('nmItemName').textContent;
+  const daysText = document.getElementById('nmDaysText').textContent;
+  const isSpoil  = daysText.toLowerCase().includes('use');
+  closeNearMiss();
+  showShareCard(itemName, daysText, isSpoil);
 }
 
 // ─── FIRST WIN MODAL ───────────────────────────────────────────
