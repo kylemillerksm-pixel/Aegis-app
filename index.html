@@ -432,9 +432,18 @@
   }
   @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   .mc-rarity { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; }
-  .mc-name   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .mc-name   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
   .mc-meta   { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
   .mc-badge  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; margin-top: 5px; }
+  .mc-top-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .mc-sub     { font-size:11px; color:var(--text3); margin-bottom:10px; }
+  .mc-info-list { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+  .mc-info-row  { font-size:12px; color:var(--text2); line-height:1.5; }
+  .mc-footer  { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid var(--border); }
+  .mc-prot    { font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 7px; border-radius:5px; }
+  .mc-prot-warranty { background:rgba(68,136,255,.12); color:var(--blue); border:1px solid rgba(68,136,255,.25); }
+  .mc-prot-spoil    { background:rgba(255,140,0,.12);  color:#ff8c00;    border:1px solid rgba(255,140,0,.25); }
+  .mc-prot-basic    { background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border); }
 
   /* RECENT */
   .recent-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
@@ -1043,7 +1052,7 @@
     <div class="auth-header">
       <div class="auth-shield"></div>
       <div class="auth-logo">AEGIS</div>
-      <div class="auth-tagline">Your purchases, protected.</div>
+      <div class="auth-tagline">Nothing slips through.</div>
     </div>
 
     <div class="auth-tabs">
@@ -1145,7 +1154,7 @@
       <div class="logo-shield"></div>
       <div>
         <div class="logo-text">AEGIS</div>
-        <div class="logo-tag">Your purchases, protected.</div>
+        <div class="logo-tag">Nothing slips through.</div>
       </div>
     </div>
 
@@ -1457,8 +1466,8 @@
             <div class="panel-title">🗄️ Full Registry</div>
             <div id="fullRegistryCount" class="panel-action"></div>
           </div>
-          <div class="vault-header" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
-            <div></div><div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div><div></div>
+          <div class="vault-header" style="grid-template-columns:40px 2fr 1.2fr 1.2fr 32px">
+            <div></div><div>Item</div><div>Price</div><div>Status</div><div></div>
           </div>
           <div id="vaultList">
             <div class="empty-state">
@@ -1601,7 +1610,7 @@
   <div class="ob-shield"></div>
   <div class="ob-title">WELCOME TO AEGIS</div>
   <p class="ob-sub">
-    <strong>Your purchases, protected.</strong><br>
+    <strong>Nothing slips through.</strong><br>
     Scan a receipt and Aegis tracks every warranty and expiry date — so nothing slips through the cracks.
   </p>
   <div class="ob-steps">
@@ -2152,8 +2161,7 @@ let currentVaultFilter = 'all';
 function renderVaultRow(item) {
   const price   = item.price || 0;
   const rarity  = (item.rarity || 'COMMON').toUpperCase();
-  const rarityClass = { EXOTIC:'r-exotic', LEGENDARY:'r-legendary', RARE:'r-rare', COMMON:'r-common' }[rarity] || 'r-common';
-  const rarityEmoji = { EXOTIC:'🟡', LEGENDARY:'🟣', RARE:'🔵', COMMON:'⚪' }[rarity] || '⚪';
+  // rarity vars kept for dashboard compatibility
 
   let statusBadge = '<span class="alert-badge ab-green">—</span>';
   if ((item.warranty_days || 0) > 0 && item.purchase_date) {
@@ -2169,9 +2177,7 @@ function renderVaultRow(item) {
   return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
     <div>${emojiAvatar(item.item_name, item.category)}</div>
     <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
-    <div><span class="rarity-chip ${rarityClass}">${rarityEmoji} ${rarity}</span></div>
     <div class="vi-price">$${price.toFixed(2)}</div>
-    <div style="font-size:11px;color:var(--text3)">${item.warranty_days ? item.warranty_days+'d' : '—'}</div>
     <div>${statusBadge}</div>
     <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
   </div>`;
@@ -2537,28 +2543,72 @@ function parseJSON(raw) {
 }
 
 // ─── RENDER MANIFEST ──────────────────────────────────────────
-function renderManifest(items, gridId, titleId) {
-  document.getElementById(titleId).textContent = `📦 Inventory Manifest — ${items.length} item(s) identified`;
+function warrantyText(days) {
+  if (!days || days <= 0) return null;
+  if (days >= 730)  return '🛡️ Protected for ' + Math.round(days/365) + ' years';
+  if (days >= 365)  return '🛡️ Protected for 1 year';
+  if (days >= 60)   return '🛡️ Protected for ' + Math.round(days/30) + ' months';
+  if (days >= 30)   return '🛡️ Protected for 1 month';
+  return '🛡️ Protected for ' + days + ' days';
+}
 
-  const rarityOf = price => price > 1000 ? '🟡 EXOTIC' : price > 200 ? '🟣 LEGENDARY' : price > 50 ? '🔵 RARE' : '⚪ COMMON';
-  const colorOf  = price => price > 1000 ? 'var(--gold)' : price > 200 ? 'var(--purple)' : price > 50 ? 'var(--blue)' : 'var(--text3)';
+function spoilText(days) {
+  if (!days || days <= 0) return null;
+  if (days === 1) return '⏰ Use today — expires tomorrow';
+  if (days <= 3)  return '⏰ Use within ' + days + ' days — expires soon';
+  if (days <= 7)  return '📅 Best used within ' + days + ' days';
+  return '📅 Fresh for ' + days + ' more days';
+}
+
+function purchaseText(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr);
+  const diff = Math.round((today - d) / 86400000);
+  if (diff === 0) return '📅 Purchased today';
+  if (diff === 1) return '📅 Purchased yesterday';
+  if (diff < 7)   return '📅 Purchased ' + diff + ' days ago';
+  return '📅 ' + d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+function renderManifest(items, gridId, titleId) {
+  document.getElementById(titleId).textContent =
+    items.length === 1
+      ? '✅ 1 item found — review and save'
+      : `✅ ${items.length} items found — review and save`;
 
   document.getElementById(gridId).innerHTML = items.map((item, i) => {
     const price   = parseFloat(item.price || 0);
-    const rarity  = rarityOf(price);
-    const color   = colorOf(price);
     const warranty= parseInt(item.warranty_days || 0);
     const spoil   = parseInt(item.days_until_spoil || 0);
+    const [emoji] = getItemEmoji(item.item_name, item.category);
+    const wText   = warrantyText(warranty);
+    const sText   = spoilText(spoil);
+    const pText   = purchaseText(item.purchase_date);
+    const xp      = 10 + Math.max(0, Math.floor(price - 50));
+
+    let protectionBadge = '';
+    if (warranty > 0)    protectionBadge = `<span class="mc-prot mc-prot-warranty">🛡️ Warranty tracked</span>`;
+    else if (spoil > 0)  protectionBadge = `<span class="mc-prot mc-prot-spoil">⏰ Expiry tracked</span>`;
+    else                 protectionBadge = `<span class="mc-prot mc-prot-basic">📦 Item tracked</span>`;
+
     return `<div class="manifest-card" style="animation-delay:${i*0.06}s">
-      <div class="mc-rarity" style="color:${color}">${rarity}</div>
+      <div class="mc-top-row">
+        <span style="font-size:26px">${emoji}</span>
+        ${protectionBadge}
+      </div>
       <div class="mc-name">${item.item_name || 'Unknown'}</div>
-      <div class="mc-meta">📍 ${item.merchant || '—'}</div>
-      <div class="mc-meta">💰 $${price.toFixed(2)}</div>
-      ${warranty > 0 ? `<div class="mc-meta">🛡️ Warranty: ${warranty}d</div>` : ''}
-      ${spoil > 0    ? `<div class="mc-meta">⏳ Spoils in: ${spoil}d</div>`    : ''}
-      <span class="mc-badge" style="background:rgba(245,200,66,.1);color:var(--gold)">
-        +${10 + Math.max(0, Math.floor(price - 50))} XP
-      </span>
+      <div class="mc-sub">📍 ${item.merchant || '—'} &nbsp;·&nbsp; $${price.toFixed(2)}</div>
+      <div class="mc-info-list">
+        ${wText ? `<div class="mc-info-row">${wText}</div>` : ''}
+        ${sText ? `<div class="mc-info-row">${sText}</div>` : ''}
+        ${pText ? `<div class="mc-info-row">${pText}</div>` : ''}
+        ${!wText && !sText ? '<div class="mc-info-row" style="color:var(--text3)">No expiry for this item</div>' : ''}
+      </div>
+      <div class="mc-footer">
+        <span style="font-size:11px;color:var(--text3)">Tap save to protect it</span>
+        <span class="mc-badge" style="background:rgba(245,200,66,.1);color:var(--gold)">+${xp} XP</span>
+      </div>
     </div>`;
   }).join('');
 }
