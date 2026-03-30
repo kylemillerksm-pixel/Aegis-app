@@ -526,6 +526,46 @@
   ::-webkit-scrollbar-track { background: var(--dark); }
   ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
 
+  /* ── ONBOARDING MULTI-STEP ───────────────────────── */
+  .ob-progress { display:flex; gap:8px; margin-bottom:32px; }
+  .ob-dot { width:8px; height:8px; border-radius:50%; background:var(--border2); transition:all .3s; }
+  .ob-dot.active { background:var(--gold); width:24px; border-radius:4px; }
+  .ob-step-screen { width:100%; max-width:400px; text-align:center; }
+  .ob-step-icon-lg { font-size:52px; margin-bottom:16px; display:block; }
+  .ob-step-title { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:.08em; color:var(--text); margin-bottom:12px; }
+  .ob-example-card { background:var(--dark2); border:1px solid var(--border2); border-radius:10px; padding:14px; margin-bottom:24px; text-align:left; }
+  .ob-example-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:13px; color:var(--text2); border-bottom:1px solid var(--border); }
+  .ob-example-row:last-child { border-bottom:none; }
+  .ob-gmail-card { background:var(--dark2); border:1px solid var(--border2); border-radius:10px; padding:16px; margin-bottom:20px; text-align:left; }
+  .ob-gmail-step { display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; font-size:13px; color:var(--text2); line-height:1.5; }
+  .ob-gmail-num { min-width:22px; height:22px; background:rgba(245,200,66,.15); border:1px solid rgba(245,200,66,.3); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--gold); margin-top:1px; }
+  .ob-gmail-text code { background:var(--black); padding:2px 5px; border-radius:3px; font-size:11px; color:var(--gold); font-family:monospace; }
+  .ob-scan-address { background:var(--black); border:1px solid rgba(245,200,66,.3); border-radius:7px; padding:10px 14px; font-size:14px; font-weight:600; color:var(--gold); letter-spacing:.04em; text-align:center; margin-bottom:8px; font-family:monospace; }
+  .ob-copy-btn { width:100%; padding:8px; background:transparent; border:1px solid var(--border2); border-radius:6px; color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; touch-action:manipulation; margin-bottom:4px; font-family:'Barlow Condensed',sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+  .ob-alert-mock { background:var(--dark2); border:1px solid rgba(255,68,68,.2); border-radius:10px; padding:16px; margin-bottom:8px; text-align:left; }
+
+  /* ── VAULT FILTER TABS ───────────────────────────── */
+  .vault-tabs { display:flex; gap:8px; margin-bottom:16px; padding:0 4px; }
+  .vault-tab { padding:6px 14px; background:transparent; border:1px solid var(--border); border-radius:20px; cursor:pointer; font-size:12px; font-weight:600; color:var(--text3); touch-action:manipulation; transition:all .15s; font-family:'Barlow Condensed',sans-serif; letter-spacing:.06em; text-transform:uppercase; }
+  .vault-tab.active { background:rgba(245,200,66,.1); border-color:rgba(245,200,66,.3); color:var(--gold); }
+
+  /* ── MARK AS USED BUTTONS ────────────────────────── */
+  .used-btn { background:transparent; border:1px solid rgba(68,204,136,.25); color:#44cc88; cursor:pointer; font-size:11px; font-weight:700; padding:3px 8px; border-radius:5px; touch-action:manipulation; transition:all .15s; font-family:'Barlow Condensed',sans-serif; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .used-btn:hover { background:rgba(68,204,136,.1); }
+  .claim-btn { background:transparent; border:1px solid rgba(68,136,255,.25); color:var(--blue); cursor:pointer; font-size:11px; font-weight:700; padding:3px 8px; border-radius:5px; touch-action:manipulation; transition:all .15s; font-family:'Barlow Condensed',sans-serif; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .claim-btn:hover { background:rgba(68,136,255,.1); }
+
+  /* ── CLUTCH SAVE MODAL ───────────────────────────── */
+  .clutch-modal { position:fixed; inset:0; background:rgba(8,10,15,.88); z-index:8600; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .clutch-modal.hidden { display:none; }
+  .clutch-box { background:var(--dark2); border:1px solid rgba(68,204,136,.3); border-radius:16px; padding:28px; max-width:340px; width:100%; text-align:center; }
+  .clutch-icon { font-size:48px; margin-bottom:12px; display:block; }
+  .clutch-title { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:.08em; color:#44cc88; margin-bottom:6px; }
+  .clutch-sub { font-size:14px; color:var(--text2); margin-bottom:16px; line-height:1.6; }
+  .clutch-xp { font-family:'Bebas Neue',sans-serif; font-size:36px; color:var(--gold); margin-bottom:4px; }
+  .clutch-xp-label { font-size:11px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; margin-bottom:20px; }
+  .clutch-btn { width:100%; padding:12px; background:#44cc88; color:var(--black); font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; border:none; border-radius:8px; cursor:pointer; touch-action:manipulation; }
+
   /* ── SHAREABLE NEAR MISS CARD ───────────────────────── */
   .share-card-modal {
     position: fixed; inset: 0;
@@ -1658,6 +1698,11 @@
             <div class="panel-title">🗄️ Full Registry</div>
             <div id="fullRegistryCount" class="panel-action"></div>
           </div>
+          <div class="vault-tabs">
+            <button class="vault-tab active" id="vtab-active" onclick="setVaultFilter('active',this)" ontouchend="this.onclick()">Active</button>
+            <button class="vault-tab" id="vtab-used" onclick="setVaultFilter('used',this)" ontouchend="this.onclick()">Used</button>
+            <button class="vault-tab" id="vtab-archived" onclick="setVaultFilter('archived',this)" ontouchend="this.onclick()">Archived</button>
+          </div>
           <div class="vault-header" style="grid-template-columns:40px 2fr 1.2fr 1.2fr 32px">
             <div></div><div>Item</div><div>Price</div><div>Status</div><div></div>
           </div>
@@ -1838,6 +1883,18 @@
   </div>
 </div>
 
+<!-- CLUTCH SAVE MODAL -->
+<div class="clutch-modal hidden" id="clutchModal">
+  <div class="clutch-box">
+    <span class="clutch-icon">⚡</span>
+    <div class="clutch-title">CLUTCH SAVE!</div>
+    <p class="clutch-sub" id="clutchSub">You used it just in time.</p>
+    <div class="clutch-xp" id="clutchXP">+50 XP</div>
+    <div class="clutch-xp-label">Nothing slipped through</div>
+    <button class="clutch-btn" onclick="closeClutch()" ontouchend="this.onclick()">💪 Keep It Up</button>
+  </div>
+</div>
+
 <!-- DELETE CONFIRM MODAL -->
 <div class="delete-modal hidden" id="deleteModal">
   <div class="delete-box">
@@ -1859,34 +1916,73 @@
   </div>
 </div>
 
-<!-- ONBOARDING SCREEN -->
+<!-- MULTI-STEP ONBOARDING -->
 <div class="onboarding-screen hidden" id="onboardingScreen">
-  <div class="ob-shield"></div>
-  <div class="ob-title">WELCOME TO AEGIS</div>
-  <p class="ob-sub">
-    <strong>Nothing slips through.</strong><br>
-    Scan a receipt and Aegis tracks every warranty and expiry date — so nothing slips through the cracks.
-  </p>
-  <div class="ob-steps">
-    <div class="ob-step">
-      <div class="ob-step-icon">📷</div>
-      <div class="ob-step-label">Scan a receipt</div>
-    </div>
-    <div class="ob-step">
-      <div class="ob-step-icon">🧠</div>
-      <div class="ob-step-label">Aegis learns everything</div>
-    </div>
-    <div class="ob-step">
-      <div class="ob-step-icon">⚡</div>
-      <div class="ob-step-label">Get alerted before it's too late</div>
-    </div>
+  <div class="ob-progress" id="obProgress">
+    <div class="ob-dot active" id="obDot0"></div>
+    <div class="ob-dot" id="obDot1"></div>
+    <div class="ob-dot" id="obDot2"></div>
+    <div class="ob-dot" id="obDot3"></div>
+    <div class="ob-dot" id="obDot4"></div>
   </div>
-  <button class="ob-btn" onclick="startOnboarding()" ontouchend="this.onclick()">
-    📷 Scan My First Receipt
-  </button>
-  <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
-    Skip for now →
-  </button>
+  <!-- STEP 0: Welcome -->
+  <div class="ob-step-screen" id="obStep0">
+    <div class="ob-shield"></div>
+    <div class="ob-title">NOTHING SLIPS<br>THROUGH.</div>
+    <p class="ob-sub"><strong>GuardNest</strong> watches every warranty and expiry date so you never lose money on something you already paid to protect.</p>
+    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Get Started →</button>
+    <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">Skip setup</button>
+  </div>
+  <!-- STEP 1: Scan -->
+  <div class="ob-step-screen hidden" id="obStep1">
+    <div class="ob-step-icon-lg">📷</div>
+    <div class="ob-step-title">Scan Any Receipt</div>
+    <p class="ob-sub">Point your camera at any receipt — grocery, electronics, appliances. <strong>GuardNest reads it in seconds</strong> and tracks every item automatically.</p>
+    <div class="ob-example-card">
+      <div class="ob-example-row"><span>🍗 Chicken Breast</span><span style="color:#ff8c00">⏰ Use in 3 days</span></div>
+      <div class="ob-example-row"><span>📺 Samsung TV</span><span style="color:var(--blue)">🛡️ 1 year warranty</span></div>
+      <div class="ob-example-row"><span>🌹 Roses</span><span style="color:#ff8c00">⏰ Fresh for 7 days</span></div>
+    </div>
+    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Next →</button>
+  </div>
+  <!-- STEP 2: Email Forwarding -->
+  <div class="ob-step-screen hidden" id="obStep2">
+    <div class="ob-step-icon-lg">📧</div>
+    <div class="ob-step-title">Auto-Capture Email Receipts</div>
+    <p class="ob-sub">Set up <strong>automatic forwarding</strong> and GuardNest captures every receipt the moment it hits your inbox. Set it once, works forever.</p>
+    <div class="ob-gmail-card">
+      <div class="ob-gmail-step"><div class="ob-gmail-num">1</div><div class="ob-gmail-text">Open <strong>Gmail</strong> → Settings → See all settings</div></div>
+      <div class="ob-gmail-step"><div class="ob-gmail-num">2</div><div class="ob-gmail-text">Click <strong>Filters and Blocked Addresses</strong> → Create a new filter</div></div>
+      <div class="ob-gmail-step"><div class="ob-gmail-num">3</div><div class="ob-gmail-text">In <strong>From</strong> field: <code>bestbuy.com OR target.com OR amazon.com OR walmart.com</code></div></div>
+      <div class="ob-gmail-step"><div class="ob-gmail-num">4</div><div class="ob-gmail-text">Select <strong>Forward to:</strong> and enter your GuardNest scan address below</div></div>
+      <div class="ob-scan-address">scan@guardnest.app</div>
+      <button class="ob-copy-btn" onclick="copyEmailAddress()" ontouchend="this.onclick()">📋 Copy Address</button>
+    </div>
+    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Done — Next →</button>
+    <button class="ob-skip" onclick="obNext()" ontouchend="this.onclick()">Set up later</button>
+  </div>
+  <!-- STEP 3: Alerts -->
+  <div class="ob-step-screen hidden" id="obStep3">
+    <div class="ob-step-icon-lg">⚡</div>
+    <div class="ob-step-title">Get Alerted in Time</div>
+    <p class="ob-sub">When a warranty or expiry is within 7 days, GuardNest tells you — with <strong>exactly what to do next.</strong></p>
+    <div class="ob-alert-mock">
+      <div style="font-size:10px;color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">⚠️ Action Required</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text);margin-bottom:4px">Samsung 65" TV</div>
+      <div style="font-size:13px;color:var(--red);font-weight:600;margin-bottom:10px">Warranty expires in 7 days</div>
+      <div style="font-size:12px;color:var(--text2)">File a claim now before coverage runs out.</div>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin:16px 0 24px">Plus a weekly email every Monday showing everything in your vault.</p>
+    <button class="ob-btn" onclick="obNext()" ontouchend="this.onclick()">Next →</button>
+  </div>
+  <!-- STEP 4: Ready -->
+  <div class="ob-step-screen hidden" id="obStep4">
+    <div class="ob-step-icon-lg">🛡️</div>
+    <div class="ob-step-title">You're Protected.</div>
+    <p class="ob-sub">Scan your first receipt and GuardNest starts watching. <strong>Nothing will slip through.</strong></p>
+    <button class="ob-btn" onclick="startOnboarding()" ontouchend="this.onclick()">📷 Scan My First Receipt</button>
+    <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">Go to dashboard</button>
+  </div>
 </div>
 
 <!-- FIRST SAVE CELEBRATION -->
@@ -2027,6 +2123,7 @@ async function bootApp() {
   refreshVault();
   updateSidebar();
   checkOnboarding();
+  await autoArchiveExpired();
   // Check for near-miss alerts on app load
   if (allItems.length > 0) {
     const shownToday = localStorage.getItem('guardnest_nearmiss_' + new Date().toDateString());
@@ -2438,12 +2535,36 @@ function renderVaultRow(item) {
     statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
   }
 
-  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
+  // Action buttons
+  const isSpoilItem = (item.days_until_spoil || 0) > 0;
+  const isWarrantyItem = (item.warranty_days || 0) > 0 && item.purchase_date;
+  const itemStatus = item.status || 'active';
+  let actionBtn = '';
+  if (itemStatus === 'used') {
+    actionBtn = `<span style="font-size:11px;color:#44cc88;font-weight:600">✓ Used</span>`;
+  } else if (itemStatus === 'archived') {
+    actionBtn = `<span style="font-size:11px;color:var(--text3)">Expired</span>`;
+  } else if (isSpoilItem) {
+    const sn = (item.item_name||'').replace(/["\']/g,'');
+    actionBtn = `<button class="used-btn" onclick="markAsUsed('${item.id}','${sn}',${item.days_until_spoil||0},event)" ontouchend="this.onclick(event)">✓ Used it</button>`;
+  } else if (isWarrantyItem) {
+    const td = new Date(); td.setHours(0,0,0,0);
+    const ex = new Date(item.purchase_date);
+    ex.setDate(ex.getDate() + item.warranty_days);
+    const dl = Math.round((ex - td) / 86400000);
+    if (dl >= 0 && dl <= 30) {
+      const wn = (item.item_name||'').replace(/["\']/g,'');
+      actionBtn = `<button class="claim-btn" onclick="markClaimFiled('${item.id}','${wn}',event)" ontouchend="this.onclick(event)">🛡️ Claim</button>`;
+    }
+  }
+
+  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr auto 32px">
     <div>${emojiAvatar(item.item_name, item.category)}</div>
     <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
     <div class="vi-price">$${price.toFixed(2)}</div>
     <div>${statusBadge}</div>
-    <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
+    <div>${actionBtn}</div>
+    <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/['"]/g,'')}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
   </div>`;
 }
 
@@ -2455,9 +2576,10 @@ function filterVault(filter, btn) {
 }
 
 function refreshVault() {
-  const total    = allItems.length;
-  const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
-  const warranted= allItems.filter(i => (i.warranty_days||0) > 0).length;
+  const activeItems = allItems.filter(i => (i.status||'active') === 'active');
+  const total    = activeItems.length;
+  const totalVal = activeItems.reduce((s,i) => s + (i.price||0), 0);
+  const warranted= activeItems.filter(i => (i.warranty_days||0) > 0).length;
 
   document.getElementById('vTotal').textContent    = total;
   document.getElementById('vValue').textContent    = '$' + totalVal.toFixed(0);
@@ -3288,13 +3410,105 @@ function closeFirstWin() {
   showPage('vault');
 }
 
+// ─── VAULT FILTER ─────────────────────────────────────────────
+
+function setVaultFilter(filter, btn) {
+  currentVaultFilter = filter;
+  document.querySelectorAll('.vault-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  refreshVault();
+}
+
+// ─── MARK AS USED ──────────────────────────────────────────────
+async function markAsUsed(itemId, itemName, daysLeft, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (!currentUser) return;
+  const isClutch = daysLeft <= 1;
+  const xpEarned = isClutch ? 50 : 25;
+  const { error } = await supa.from('items')
+    .update({ status: 'used', used_at: new Date().toISOString() })
+    .eq('id', itemId).eq('user_id', currentUser.id);
+  if (error) { showToast('Error updating item', 'error'); return; }
+  await loadItems();
+  refreshVault(); refreshDashboard(); updateSidebar();
+  if (isClutch) {
+    document.getElementById('clutchSub').textContent =
+      `You used your ${itemName} with ${daysLeft <= 0 ? 'no' : daysLeft} day${daysLeft !== 1 ? 's' : ''} to spare.`;
+    document.getElementById('clutchXP').textContent = `+${xpEarned} XP`;
+    document.getElementById('clutchModal').classList.remove('hidden');
+  } else {
+    showToast(`✅ ${itemName} marked as used · +${xpEarned} XP`, 'success');
+  }
+}
+
+async function markClaimFiled(itemId, itemName, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (!currentUser) return;
+  const { error } = await supa.from('items')
+    .update({ status: 'used', used_at: new Date().toISOString() })
+    .eq('id', itemId).eq('user_id', currentUser.id);
+  if (!error) {
+    await loadItems();
+    refreshVault(); refreshDashboard(); updateSidebar();
+    showToast(`🛡️ Claim filed on ${itemName} · +200 XP`, 'success');
+  }
+}
+
+function closeClutch() {
+  document.getElementById('clutchModal').classList.add('hidden');
+}
+
+// ─── AUTO-ARCHIVE EXPIRED ITEMS ────────────────────────────────
+async function autoArchiveExpired() {
+  if (!currentUser || !allItems.length) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const toArchive = allItems.filter(item => {
+    if ((item.status || 'active') !== 'active') return false;
+    if ((item.days_until_spoil || 0) > 0 && item.days_until_spoil < 0) return true;
+    if ((item.warranty_days || 0) > 0 && item.purchase_date) {
+      const exp = new Date(item.purchase_date);
+      exp.setDate(exp.getDate() + item.warranty_days);
+      return exp < today;
+    }
+    return false;
+  });
+  if (!toArchive.length) return;
+  await supa.from('items').update({ status: 'archived' })
+    .in('id', toArchive.map(i => i.id)).eq('user_id', currentUser.id);
+  await loadItems();
+}
+
 // ─── ONBOARDING ───────────────────────────────────────────────
+// ── MULTI-STEP ONBOARDING ──────────────────────────────────────
+let currentObStep = 0;
+const OB_TOTAL = 5;
+
 function checkOnboarding() {
-  const hasSeenOnboarding = localStorage.getItem('aegis_onboarded');
-  const hasItems = allItems.length > 0;
-  if (!hasSeenOnboarding && !hasItems) {
+  const seen = localStorage.getItem('guardnest_onboarded');
+  if (!seen && allItems.length === 0) {
+    currentObStep = 0;
+    showObStep(0);
     document.getElementById('onboardingScreen').classList.remove('hidden');
   }
+}
+
+function showObStep(step) {
+  for (let i = 0; i < OB_TOTAL; i++) {
+    const el = document.getElementById('obStep' + i);
+    const dot = document.getElementById('obDot' + i);
+    if (el) el.classList.add('hidden');
+    if (dot) dot.classList.remove('active');
+  }
+  const cur = document.getElementById('obStep' + step);
+  const curDot = document.getElementById('obDot' + step);
+  if (cur) cur.classList.remove('hidden');
+  if (curDot) curDot.classList.add('active');
+}
+
+function obNext() {
+  currentObStep++;
+  if (currentObStep >= OB_TOTAL) { dismissOnboarding(); return; }
+  showObStep(currentObStep);
 }
 
 function startOnboarding() {
@@ -3304,7 +3518,22 @@ function startOnboarding() {
 
 function dismissOnboarding() {
   document.getElementById('onboardingScreen').classList.add('hidden');
-  localStorage.setItem('aegis_onboarded', 'true');
+  localStorage.setItem('guardnest_onboarded', 'true');
+}
+
+function copyEmailAddress() {
+  const addr = 'scan@guardnest.app';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(addr).then(() => showToast('📋 Copied — paste into Gmail filter', 'success'));
+  } else {
+    const el = document.createElement('textarea');
+    el.value = addr;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('📋 Copied — paste into Gmail filter', 'success');
+  }
 }
 
 function showCelebration(items) {
