@@ -3673,7 +3673,7 @@ function showShoppingPrompt() {
         : item.warranty_days > 0
         ? `${item.warranty_days}d warranty`
         : 'Item tracked';
-      return `<div class="sp-item" id="spItem${i}" onclick="toggleSpItem(${i})" ontouchend="this.onclick()">
+      return `<div class="sp-item" id="spItem${i}" onclick="toggleSpItem(${i})">
         <div class="sp-item-emoji">${emoji}</div>
         <div class="sp-item-info">
           <div class="sp-item-name">${item.name}</div>
@@ -3688,18 +3688,34 @@ function showShoppingPrompt() {
   localStorage.setItem('guardnest_last_prompt', new Date().toDateString());
   localStorage.setItem('guardnest_last_prompt_date', new Date().toISOString());
 
+  // Add touch handlers after render
   setTimeout(() => {
     document.getElementById('shopPromptModal').classList.remove('hidden');
+    // Add touch listeners to prevent double-fire on mobile
+    patterns.forEach((_, i) => {
+      const el = document.getElementById('spItem' + i);
+      if (el) {
+        el.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSpItem(i);
+        }, {passive: false});
+      }
+    });
   }, 800);
 }
 
 function toggleSpItem(i) {
-  const item = document.getElementById(`spItem${i}`);
-  const check = document.getElementById(`spCheck${i}`);
+  const item = document.getElementById('spItem' + i);
+  const check = document.getElementById('spCheck' + i);
   if (!item || !check) return;
-  const isChecked = item.classList.contains('checked');
-  item.classList.toggle('checked', !isChecked);
-  check.textContent = isChecked ? '' : '✓';
+  if (item.classList.contains('checked')) {
+    item.classList.remove('checked');
+    check.textContent = '';
+  } else {
+    item.classList.add('checked');
+    check.textContent = '✓';
+  }
 }
 
 async function saveShoppingPrompt() {
