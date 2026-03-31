@@ -1183,6 +1183,23 @@
     cursor: pointer; touch-action: manipulation;
   }
 
+
+  /* ── USED BUTTON ─────────────────────────────────────────── */
+  .used-btn {
+    background: transparent; border: none;
+    color: var(--green); cursor: pointer;
+    font-size: 16px; padding: 4px 6px;
+    border-radius: 4px; transition: all .15s;
+    touch-action: manipulation;
+    opacity: 0; transition: opacity .15s;
+  }
+  .vault-row:hover .used-btn { opacity: 1; }
+  .used-btn:hover { background: rgba(68,204,136,.1); }
+  @media (max-width: 768px) {
+    .used-btn { opacity: 1 !important; }
+    .used-btn:active { background: rgba(68,204,136,.15); }
+  }
+
   /* ── DELETE BUTTON ───────────────────────────────────── */
   .delete-btn {
     background: transparent; border: none;
@@ -1194,6 +1211,10 @@
   }
   .vault-row:hover .delete-btn { opacity: 1; }
   .delete-btn:hover { color: var(--red); background: rgba(255,68,68,.1); }
+  @media (max-width: 768px) {
+    .delete-btn { opacity: 1 !important; color: var(--text3); }
+    .delete-btn:active { color: var(--red); }
+  }
 
   /* ── DELETE CONFIRM MODAL ────────────────────────────── */
   .delete-modal {
@@ -1543,11 +1564,11 @@
     /* Vault rows simplify on mobile */
     .vault-header { display: none; }
     .vault-row {
-      grid-template-columns: 36px 1fr auto !important;
+      grid-template-columns: 36px 1fr auto auto !important;
       padding: 10px 14px;
-      gap: 10px;
+      gap: 8px;
     }
-    .vault-row > div:nth-child(3),
+    .vault-row > div:nth-child(3) { display: none; }
     .vault-row > div:nth-child(4) { display: none; }
 
     /* Alert items */
@@ -1705,7 +1726,7 @@
 <!-- ═══════════════════════════════════════════
      LOADING OVERLAY
 ═══════════════════════════════════════════ -->
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loadingOverlay" style="display:none;visibility:hidden;pointer-events:none;z-index:-1;">
   <div class="loading-spinner"></div>
   <div class="loading-text">AEGIS</div>
   <div class="loading-sub" id="loadingMsg">INITIALIZING SYSTEM...</div>
@@ -2301,10 +2322,10 @@
     </div>
     <div class="sp-items" id="spItemsList"></div>
     <div class="sp-footer">
-      <button class="sp-btn-save" onclick="saveShoppingPrompt()" ontouchend="this.onclick()">
+      <button class="sp-btn-save" onclick="saveShoppingPrompt()">
         ✅ Add to Vault
       </button>
-      <button class="sp-btn-skip" onclick="skipShoppingPrompt()" ontouchend="this.onclick()">
+      <button class="sp-btn-skip" onclick="skipShoppingPrompt()">
         Not yet
       </button>
     </div>
@@ -3331,11 +3352,12 @@ function renderVaultRow(item) {
     statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
   }
 
-  return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 1.2fr 1.2fr 32px">
+    return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 40px 32px">
     <div>${emojiAvatar(item.item_name, item.category)}</div>
     <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
     <div class="vi-price">$${price.toFixed(2)}</div>
     <div>${statusBadge}</div>
+    <div><button class="used-btn" onclick="markItemUsed('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Mark as used">✓</button></div>
     <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
   </div>`;
 }
@@ -3435,9 +3457,11 @@ function refreshVault() {
 
   // ── FULL REGISTRY ───────────────────────────────────────────
   const rarityOrder = { EXOTIC:0, LEGENDARY:1, RARE:2, COMMON:3 };
-  const sorted = [...allItems].sort((a,b) =>
-    (rarityOrder[a.rarity?.toUpperCase()]??3) - (rarityOrder[b.rarity?.toUpperCase()]??3)
-  );
+  const sorted = [...allItems]
+    .filter(i => (i.status || 'active') === 'active')
+    .sort((a,b) =>
+      (rarityOrder[a.rarity?.toUpperCase()]??3) - (rarityOrder[b.rarity?.toUpperCase()]??3)
+    );
   document.getElementById('fullRegistryCount').textContent = `${sorted.length} total`;
   const el = document.getElementById('vaultList');
   el.innerHTML = sorted.length === 0
@@ -3772,165 +3796,6 @@ function renderManifest(items, gridId, titleId) {
   }).join('');
 }
 
-// ─── SAVE TO VAULT ────────────────────────────────────────────
-function refreshReceipts() {
-  const el = document.getElementById('receiptList');
-  const countEl = document.getElementById('receiptCount');
-  if (!el) return;
-
-  if (!allReceipts.length) {
-    el.innerHTML = `<div class="empty-state">
-      <span class="empty-icon">🧾</span>
-      <div class="empty-title">No Receipts Yet</div>
-      <div class="empty-sub">Scan a receipt to start building your history</div>
-    </div>`;
-    if (countEl) countEl.textContent = '';
-    return;
-  }
-
-  if (countEl) countEl.textContent = `${allReceipts.length} scan${allReceipts.length !== 1 ? 's' : ''}`;
-
-  el.innerHTML = allReceipts.map(r => {
-    const date     = new Date(r.scan_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const icon     = r.source_type === 'pdf' ? '📄' : '🧾';
-    const items    = allItems.filter(i => i.receipt_id === r.id);
-    const expiring = items.filter(i => {
-      const today = new Date(); today.setHours(0,0,0,0);
-      if ((i.warranty_days || 0) > 0 && i.purchase_date) {
-        const exp = new Date(i.purchase_date);
-        exp.setDate(exp.getDate() + i.warranty_days);
-        return Math.round((exp - today) / 86400000) <= 30;
-      }
-      return (i.days_until_spoil || 0) > 0 && (i.days_until_spoil || 0) <= 7;
-    }).length;
-
-    return `<div class="alert-item" style="padding:14px 0;cursor:pointer" onclick="filterVaultByReceipt('${r.id}')">
-      <div style="font-size:24px;margin-right:4px">${icon}</div>
-      <div class="alert-info">
-        <div class="alert-name">${r.merchant || 'Unknown Merchant'}</div>
-        <div class="alert-meta">📅 ${date} · ${r.item_count} item${r.item_count !== 1 ? 's' : ''} · $${parseFloat(r.total_value || 0).toFixed(2)}</div>
-        ${expiring > 0 ? `<div style="font-size:11px;color:var(--red);margin-top:3px">⚠️ ${expiring} item${expiring !== 1 ? 's' : ''} expiring soon</div>` : ''}
-      </div>
-      <span style="font-size:11px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">${r.source_type === 'pdf' ? 'PDF' : 'Image'}</span>
-    </div>`;
-  }).join('<div style="border-top:1px solid var(--border)"></div>');
-}
-
-function filterVaultByReceipt(receiptId) {
-  showPage('vault');
-  // Highlight items from this receipt in the vault
-  const receipt = allReceipts.find(r => r.id === receiptId);
-  if (receipt) {
-    showToast(`Showing items from ${receipt.merchant} · ${new Date(receipt.scan_date).toLocaleDateString()}`, 'info');
-  }
-}
-
-async function saveScanResults() { await saveItems('btnSave', 'scanResults'); }
-async function savePdfResults()  { await saveItems('btnSavePdf', 'pdfResults'); }
-
-async function saveItems(btnId, resultsId) {
-  if (!currentUser || !pendingItems.length) return;
-
-  const btn = document.getElementById(btnId);
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-
-  // ── Step 1: Create receipt session record ──────────────────
-  const merchant    = pendingItems[0]?.merchant || 'Unknown';
-  const totalValue  = pendingItems.reduce((s,i) => s + parseFloat(i.price || 0), 0);
-  const sourceType  = resultsId === 'pdfResults' ? 'pdf' : 'image';
-  const today       = new Date().toISOString().split('T')[0];
-
-  const { data: receiptData, error: receiptError } = await supa
-    .from('receipts')
-    .insert({
-      user_id:     currentUser.id,
-      merchant:    merchant,
-      scan_date:   today,
-      item_count:  pendingItems.length,
-      total_value: totalValue.toFixed(2),
-      source_type: sourceType,
-    })
-    .select()
-    .single();
-
-  const receiptId = receiptData?.id || null;
-
-  // ── Step 2: Save items linked to receipt session ───────────
-  const rows = pendingItems.map(item => ({
-    user_id:         currentUser.id,
-    receipt_id:      receiptId,
-    item_name:       item.item_name   || 'Unknown',
-    merchant:        item.merchant    || null,
-    price:           parseFloat(item.price || 0),
-    purchase_date:   item.purchase_date || today,
-    category:        item.category    || 'General',
-    rarity:          rarityWord(parseFloat(item.price || 0)),
-    warranty_days:   parseInt(item.warranty_days   || 0),
-    days_until_spoil:parseInt(item.days_until_spoil || 0),
-    image_url:       item.image_url   || null,
-  }));
-
-  const { error } = await supa.from('items').insert(rows);
-
-  if (btn) { btn.disabled = false; btn.textContent = '💾 Save to Vault'; }
-
-  if (error) {
-    showToast('Save failed: ' + error.message, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = '💾 Save to Vault'; }
-  } else {
-    showToast(`✅ ${rows.length} item(s) saved to Vault`, 'success');
-    pendingItems = [];
-    document.getElementById(resultsId)?.classList.add('hidden');
-    document.getElementById('saveReminder')?.classList.add('hidden');
-    document.getElementById('pdfSaveReminder')?.classList.add('hidden');
-    // Update streak
-    const wk = getWeekKey();
-    localStorage.setItem('guardnest_last_scan_week', wk);
-    if (!parseInt(localStorage.getItem('guardnest_streak')||'0')) localStorage.setItem('guardnest_streak','1');
-    const prevCredits = totalCredits;
-    const prevCount = allItems.length;
-    const prevValue = allItems.reduce((s,i) => s + (i.price||0), 0);
-    await loadItems();
-    await loadReceipts();
-    refreshDashboard();
-    refreshAlerts();
-    refreshVault();
-    updateSidebar();
-    // Check for level up
-    checkLevelUp(prevCredits, totalCredits);
-    // Check for badge earned
-    const newValue = allItems.reduce((s,i) => s + (i.price||0), 0);
-    checkAndShowBadge(prevCount, allItems.length, prevValue, newValue);
-    checkBadges();
-    // Show first win modal (first time only)
-    showFirstWin(allItems);
-    // Check for near-miss alerts (after first win clears)
-    setTimeout(() => checkNearMiss(allItems), 2000);
-    const xpBar = document.getElementById('xpBar');
-    if (xpBar) {
-      xpBar.style.transition = 'width 1s ease';
-      setTimeout(() => { xpBar.style.transition = 'width .6s ease'; }, 1100);
-    }
-  }
-}
-
-function rarityWord(price) {
-  if (price > 1000) return 'EXOTIC';
-  if (price > 200)  return 'LEGENDARY';
-  if (price > 50)   return 'RARE';
-  return 'COMMON';
-}
-
-function checkBadges() {
-  const totalValue = allItems.reduce((s, i) => s + (i.price || 0), 0);
-  const messages   = [];
-  if (allItems.length === 1) messages.push('🏅 Badge: First Acquisition!');
-  if (totalValue >= 500 && allItems.length > 0 && allItems.length <= 5) messages.push('🏅 Badge: High Roller!');
-  if (allItems.length === 10) messages.push('🏅 Badge: Asset Manager!');
-  if (allItems.length === 25) messages.push('🏅 Badge: Quartermaster!');
-  messages.forEach(m => showToast(m, 'success'));
-}
-
 // ─── HELPERS ──────────────────────────────────────────────────
 function fileToBase64(file) {
   return new Promise((res, rej) => {
@@ -3957,6 +3822,32 @@ function showToast(msg, type = 'info') {
   el.textContent = msg;
   c.appendChild(el);
   setTimeout(() => el.remove(), 4000);
+}
+
+
+// ─── MARK ITEM AS USED ────────────────────────────────────────
+async function markItemUsed(itemId, itemName, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+
+  const { error } = await supa
+    .from('items')
+    .update({ status: 'used', used_at: new Date().toISOString() })
+    .eq('id', itemId)
+    .eq('user_id', currentUser.id);
+
+  if (error) {
+    showToast('Error: ' + error.message, 'error');
+  } else {
+    showToast(`✅ ${itemName} marked as used — nice work!`, 'success');
+    // XP bonus for using something before it expired
+    totalCredits += 25;
+    showXpFloat(25, event?.clientX, event?.clientY);
+    await loadItems();
+    refreshDashboard();
+    refreshAlerts();
+    refreshVault();
+    updateSidebar();
+  }
 }
 
 // ─── DELETE ITEM ──────────────────────────────────────────────
