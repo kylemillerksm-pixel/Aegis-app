@@ -534,6 +534,267 @@
   ::-webkit-scrollbar-track { background: var(--dark); }
   ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
 
+  /* ── LEVEL UP MODAL ──────────────────────────────── */
+  .levelup-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.95);
+    z-index: 9100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .levelup-modal.hidden { display: none; }
+  .levelup-box {
+    background: var(--dark2);
+    border: 1px solid rgba(245,200,66,.4);
+    border-radius: 20px; padding: 32px;
+    max-width: 360px; width: 100%;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .levelup-box::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(245,200,66,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .levelup-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 96px; line-height: 1;
+    color: var(--gold); letter-spacing: .05em;
+    animation: levelNumPop .5s cubic-bezier(.36,1.5,.64,1) both;
+  }
+  @keyframes levelNumPop {
+    from { transform: scale(0.3); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .levelup-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--gold2);
+    margin-bottom: 4px;
+  }
+  .levelup-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px; letter-spacing: .1em;
+    color: var(--text); margin-bottom: 16px;
+  }
+  .levelup-unlock {
+    background: rgba(68,204,136,.1);
+    border: 1px solid rgba(68,204,136,.25);
+    border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .levelup-unlock-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: #44cc88; margin-bottom: 6px;
+  }
+  .levelup-unlock-text {
+    font-size: 14px; color: var(--text2); line-height: 1.6;
+  }
+  .levelup-btn {
+    width: 100%; padding: 13px;
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    border: none; border-radius: 8px;
+    cursor: pointer; touch-action: manipulation;
+  }
+  .levelup-shield {
+    font-size: 48px; margin-bottom: 8px; display: block;
+    animation: shieldSpin .6s ease both;
+  }
+  @keyframes shieldSpin {
+    from { transform: rotateY(90deg) scale(.5); opacity: 0; }
+    to   { transform: rotateY(0deg)  scale(1);  opacity: 1; }
+  }
+
+  /* ── CONFETTI ─────────────────────────────────────── */
+  .confetti-canvas {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 9200;
+  }
+
+  /* ── STREAK WARNING BANNER ───────────────────────── */
+  .streak-warning {
+    background: rgba(255,140,0,.1);
+    border: 1px solid rgba(255,140,0,.3);
+    border-radius: 10px; padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--orange);
+    font-weight: 500; cursor: pointer;
+  }
+  .streak-warning.hidden { display: none; }
+  .streak-warning-icon { font-size: 20px; flex-shrink: 0; }
+  .streak-warning-text { flex: 1; line-height: 1.5; }
+  .streak-warning-dismiss {
+    font-size: 16px; color: var(--text3);
+    cursor: pointer; padding: 4px; flex-shrink: 0;
+  }
+
+  /* ── BADGE EARNED MODAL ──────────────────────────── */
+  .badge-earned-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.88);
+    z-index: 9000; display: flex;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .badge-earned-modal.hidden { display: none; }
+  .badge-earned-box {
+    background: var(--dark2);
+    border: 1px solid rgba(245,200,66,.25);
+    border-radius: 16px; padding: 28px;
+    max-width: 320px; width: 100%;
+    text-align: center;
+  }
+  .badge-earned-icon {
+    font-size: 64px; display: block;
+    margin-bottom: 12px;
+    animation: badgePop .5s cubic-bezier(.36,1.5,.64,1) both;
+  }
+  @keyframes badgePop {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .badge-earned-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px; letter-spacing: .2em;
+    color: var(--gold2); text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .badge-earned-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: .08em;
+    color: var(--text); margin-bottom: 8px;
+  }
+  .badge-earned-desc {
+    font-size: 13px; color: var(--text2);
+    line-height: 1.6; margin-bottom: 20px;
+  }
+  .badge-earned-btn {
+    width: 100%; padding: 12px;
+    background: rgba(245,200,66,.12);
+    border: 1px solid rgba(245,200,66,.3);
+    border-radius: 8px; color: var(--gold);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; touch-action: manipulation;
+  }
+
+  /* ── ALERT DETAIL MODAL ──────────────────────────── */
+  .alert-detail-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,10,15,.88);
+    z-index: 8800; display: flex;
+    align-items: flex-end; justify-content: center;
+    padding: 0;
+  }
+  .alert-detail-modal.hidden { display: none; }
+  .alert-detail-box {
+    background: var(--dark2);
+    border: 1px solid var(--border2);
+    border-radius: 20px 20px 0 0;
+    padding: 24px; width: 100%;
+    max-width: 480px;
+  }
+  .ad-handle {
+    width: 40px; height: 4px;
+    background: var(--border2); border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .ad-item-row {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .ad-item-info { flex: 1; }
+  .ad-item-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: .06em; color: var(--text);
+  }
+  .ad-item-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .ad-urgency {
+    background: rgba(255,68,68,.08);
+    border: 1px solid rgba(255,68,68,.2);
+    border-radius: 8px; padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+  .ad-urgency-days {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; color: var(--red); line-height: 1;
+  }
+  .ad-urgency-label { font-size: 12px; color: var(--text3); }
+  .ad-action-text {
+    font-size: 13px; color: var(--text2);
+    line-height: 1.7; margin-bottom: 16px;
+  }
+  .ad-btns { display: flex; gap: 10px; margin-bottom: 12px; }
+  .ad-btn-primary {
+    flex: 2; padding: 12px;
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    border: none; border-radius: 8px;
+    cursor: pointer; touch-action: manipulation;
+    text-decoration: none; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .ad-btn-dismiss {
+    flex: 1; padding: 12px;
+    background: transparent; border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text3);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; touch-action: manipulation;
+  }
+
+  /* ── RECEIPTS PAGE ───────────────────────────────── */
+  .receipt-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background .12s;
+  }
+  .receipt-card:hover { background: rgba(255,255,255,.02); }
+  .receipt-card:last-child { border-bottom: none; }
+  .receipt-icon {
+    width: 42px; height: 42px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .receipt-info { flex: 1; }
+  .receipt-merchant {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    margin-bottom: 3px;
+  }
+  .receipt-meta { font-size: 11px; color: var(--text3); }
+  .receipt-alert {
+    font-size: 10px; color: var(--red);
+    margin-top: 3px; font-weight: 600;
+  }
+  .receipt-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--text);
+    flex-shrink: 0;
+  }
+
+  /* ── XP FLOAT ANIMATION ──────────────────────────── */
+  .xp-float {
+    position: fixed; pointer-events: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; color: var(--gold);
+    font-weight: 700; z-index: 9500;
+    animation: xpFloat 1.4s ease-out forwards;
+    text-shadow: 0 2px 8px rgba(0,0,0,.5);
+  }
+  @keyframes xpFloat {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    60%  { opacity: 1; transform: translateY(-40px) scale(1.15); }
+    100% { opacity: 0; transform: translateY(-80px) scale(.8); }
+  }
+
   /* ── MISSION BOARD ───────────────────────────────── */
   .mission-header {
     display: flex; align-items: center; gap: 16px;
@@ -1634,6 +1895,16 @@
       <!-- ─── DASHBOARD: MISSION BOARD ─── -->
       <div class="page active" id="page-dashboard">
 
+        <!-- STREAK WARNING BANNER -->
+        <div class="streak-warning hidden" id="streakWarning">
+          <div class="streak-warning-icon">⚠️</div>
+          <div class="streak-warning-text">
+            <strong>Your streak ends tonight.</strong><br>
+            Scan one receipt to keep your <span id="swStreakNum">0</span> week streak alive.
+          </div>
+          <div class="streak-warning-dismiss" onclick="dismissStreakWarning()" ontouchend="this.onclick()">✕</div>
+        </div>
+
         <!-- STREAK + LEVEL HEADER -->
         <div class="mission-header">
           <div class="mission-streak" id="missionStreak">
@@ -1778,11 +2049,11 @@
       <!-- ─── ALERTS ─── -->
       <div class="page" id="page-alerts">
         <div class="stat-row cols5" id="alertStats">
-          <div class="stat-card c-red"><div class="sc-label">Expired</div><div class="sc-num" id="aExpired">0</div></div>
-          <div class="stat-card c-orange"><div class="sc-label">Critical</div><div class="sc-num" id="aCritical">0</div></div>
-          <div class="stat-card" style="border-top:2px solid var(--yellow)"><div class="sc-label">Warning</div><div class="sc-num" style="color:var(--yellow)" id="aWarning">0</div></div>
-          <div class="stat-card c-blue"><div class="sc-label">Monitor</div><div class="sc-num" id="aMonitor">0</div></div>
-          <div class="stat-card c-gold"><div class="sc-label">At Risk $</div><div class="sc-num" id="aRisk">$0</div></div>
+          <div class="stat-card c-red" onclick="filterAlerts('expired')" style="cursor:pointer" id="aCardExpired"><div class="sc-label">Expired</div><div class="sc-num" id="aExpired">0</div></div>
+          <div class="stat-card c-orange" onclick="filterAlerts('critical')" style="cursor:pointer" id="aCardCritical"><div class="sc-label">Critical</div><div class="sc-num" id="aCritical">0</div></div>
+          <div class="stat-card" style="border-top:2px solid var(--yellow);cursor:pointer" onclick="filterAlerts('warning')" id="aCardWarning"><div class="sc-label">Warning</div><div class="sc-num" style="color:var(--yellow)" id="aWarning">0</div></div>
+          <div class="stat-card c-blue" onclick="filterAlerts('monitor')" style="cursor:pointer" id="aCardMonitor"><div class="sc-label">Monitor</div><div class="sc-num" id="aMonitor">0</div></div>
+          <div class="stat-card c-gold" onclick="filterAlerts('all')" style="cursor:pointer"><div class="sc-label">All</div><div class="sc-num" id="aRisk" style="font-size:20px">All</div></div>
         </div>
         <div class="panel">
           <div class="panel-header"><div class="panel-title">⚠️ All Active Alerts</div></div>
@@ -1880,6 +2151,28 @@
               <span class="empty-icon">🗄️</span>
               <div class="empty-title">Vault Empty</div>
               <div class="empty-sub">Scan a receipt to add your first asset</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── RECEIPTS / HISTORY ─── -->
+      <div class="page" id="page-receipts">
+        <div class="stat-row cols3" style="margin-bottom:20px">
+          <div class="stat-card c-gold"><div class="sc-label">Total Scans</div><div class="sc-num" id="rTotal">0</div></div>
+          <div class="stat-card c-green"><div class="sc-label">Items Tracked</div><div class="sc-num" id="rItems">0</div></div>
+          <div class="stat-card c-blue"><div class="sc-label">Total Value</div><div class="sc-num" id="rValue">$0</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🧾 Scan History</div>
+            <div class="panel-action" id="receiptCount"></div>
+          </div>
+          <div id="receiptList">
+            <div class="empty-state">
+              <span class="empty-icon">🧾</span>
+              <div class="empty-title">No Scans Yet</div>
+              <div class="empty-sub">Scan a receipt to start building your history</div>
             </div>
           </div>
         </div>
@@ -2072,6 +2365,63 @@
     </button>
   </div>
 </div>
+
+<!-- LEVEL UP MODAL -->
+<div class="levelup-modal hidden" id="levelUpModal">
+  <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+  <div class="levelup-box">
+    <span class="levelup-shield">🛡️</span>
+    <div class="levelup-label">Level Up</div>
+    <div class="levelup-num" id="luNum">2</div>
+    <div class="levelup-title" id="luTitle">OPERATIVE</div>
+    <div class="levelup-unlock" id="luUnlock">
+      <div class="levelup-unlock-label">🔓 Unlocked</div>
+      <div class="levelup-unlock-text" id="luUnlockText">Weekly intelligence email — GuardNest now comes to you every Monday.</div>
+    </div>
+    <button class="levelup-btn" onclick="closeLevelUp()" ontouchend="this.onclick()">
+      Let's Go 🚀
+    </button>
+  </div>
+</div>
+
+<!-- BADGE EARNED MODAL -->
+<div class="badge-earned-modal hidden" id="badgeEarnedModal">
+  <div class="badge-earned-box">
+    <span class="badge-earned-icon" id="beIcon">🏆</span>
+    <div class="badge-earned-title">Badge Earned</div>
+    <div class="badge-earned-name" id="beName">QUARTERMASTER</div>
+    <p class="badge-earned-desc" id="beDesc">You've tracked 25 items. Your vault is a force to be reckoned with.</p>
+    <button class="badge-earned-btn" onclick="closeBadgeEarned()" ontouchend="this.onclick()">
+      Nice 💪
+    </button>
+  </div>
+</div>
+
+<!-- ALERT DETAIL MODAL -->
+<div class="alert-detail-modal hidden" id="alertDetailModal">
+  <div class="alert-detail-box">
+    <div class="ad-handle"></div>
+    <div class="ad-item-row">
+      <div id="adEmoji" style="font-size:36px">📦</div>
+      <div class="ad-item-info">
+        <div class="ad-item-name" id="adName">Item</div>
+        <div class="ad-item-meta" id="adMeta">Merchant · Category</div>
+      </div>
+      <span class="alert-badge ab-red" id="adBadge">3D LEFT</span>
+    </div>
+    <div class="ad-urgency" id="adUrgency">
+      <div class="ad-urgency-days" id="adDays">3 days</div>
+      <div class="ad-urgency-label" id="adUrgencyLabel">until expiry</div>
+    </div>
+    <p class="ad-action-text" id="adActionText">Take action before it's too late.</p>
+    <div class="ad-btns">
+      <a class="ad-btn-primary" id="adActionBtn" href="#" target="_blank">🔍 Take Action</a>
+      <button class="ad-btn-dismiss" onclick="closeAlertDetail()" ontouchend="this.onclick()">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<!-- STREAK WARNING BANNER (inside dashboard, injected by JS) -->
 
 <!-- DELETE CONFIRM MODAL -->
 <div class="delete-modal hidden" id="deleteModal">
@@ -2277,6 +2627,8 @@ async function bootApp() {
     learnShoppingPatterns();
     setTimeout(() => showShoppingPrompt(), 3000);
   }
+  // Check streak warning
+  checkStreakWarning();
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────
@@ -2709,9 +3061,23 @@ function refreshDashboard() {
   document.getElementById('statTotalItems').textContent = total;
 
   // Update alert badge
-  if (alerts.length > 0) {
-    document.getElementById('alertBadge').textContent = alerts.length;
-    document.getElementById('alertBadge').classList.remove('hidden');
+  const alertBadgeEl = document.getElementById('alertBadge');
+  if (alertBadgeEl) {
+    if (alerts.length > 0) {
+      alertBadgeEl.textContent = alerts.length;
+      alertBadgeEl.classList.remove('hidden');
+    } else {
+      alertBadgeEl.classList.add('hidden');
+    }
+  }
+  const bnBadgeEl = document.getElementById('bnAlertBadge');
+  if (bnBadgeEl) {
+    if (alerts.length > 0) {
+      bnBadgeEl.textContent = alerts.length;
+      bnBadgeEl.classList.remove('hidden');
+    } else {
+      bnBadgeEl.classList.add('hidden');
+    }
   }
 
   // ── STREAK ────────────────────────────────────────────────
@@ -2864,7 +3230,13 @@ function urgencyClass(days) {
 function renderAlertItem(a) {
   const [cls, color, label] = urgencyClass(a.days);
   const icon = a.alertType === 'Warranty' ? '🛡️' : '🥗';
-  return `<div class="alert-item">
+  const alertJson = encodeURIComponent(JSON.stringify({
+    item_name: a.item_name, merchant: a.merchant,
+    alertType: a.alertType, days: a.days,
+    category: a.category || '', price: a.price || 0,
+    warranty_days: a.warranty_days || 0,
+  }));
+  return `<div class="alert-item" onclick="showAlertDetail(JSON.parse(decodeURIComponent('${alertJson}')))" style="cursor:pointer">
     ${emojiAvatar(a.item_name, a.category || '')}
     <div class="alert-info">
       <div class="alert-name">${a.item_name || 'Unknown'}</div>
@@ -2874,26 +3246,53 @@ function renderAlertItem(a) {
   </div>`;
 }
 
+let currentAlertFilter = 'all';
+
+function filterAlerts(filter) {
+  currentAlertFilter = filter;
+  // Highlight active card
+  ['expired','critical','warning','monitor'].forEach(f => {
+    const card = document.getElementById('aCard' + f.charAt(0).toUpperCase() + f.slice(1));
+    if (card) card.style.opacity = (filter === f || filter === 'all') ? '1' : '0.4';
+  });
+  refreshAlertsList();
+}
+
+function refreshAlertsList() {
+  const alerts = buildAlerts();
+  const filtered = currentAlertFilter === 'all' ? alerts
+    : currentAlertFilter === 'expired'  ? alerts.filter(a => a.days <= 0)
+    : currentAlertFilter === 'critical' ? alerts.filter(a => a.days > 0 && a.days <= 3)
+    : currentAlertFilter === 'warning'  ? alerts.filter(a => a.days > 3 && a.days <= 7)
+    : currentAlertFilter === 'monitor'  ? alerts.filter(a => a.days > 7 && a.days <= 30)
+    : alerts;
+
+  const el = document.getElementById('alertsList');
+  if (!el) return;
+  if (filtered.length === 0) {
+    const msg = currentAlertFilter === 'all'
+      ? 'Nothing expiring in the next 30 days'
+      : 'No ' + currentAlertFilter + ' alerts';
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">✅</span><div class="empty-title">All Clear</div><div class="empty-sub">${msg}</div></div>`;
+  } else {
+    el.innerHTML = filtered.map(a => renderAlertItem(a)).join('');
+  }
+}
+
 function refreshAlerts() {
   const alerts = buildAlerts();
   const expired  = alerts.filter(a => a.days <= 0).length;
   const critical = alerts.filter(a => a.days > 0 && a.days <= 3).length;
   const warning  = alerts.filter(a => a.days > 3 && a.days <= 7).length;
   const monitor  = alerts.filter(a => a.days > 7 && a.days <= 30).length;
-  const atRisk   = alerts.reduce((s, a) => s + (a.price || 0), 0);
 
   document.getElementById('aExpired').textContent  = expired;
   document.getElementById('aCritical').textContent = critical;
   document.getElementById('aWarning').textContent  = warning;
   document.getElementById('aMonitor').textContent  = monitor;
-  document.getElementById('aRisk').textContent     = '$' + atRisk.toFixed(0);
+  document.getElementById('aRisk').textContent     = 'All';
 
-  const el = document.getElementById('alertsList');
-  if (alerts.length === 0) {
-    el.innerHTML = `<div class="empty-state"><span class="empty-icon">✅</span><div class="empty-title">All Clear</div><div class="empty-sub">Nothing expiring in the next 30 days</div></div>`;
-  } else {
-    el.innerHTML = alerts.map(a => renderAlertItem(a)).join('');
-  }
+  refreshAlertsList();
 }
 
 // ─── VAULT ────────────────────────────────────────────────────
@@ -3471,12 +3870,20 @@ async function saveItems(btnId, resultsId) {
     const wk = getWeekKey();
     localStorage.setItem('guardnest_last_scan_week', wk);
     if (!parseInt(localStorage.getItem('guardnest_streak')||'0')) localStorage.setItem('guardnest_streak','1');
+    const prevCredits = totalCredits;
+    const prevCount = allItems.length;
+    const prevValue = allItems.reduce((s,i) => s + (i.price||0), 0);
     await loadItems();
     await loadReceipts();
     refreshDashboard();
     refreshAlerts();
     refreshVault();
     updateSidebar();
+    // Check for level up
+    checkLevelUp(prevCredits, totalCredits);
+    // Check for badge earned
+    const newValue = allItems.reduce((s,i) => s + (i.price||0), 0);
+    checkAndShowBadge(prevCount, allItems.length, prevValue, newValue);
     checkBadges();
     // Show first win modal (first time only)
     showFirstWin(allItems);
@@ -3978,6 +4385,248 @@ function showFirstWin(items) {
 function closeFirstWin() {
   document.getElementById('firstWinModal').classList.add('hidden');
   showPage('vault');
+}
+
+// ─── CONFETTI ─────────────────────────────────────────────────
+function fireConfetti(duration) {
+  const canvas = document.getElementById('confettiCanvas');
+  if (!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const pieces = [];
+  const colors = ['#F5C842','#44CC88','#4488FF','#FF4444','#FF8C00','#CC88FF','#FFFFFF'];
+  for (let i = 0; i < 120; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 4,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * 360,
+      vx: Math.random() * 4 - 2,
+      vy: Math.random() * 3 + 2,
+      vr: Math.random() * 6 - 3,
+    });
+  }
+  let start = null;
+  function draw(ts) {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x + p.w/2, p.y + p.h/2);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, 1 - elapsed / duration);
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    if (elapsed < duration) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  requestAnimationFrame(draw);
+}
+
+// ── XP FLOAT ANIMATION ─────────────────────────────────────────
+function showXpFloat(xp, x, y) {
+  const el = document.createElement('div');
+  el.className = 'xp-float';
+  el.textContent = '+' + xp + ' XP';
+  el.style.left = (x || window.innerWidth / 2 - 30) + 'px';
+  el.style.top  = (y || window.innerHeight / 2) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+// ─── LEVEL UP MODAL ────────────────────────────────────────────
+const LEVEL_UNLOCKS = {
+  2: 'Weekly intelligence email — GuardNest now comes to you every Monday morning.',
+  3: 'Shopping pattern engine — GuardNest learns what you buy and asks if you picked it up.',
+  4: 'Predictive alerts — Get warned before things expire, not just when they do.',
+  5: 'Natural language vault search — Ask your vault anything.',
+  6: 'Clutch save bonus — Earn double XP when you use something in the last 24 hours.',
+  7: 'Advanced analytics — See your annual waste saved and warranty claims value.',
+  8: 'Sovereign status — Receipt image storage unlocked. Your receipts archived forever.',
+};
+
+function checkLevelUp(prevCredits, newCredits) {
+  const prevInfo = getLevelInfo(prevCredits);
+  const newInfo  = getLevelInfo(newCredits);
+  if (newInfo.level > prevInfo.level) {
+    setTimeout(() => showLevelUp(newInfo.level, newInfo.title), 800);
+  }
+}
+
+function showLevelUp(level, title) {
+  document.getElementById('luNum').textContent   = level;
+  document.getElementById('luTitle').textContent = title.toUpperCase();
+  const unlockText = LEVEL_UNLOCKS[level] || 'Keep scanning to unlock more features.';
+  document.getElementById('luUnlockText').textContent = unlockText;
+  document.getElementById('levelUpModal').classList.remove('hidden');
+  fireConfetti(3000);
+}
+
+function closeLevelUp() {
+  document.getElementById('levelUpModal').classList.add('hidden');
+}
+
+// ─── BADGE EARNED MODAL ────────────────────────────────────────
+const BADGE_DEFS = [
+  { icon: '🎯', name: 'First Acquisition', desc: 'You added your first item to the vault. Nothing slips through.' },
+  { icon: '💎', name: 'High Roller',       desc: 'You have over $500 in protected value. That's real money.' },
+  { icon: '⚙️', name: 'Operational',       desc: 'You scanned something worth protecting. The vault is alive.' },
+  { icon: '📊', name: 'Asset Manager',     desc: '10 items tracked. You're building a real vault now.' },
+  { icon: '🏆', name: 'Quartermaster',     desc: '25 items tracked. You're in the top tier of protected users.' },
+];
+
+function checkAndShowBadge(prevItems, newItems, prevValue, newValue) {
+  const checks = [
+    newItems >= 1  && prevItems < 1,
+    newValue >= 500 && prevValue < 500,
+    newItems >= 1  && prevItems < 1,
+    newItems >= 10 && prevItems < 10,
+    newItems >= 25 && prevItems < 25,
+  ];
+  for (let i = 0; i < checks.length; i++) {
+    if (checks[i]) {
+      setTimeout(() => showBadgeEarned(i), 1200);
+      break;
+    }
+  }
+}
+
+function showBadgeEarned(index) {
+  const b = BADGE_DEFS[index];
+  if (!b) return;
+  document.getElementById('beIcon').textContent = b.icon;
+  document.getElementById('beName').textContent = b.name.toUpperCase();
+  document.getElementById('beDesc').textContent = b.desc;
+  document.getElementById('badgeEarnedModal').classList.remove('hidden');
+}
+
+function closeBadgeEarned() {
+  document.getElementById('badgeEarnedModal').classList.add('hidden');
+}
+
+// ─── STREAK WARNING ────────────────────────────────────────────
+function checkStreakWarning() {
+  const streak = parseInt(localStorage.getItem('guardnest_streak') || '0');
+  if (streak === 0) return;
+  const today = new Date().getDay(); // 0=Sun, 6=Sat
+  const isWeekend = today === 0 || today === 6;
+  const lastScanWeek = localStorage.getItem('guardnest_last_scan_week');
+  const thisWeek = getWeekKey();
+  const alreadyScannedThisWeek = lastScanWeek === thisWeek;
+  const dismissed = localStorage.getItem('guardnest_streak_warning_' + thisWeek);
+  if (isWeekend && !alreadyScannedThisWeek && !dismissed) {
+    const el = document.getElementById('streakWarning');
+    const num = document.getElementById('swStreakNum');
+    if (el) { el.classList.remove('hidden'); }
+    if (num) { num.textContent = streak; }
+  }
+}
+
+function dismissStreakWarning() {
+  document.getElementById('streakWarning').classList.add('hidden');
+  localStorage.setItem('guardnest_streak_warning_' + getWeekKey(), 'true');
+}
+
+// ─── ALERT DETAIL MODAL ────────────────────────────────────────
+function showAlertDetail(alert) {
+  const isSpoil = alert.alertType === 'Perishable';
+  const [emoji] = getItemEmoji(alert.item_name, alert.category);
+  const [cls,,label] = urgencyClass(alert.days);
+
+  document.getElementById('adEmoji').textContent = emoji;
+  document.getElementById('adName').textContent  = alert.item_name || 'Unknown';
+  document.getElementById('adMeta').textContent  = (alert.merchant || '—') + ' · ' + (isSpoil ? '🥗 Perishable' : '🛡️ Warranty');
+  document.getElementById('adBadge').className   = 'alert-badge ' + cls;
+  document.getElementById('adBadge').textContent = label;
+
+  const daysText = alert.days <= 0 ? 'Expired'
+    : alert.days === 1 ? '1 day'
+    : alert.days + ' days';
+  document.getElementById('adDays').textContent        = daysText;
+  document.getElementById('adUrgencyLabel').textContent = alert.days <= 0 ? '— already expired' : 'until expiry';
+
+  const bgColor = alert.days <= 0 ? 'rgba(255,68,68,.08)' : alert.days <= 3 ? 'rgba(255,140,0,.08)' : 'rgba(68,136,255,.08)';
+  const borderColor = alert.days <= 0 ? 'rgba(255,68,68,.2)' : alert.days <= 3 ? 'rgba(255,140,0,.2)' : 'rgba(68,136,255,.2)';
+  document.getElementById('adUrgency').style.background = bgColor;
+  document.getElementById('adUrgency').style.borderColor = borderColor;
+
+  if (isSpoil) {
+    document.getElementById('adActionText').textContent = alert.days <= 0
+      ? 'This item has expired. You can mark it as used or remove it from your vault.'
+      : 'Use this before it goes to waste. Even using part of it helps.';
+    document.getElementById('adActionBtn').href = 'https://www.google.com/search?q=recipe+with+' + encodeURIComponent(alert.item_name || '');
+    document.getElementById('adActionBtn').textContent = '🍳 Find a Recipe';
+  } else {
+    document.getElementById('adActionText').textContent = alert.days <= 0
+      ? 'This warranty has expired. Check if you have any remaining coverage options.'
+      : 'File a claim now if anything needs attention. Once this expires your coverage is gone.';
+    document.getElementById('adActionBtn').href = 'https://www.google.com/search?q=' + encodeURIComponent((alert.merchant || '') + ' ' + (alert.item_name || '') + ' warranty claim');
+    document.getElementById('adActionBtn').textContent = '🔍 Find Claim Info';
+  }
+
+  document.getElementById('alertDetailModal').classList.remove('hidden');
+}
+
+function closeAlertDetail() {
+  document.getElementById('alertDetailModal').classList.add('hidden');
+}
+
+// ─── UPDATED refreshReceipts ───────────────────────────────────
+function refreshReceipts() {
+  const el = document.getElementById('receiptList');
+  const countEl = document.getElementById('receiptCount');
+  const rTotal = document.getElementById('rTotal');
+  const rItems = document.getElementById('rItems');
+  const rValue = document.getElementById('rValue');
+
+  if (rTotal) rTotal.textContent = allReceipts.length;
+  if (rItems) rItems.textContent = allItems.length;
+  if (rValue) rValue.textContent = '$' + allItems.reduce((s,i) => s + (i.price||0), 0).toFixed(0);
+
+  if (!el) return;
+  if (!allReceipts.length) {
+    el.innerHTML = `<div class="empty-state">
+      <span class="empty-icon">🧾</span>
+      <div class="empty-title">No Scans Yet</div>
+      <div class="empty-sub">Scan a receipt to start building your history</div>
+    </div>`;
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  if (countEl) countEl.textContent = `${allReceipts.length} scan${allReceipts.length !== 1 ? 's' : ''}`;
+
+  el.innerHTML = allReceipts.map(r => {
+    const date = new Date(r.created_at || r.scan_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const icon = r.source_type === 'pdf' ? '📄' : r.source_type === 'quick-add' ? '🛒' : '🧾';
+    const items = allItems.filter(i => i.receipt_id === r.id);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const expiring = items.filter(i => {
+      if ((i.warranty_days||0) > 0 && i.purchase_date) {
+        const exp = new Date(i.purchase_date); exp.setDate(exp.getDate() + i.warranty_days);
+        return Math.round((exp - today) / 86400000) <= 30;
+      }
+      return (i.days_until_spoil||0) > 0 && (i.days_until_spoil||0) <= 7;
+    }).length;
+    const value = parseFloat(r.total_value || 0);
+
+    return `<div class="receipt-card" onclick="showPage('vault')">
+      <div class="receipt-icon">${icon}</div>
+      <div class="receipt-info">
+        <div class="receipt-merchant">${r.merchant || 'Unknown Merchant'}</div>
+        <div class="receipt-meta">📅 ${date} · ${r.item_count || items.length} item${(r.item_count || items.length) !== 1 ? 's' : ''}</div>
+        ${expiring > 0 ? `<div class="receipt-alert">⚠️ ${expiring} item${expiring !== 1 ? 's' : ''} expiring soon</div>` : ''}
+      </div>
+      <div class="receipt-value">$${value.toFixed(0)}</div>
+    </div>`;
+  }).join('');
 }
 
 // ─── ONBOARDING ───────────────────────────────────────────────
