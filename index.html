@@ -2996,15 +2996,26 @@ function buildMissions() {
   });
 
   // Mission 2: Use a perishable item (if any exist)
-  const perishables = allItems.filter(i => (i.days_until_spoil||0) > 0 && (i.status||'active') === 'active');
+  const missionToday = new Date(); missionToday.setHours(0,0,0,0);
+  const perishables = allItems
+    .filter(i => (i.days_until_spoil||0) > 0 && (i.status||'active') === 'active')
+    .map(i => {
+      let dl = i.days_until_spoil;
+      if (i.purchase_date) {
+        const e = new Date(i.purchase_date); e.setDate(e.getDate() + i.days_until_spoil);
+        dl = Math.round((e - missionToday) / 86400000);
+      }
+      return { ...i, _daysLeft: dl };
+    });
   if (perishables.length > 0) {
-    const mostUrgent = perishables.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
+    const mostUrgent = perishables.sort((a,b) => (a._daysLeft||99) - (b._daysLeft||99))[0];
+    const urgentDays = mostUrgent._daysLeft;
     missions.push({
       id: 'use_perishable',
       icon: '🥗',
       title: `Use your ${mostUrgent.item_name || 'perishable'}`,
-      desc: `${mostUrgent.days_until_spoil} day${mostUrgent.days_until_spoil !== 1 ? 's' : ''} left — don't let it go to waste`,
-      xp: mostUrgent.days_until_spoil <= 1 ? 50 : 25,
+      desc: `${urgentDays} day${urgentDays !== 1 ? 's' : ''} left — don't let it go to waste`,
+      xp: urgentDays <= 1 ? 50 : 25,
       done: completed.includes('use_perishable'),
       action: () => showPage('vault'),
       actionLabel: 'View Vault →',
@@ -3249,8 +3260,15 @@ function buildAlerts() {
       if (daysLeft <= 30) alerts.push({ ...item, alertType: 'Warranty', days: daysLeft, category: item.category || '' });
     }
 
-    if (spoil > 0 && spoil <= 7) {
-      alerts.push({ ...item, alertType: 'Perishable', days: spoil, category: item.category || '' });
+    if (spoil > 0 && item.purchase_date) {
+      const purchasedSpoil = new Date(item.purchase_date);
+      const spoilExpiry = new Date(purchasedSpoil);
+      spoilExpiry.setDate(spoilExpiry.getDate() + spoil);
+      const spoilDaysLeft = Math.round((spoilExpiry - today) / 86400000);
+      if (spoilDaysLeft <= 7) alerts.push({ ...item, alertType: 'Perishable', days: spoilDaysLeft, category: item.category || '' });
+    } else if (spoil > 0) {
+      // Fallback: no purchase_date, use stored value
+      if (spoil <= 7) alerts.push({ ...item, alertType: 'Perishable', days: spoil, category: item.category || '' });
     }
   });
 
@@ -3391,9 +3409,23 @@ function refreshVault() {
       const daysLeft  = Math.round((expiry - today) / 86400000);
       if (daysLeft >= 0 && daysLeft <= 7) return true;
     }
-    if (spoil > 0 && spoil <= 7) return true;
+    if (spoil > 0 && item.purchase_date) {
+      const spoilExp = new Date(item.purchase_date);
+      spoilExp.setDate(spoilExp.getDate() + spoil);
+      const spoilLeft = Math.round((spoilExp - today) / 86400000);
+      if (spoilLeft >= 0 && spoilLeft <= 7) return true;
+    } else if (spoil > 0 && spoil <= 7) return true;
     return false;
-  }).sort((a,b) => (a.days_until_spoil||999) - (b.days_until_spoil||999));
+  }).sort((a,b) => {
+    const getSpoilDays = i => {
+      if (i.days_until_spoil > 0 && i.purchase_date) {
+        const e = new Date(i.purchase_date); e.setDate(e.getDate() + i.days_until_spoil);
+        return Math.round((e - today) / 86400000);
+      }
+      return i.days_until_spoil || 999;
+    };
+    return getSpoilDays(a) - getSpoilDays(b);
+  });
 
   const expiringEl = document.getElementById('rowExpiringBody');
   if (expiringThisWeek.length === 0) {
@@ -3402,12 +3434,18 @@ function refreshVault() {
     expiringEl.innerHTML = expiringThisWeek.map(item => {
       const spoil   = item.days_until_spoil || 0;
       const warranty= item.warranty_days || 0;
-      let days = spoil > 0 ? spoil : 0;
+      let days = 0;
       if (warranty > 0 && item.purchase_date) {
         const purchased = new Date(item.purchase_date);
         const expiry    = new Date(purchased);
         expiry.setDate(expiry.getDate() + warranty);
         days = Math.round((expiry - today) / 86400000);
+      } else if (spoil > 0 && item.purchase_date) {
+        const spoilExp = new Date(item.purchase_date);
+        spoilExp.setDate(spoilExp.getDate() + spoil);
+        days = Math.round((spoilExp - today) / 86400000);
+      } else if (spoil > 0) {
+        days = spoil;
       }
       const [cls,,label] = urgencyClass(days);
       const icon = spoil > 0 ? '🥗' : '🛡️';
@@ -3440,14 +3478,26 @@ function refreshVault() {
     : recent.map(item => renderVaultRow(item)).join('');
 
   // ── SMART ROW: Perishables ──────────────────────────────────
-  const perishables = allItems.filter(i => (i.days_until_spoil||0) > 0)
-    .sort((a,b) => (a.days_until_spoil||0) - (b.days_until_spoil||0));
+  const today2 = new Date(); today2.setHours(0,0,0,0);
+  const perishables = allItems
+    .filter(i => (i.days_until_spoil||0) > 0)
+    .map(i => {
+      let daysLeft = i.days_until_spoil;
+      if (i.purchase_date) {
+        const exp = new Date(i.purchase_date);
+        exp.setDate(exp.getDate() + i.days_until_spoil);
+        daysLeft = Math.round((exp - today2) / 86400000);
+      }
+      return { ...i, _daysLeft: daysLeft };
+    })
+    .filter(i => i._daysLeft > -8)
+    .sort((a,b) => a._daysLeft - b._daysLeft);
   const perEl = document.getElementById('rowPerishablesBody');
   document.getElementById('perishableCount').textContent = perishables.length > 0 ? `${perishables.length} item${perishables.length!==1?'s':''}` : '';
   perEl.innerHTML = perishables.length === 0
     ? `<div class="empty-state" style="padding:16px"><div class="empty-sub">No perishables tracked</div></div>`
     : perishables.map(item => {
-        const days = item.days_until_spoil || 0;
+        const days = item._daysLeft;
         const [cls,,label] = urgencyClass(days);
         return `<div class="alert-item">
           <div class="alert-info"><div class="alert-name">${item.item_name||'Unknown'}</div><div class="alert-meta">📍 ${item.merchant||'—'} · $${(item.price||0).toFixed(2)}</div></div>
@@ -4183,7 +4233,12 @@ function checkNearMiss(items) {
       const left = Math.round((exp - today) / 86400000);
       return left >= 0 && left <= 7;
     }
-    if ((item.days_until_spoil||0) > 0 && item.days_until_spoil <= 1) return true;
+    if ((item.days_until_spoil||0) > 0) {
+        const nmSpoilExp = new Date(item.purchase_date || new Date());
+        nmSpoilExp.setDate(nmSpoilExp.getDate() + item.days_until_spoil);
+        const nmSpoilLeft = Math.round((nmSpoilExp - today) / 86400000);
+        if (nmSpoilLeft <= 1) return true;
+      }
     return false;
   });
 
@@ -4206,7 +4261,14 @@ function checkNearMiss(items) {
 
   const item   = urgent[0];
   const isSpoil= (item.days_until_spoil||0) > 0;
-  const days   = isSpoil ? item.days_until_spoil : (() => {
+  const nmToday2 = new Date(); nmToday2.setHours(0,0,0,0);
+  const days   = isSpoil ? (() => {
+    if (item.purchase_date) {
+      const e = new Date(item.purchase_date); e.setDate(e.getDate() + item.days_until_spoil);
+      return Math.round((e - nmToday2) / 86400000);
+    }
+    return item.days_until_spoil;
+  })() : (() => {
     const exp = new Date(item.purchase_date);
     exp.setDate(exp.getDate() + item.warranty_days);
     return Math.round((exp - today) / 86400000);
