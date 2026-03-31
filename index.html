@@ -1717,6 +1717,176 @@
     from { top: 0; }
     to   { top: 100%; }
   }
+
+  /* ══════════════════════════════════════════
+     DAILY BRIEF — Home Screen Redesign
+  ══════════════════════════════════════════ */
+  .brief-card {
+    background: var(--dark2);
+    border-radius: 16px; overflow: hidden;
+    position: relative;
+    transition: transform .25s ease, opacity .25s ease;
+    cursor: pointer; user-select: none;
+  }
+  .brief-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+  }
+  .brief-card.urgent::before   { background: var(--red); }
+  .brief-card.critical::before { background: var(--orange); }
+  .brief-card.warning::before  { background: var(--yellow); }
+  .brief-card.monitor::before  { background: var(--blue); }
+  .brief-card.clear::before    { background: var(--green); }
+
+  .brief-card-body { padding: 20px 20px 16px; }
+
+  .brief-card-type {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+    margin-bottom: 12px; display: flex;
+    align-items: center; gap: 6px;
+  }
+  .brief-card-type.perishable { color: var(--orange); }
+  .brief-card-type.warranty   { color: var(--blue); }
+  .brief-card-type.allclear   { color: var(--green); }
+
+  .brief-card-main {
+    display: flex; align-items: center;
+    gap: 16px; margin-bottom: 14px;
+  }
+  .brief-card-emoji { font-size: 52px; flex-shrink: 0; line-height: 1; }
+  .brief-card-info  { flex: 1; }
+  .brief-card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; letter-spacing: .04em;
+    color: var(--text); line-height: 1.05; margin-bottom: 4px;
+  }
+  .brief-card-merchant { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+  .brief-card-days {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px; line-height: 1; letter-spacing: .02em;
+  }
+  .brief-card-days-label {
+    font-size: 10px; color: var(--text2);
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+  .brief-card.urgent .brief-card-days   { color: var(--red); }
+  .brief-card.critical .brief-card-days { color: var(--orange); }
+  .brief-card.warning .brief-card-days  { color: var(--yellow); }
+  .brief-card.monitor .brief-card-days  { color: var(--blue); }
+  .brief-card.clear .brief-card-days    { color: var(--green); }
+
+  .brief-card-action {
+    font-size: 13px; color: var(--text2);
+    line-height: 1.6; padding: 11px 13px;
+    background: rgba(255,255,255,.03);
+    border-radius: 8px; margin-bottom: 14px;
+  }
+  .brief-card-action strong { color: var(--text); }
+
+  .brief-card-btns { display: flex; gap: 8px; }
+  .brief-btn-primary {
+    flex: 2; padding: 13px;
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    border: none; border-radius: 9px;
+    cursor: pointer; transition: all .15s;
+    touch-action: manipulation;
+  }
+  .brief-btn-primary:active { opacity: .85; transform: scale(.98); }
+  .brief-btn-secondary {
+    flex: 1; padding: 13px;
+    background: rgba(68,204,136,.1);
+    border: 1px solid rgba(68,204,136,.25);
+    border-radius: 9px; color: var(--green);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; transition: all .15s;
+    touch-action: manipulation;
+  }
+  .brief-btn-secondary:active { background: rgba(68,204,136,.2); }
+  .brief-btn-dismiss {
+    flex: 1; padding: 13px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 9px; color: var(--text3);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+    cursor: pointer; transition: all .15s;
+    touch-action: manipulation;
+  }
+  .brief-btn-dismiss:active { background: rgba(255,255,255,.04); }
+
+  .brief-dots {
+    display: flex; justify-content: center;
+    gap: 6px; margin: 8px 0 2px;
+  }
+  .brief-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border2); transition: all .2s; cursor: pointer;
+  }
+  .brief-dot.active {
+    background: var(--gold); width: 18px; border-radius: 3px;
+  }
+
+  .brief-streak-row {
+    display: flex; gap: 10px; margin-bottom: 4px;
+  }
+  .brief-streak-box {
+    flex: 1; background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brief-streak-fire { font-size: 22px; }
+  .brief-streak-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px; color: var(--gold); line-height: 1;
+  }
+  .brief-streak-info-label {
+    font-size: 9px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .brief-vault-box {
+    flex: 1; background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px 14px;
+  }
+  .brief-vault-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; color: var(--text); line-height: 1;
+  }
+  .brief-vault-label {
+    font-size: 9px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .08em; margin-top: 2px;
+  }
+  .brief-vault-sub { font-size: 11px; color: var(--green); margin-top: 2px; }
+
+  .brief-section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 10px; margin-top: 18px;
+  }
+  .brief-section-label:first-child { margin-top: 0; }
+
+  /* Slide animations */
+  @keyframes briefSlideLeft {
+    to { transform: translateX(-110%); opacity: 0; }
+  }
+  @keyframes briefSlideRight {
+    to { transform: translateX(110%); opacity: 0; }
+  }
+  @keyframes briefEnter {
+    from { transform: translateX(32px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+  .brief-exit-left  { animation: briefSlideLeft  .28s ease forwards; }
+  .brief-exit-right { animation: briefSlideRight .28s ease forwards; }
+  .brief-card-enter { animation: briefEnter .28s ease; }
 </style>
 </head>
 <body>
@@ -1919,7 +2089,7 @@
 
     <div class="content">
 
-      <!-- ─── DASHBOARD: MISSION BOARD ─── -->
+      <!-- ─── DASHBOARD: DAILY BRIEF ─── -->
       <div class="page active" id="page-dashboard">
 
         <!-- STREAK WARNING BANNER -->
@@ -1932,67 +2102,44 @@
           <div class="streak-warning-dismiss" onclick="dismissStreakWarning()" ontouchend="this.onclick()">✕</div>
         </div>
 
-        <!-- STREAK + LEVEL HEADER -->
-        <div class="mission-header">
-          <div class="mission-streak" id="missionStreak">
-            <span class="streak-fire">🔥</span>
-            <span class="streak-num" id="streakNum">0</span>
-            <span class="streak-label">week streak</span>
-          </div>
-          <div class="mission-level-wrap">
-            <div class="mission-level-title" id="missionLevelTitle">Recruit · Level 1</div>
-            <div class="mission-xp-track">
-              <div class="mission-xp-fill" id="missionXpFill" style="width:0%"></div>
+        <!-- DAILY BRIEF CARD -->
+        <div class="brief-section-label">⚡ Right Now</div>
+        <div id="briefCardWrap">
+          <div class="brief-card clear brief-card-enter" id="briefCard">
+            <div class="brief-card-body" id="briefCardBody">
+              <div class="empty-state" style="padding:28px;text-align:center">
+                <span class="empty-icon">✅</span>
+                <div class="empty-title">All Clear</div>
+                <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
+              </div>
             </div>
-            <div class="mission-xp-label" id="missionXpLabel">0 XP · 500 to next level</div>
+          </div>
+          <div class="brief-dots" id="briefDots"></div>
+        </div>
+
+        <!-- STREAK + VAULT SUMMARY -->
+        <div class="brief-section-label">This Week</div>
+        <div class="brief-streak-row">
+          <div class="brief-streak-box">
+            <div class="brief-streak-fire" id="bsf">🔥</div>
+            <div class="brief-streak-num" id="bsn">0</div>
+            <div class="brief-streak-info-label">week streak</div>
+          </div>
+          <div class="brief-vault-box">
+            <div class="brief-vault-num" id="bvn">0</div>
+            <div class="brief-vault-label">Items Protected</div>
+            <div class="brief-vault-sub" id="bvv">$0 value</div>
           </div>
         </div>
 
-        <!-- RIGHT NOW: Most urgent item -->
-        <div class="panel mission-urgent-panel" id="urgentPanel">
+        <!-- MISSIONS COMPACT -->
+        <div class="brief-section-label">🎯 Missions</div>
+        <div class="panel" style="margin-bottom:0">
           <div class="panel-header">
-            <div class="panel-title">⚡ Right Now</div>
-            <div class="panel-action" onclick="showPage('alerts')">All Alerts →</div>
-          </div>
-          <div id="urgentContent">
-            <div class="empty-state" style="padding:28px">
-              <span class="empty-icon">✅</span>
-              <div class="empty-title">Nothing Needs Attention</div>
-              <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- THIS WEEK'S MISSIONS -->
-        <div class="panel" style="margin-top:18px">
-          <div class="panel-header">
-            <div class="panel-title">🎯 This Week's Missions</div>
+            <div class="panel-title">This Week</div>
             <div class="panel-action" id="missionXpPool"></div>
           </div>
-          <div id="missionsList" class="panel-body"></div>
-        </div>
-
-        <!-- VAULT SUMMARY (collapsed stats) -->
-        <div class="mission-summary" id="missionSummary">
-          <div class="ms-stat">
-            <div class="ms-num" id="msTotal">0</div>
-            <div class="ms-label">Items</div>
-          </div>
-          <div class="ms-divider"></div>
-          <div class="ms-stat">
-            <div class="ms-num" id="msProtected">$0</div>
-            <div class="ms-label">Protected</div>
-          </div>
-          <div class="ms-divider"></div>
-          <div class="ms-stat">
-            <div class="ms-num" id="msAlerts" style="color:var(--red)">0</div>
-            <div class="ms-label">Alerts</div>
-          </div>
-          <div class="ms-divider"></div>
-          <div class="ms-stat">
-            <div class="ms-num" id="msCredits" style="color:var(--gold)">0</div>
-            <div class="ms-label">XP</div>
-          </div>
+          <div id="missionsList" class="panel-body" style="padding:0"></div>
         </div>
 
         <!-- hidden elements still needed by other functions -->
@@ -2001,9 +2148,20 @@
           <span id="dashRisk">$0</span>
           <span id="dashProtected">$0</span>
           <span id="dashCredits">0</span>
+          <span id="msTotal">0</span>
+          <span id="msProtected">$0</span>
+          <span id="msAlerts">0</span>
+          <span id="msCredits">0</span>
+          <span id="missionStreak" class="mission-streak"></span>
+          <span id="streakNum">0</span>
+          <span id="missionLevelTitle"></span>
+          <span id="missionXpFill"></span>
+          <span id="missionXpLabel"></span>
+          <span id="urgentContent"></span>
           <div id="dashAlerts"></div>
           <div id="dashRecent"></div>
           <div id="dashTopAssets"></div>
+          <div id="scannerRecent"></div>
         </div>
 
       </div>
@@ -2257,56 +2415,39 @@
   </main>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- BOTTOM NAV — 3 tabs -->
 <div class="bottom-nav" id="bottomNav">
   <div class="bottom-nav-inner">
+
     <button class="bottom-nav-item active" id="bn-dashboard" onclick="showPage('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+        <path d="M9 21V12h6v9"/>
       </svg>
       <span class="bn-label">Home</span>
-    </button>
-    <button class="bottom-nav-item" id="bn-alerts" onclick="showPage('alerts')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 01-3.46 0"/>
-      </svg>
-      <span class="bn-label">Alerts</span>
       <span class="bn-badge hidden" id="bnAlertBadge">0</span>
     </button>
+
     <button class="bottom-nav-item scan-btn" onclick="showPage('scanner')">
       <div class="bn-scan">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
-          <line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
         </svg>
       </div>
       <span class="bn-label" style="margin-top:4px">Scan</span>
     </button>
+
     <button class="bottom-nav-item" id="bn-vault" onclick="showPage('vault')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <rect x="3" y="11" width="18" height="11" rx="2"/>
-        <path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/>
+        <path d="M7 11V7a5 5 0 0110 0v4"/>
+        <circle cx="12" cy="16" r="1"/>
       </svg>
       <span class="bn-label">Vault</span>
     </button>
-    <button class="bottom-nav-item" id="bn-pdf" onclick="showPage('pdf')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-      </svg>
-      <span class="bn-label">PDF</span>
-    </button>
-    <button class="bottom-nav-item" id="bn-receipts" onclick="showPage('receipts')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-        <rect x="9" y="3" width="6" height="4" rx="1"/>
-        <line x1="9" y1="12" x2="15" y2="12"/>
-        <line x1="9" y1="16" x2="13" y2="16"/>
-      </svg>
-      <span class="bn-label">History</span>
-    </button>
+
   </div>
 </div>
 
@@ -2627,6 +2768,251 @@ const UNLOCK_HINTS = [
   });
 })();
 
+
+// ─── DAILY BRIEF — STATE ──────────────────────────────────────
+let briefAlerts = [];
+let briefIndex  = 0;
+let briefTouchX = 0;
+
+function initBriefCard() {
+  const card = document.getElementById('briefCard');
+  if (!card) return;
+
+  // Touch swipe
+  card.addEventListener('touchstart', e => {
+    briefTouchX = e.touches[0].clientX;
+  }, { passive: true });
+
+  card.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - briefTouchX;
+    if (Math.abs(dx) > 55) {
+      if (dx < 0 && briefIndex < briefAlerts.length - 1) {
+        briefIndex++; renderBriefCard(false);
+      } else if (dx > 0 && briefIndex > 0) {
+        briefIndex--; renderBriefCard(false);
+      }
+    }
+  }, { passive: true });
+
+  // Mouse drag (desktop)
+  let msx = 0;
+  card.addEventListener('mousedown', e => { msx = e.clientX; });
+  card.addEventListener('mouseup', e => {
+    const dx = e.clientX - msx;
+    if (Math.abs(dx) > 55) {
+      if (dx < 0 && briefIndex < briefAlerts.length - 1) {
+        briefIndex++; renderBriefCard(false);
+      } else if (dx > 0 && briefIndex > 0) {
+        briefIndex--; renderBriefCard(false);
+      }
+    }
+  });
+}
+
+function buildBriefAlerts() {
+  const alerts = buildAlerts();
+  // Add dismissed-today filter
+  const today = new Date().toDateString();
+  return alerts.filter(a => {
+    const key = 'brief_dismissed_' + (a.id || a.item_name) + '_' + today;
+    return !localStorage.getItem(key);
+  });
+}
+
+function refreshBriefCard() {
+  briefAlerts = buildBriefAlerts();
+  if (briefIndex >= briefAlerts.length) briefIndex = 0;
+  renderBriefCard(true);
+
+  // Update streak + vault summary
+  const streak = updateStreak();
+  const bsn = document.getElementById('bsn');
+  const bsf = document.getElementById('bsf');
+  const bvn = document.getElementById('bvn');
+  const bvv = document.getElementById('bvv');
+  if (bsn) bsn.textContent = streak;
+  if (bsf) bsf.style.filter = streak === 0 ? 'grayscale(1)' : '';
+  const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
+  if (bvn) bvn.textContent = allItems.length;
+  if (bvv) bvv.textContent = '$' + totalVal.toFixed(0) + ' value';
+}
+
+function renderBriefCard(isNew) {
+  const card = document.getElementById('briefCard');
+  const body = document.getElementById('briefCardBody');
+  const dots = document.getElementById('briefDots');
+  if (!card || !body) return;
+
+  const alerts = briefAlerts;
+
+  // All clear state
+  if (alerts.length === 0) {
+    card.className = 'brief-card clear' + (isNew ? ' brief-card-enter' : '');
+    body.innerHTML = `
+      <div style="text-align:center;padding:24px 16px">
+        <div style="font-size:56px;margin-bottom:12px">🛡️</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.06em;color:var(--text);margin-bottom:8px">All Clear</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6">Your vault is secure.<br>Nothing expiring in the next 7 days.</div>
+        <div style="margin-top:16px;font-size:11px;color:var(--text3)">Scan a receipt to keep your vault growing</div>
+      </div>`;
+    if (dots) dots.innerHTML = '';
+    return;
+  }
+
+  const item = alerts[briefIndex];
+  if (!item) return;
+
+  // Urgency class
+  let urgClass = 'monitor';
+  if (item.days <= 0)       urgClass = 'urgent';
+  else if (item.days <= 3)  urgClass = 'critical';
+  else if (item.days <= 7)  urgClass = 'warning';
+
+  card.className = 'brief-card ' + urgClass + (isNew ? ' brief-card-enter' : '');
+
+  // Dots
+  if (alerts.length > 1) {
+    dots.innerHTML = alerts.map((_,i) =>
+      `<div class="brief-dot ${i===briefIndex?'active':''}"
+            onclick="briefIndex=${i};renderBriefCard(false)"></div>`
+    ).join('');
+    dots.style.display = 'flex';
+  } else {
+    dots.innerHTML = '';
+    dots.style.display = 'none';
+  }
+
+  const isSpoil = item.alertType === 'Perishable';
+  const [emoji] = getItemEmoji(item.item_name, item.category || '');
+  const typeLabel = isSpoil ? '🥗 Perishable' : '🛡️ Warranty';
+  const typeClass = isSpoil ? 'perishable' : 'warranty';
+  const counter   = alerts.length > 1
+    ? `<span style="margin-left:auto;font-size:10px;color:var(--text3)">${briefIndex+1} of ${alerts.length}</span>`
+    : '';
+
+  // Days display
+  let daysHtml = '';
+  if (item.days <= 0) {
+    daysHtml = `<div class="brief-card-days">EXPIRED</div>
+                <div class="brief-card-days-label">take action now</div>`;
+  } else if (item.days === 0) {
+    daysHtml = `<div class="brief-card-days">TODAY</div>
+                <div class="brief-card-days-label">last chance</div>`;
+  } else {
+    daysHtml = `<div class="brief-card-days">${item.days}</div>
+                <div class="brief-card-days-label">day${item.days !== 1?'s':''} remaining</div>`;
+  }
+
+  // Action text
+  let actionText = '';
+  let primaryBtn = '';
+  let secondaryBtn = '';
+  let dismissBtn = '';
+
+  if (isSpoil) {
+    actionText = item.days <= 0
+      ? `This has already expired. Mark it used or remove it from your vault.`
+      : item.days <= 1
+      ? `Use tonight — <strong>expires tomorrow.</strong> Don't let it go to waste.`
+      : `<strong>${item.days} days left.</strong> Plan a meal before it expires.`;
+    const recipeUrl = `https://www.google.com/search?q=recipe+with+${encodeURIComponent(item.item_name||'')}`;
+    primaryBtn = `<button class="brief-btn-primary" onclick="window.open('${recipeUrl}','_blank')">🍳 Find Recipe</button>`;
+    secondaryBtn = `<button class="brief-btn-secondary" onclick="briefMarkUsed('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}')">✓ Used It</button>`;
+    dismissBtn = `<button class="brief-btn-dismiss" onclick="briefDismiss('${item.id||item.item_name}')">Later</button>`;
+  } else {
+    actionText = item.days <= 0
+      ? `Warranty has expired. Check if any remaining coverage options exist.`
+      : `<strong>File a claim now</strong> if anything needs attention — warranty expires in ${item.days} day${item.days!==1?'s':''}.`;
+    const claimUrl = `https://www.google.com/search?q=${encodeURIComponent((item.merchant||'')+' '+(item.item_name||'')+' warranty claim')}`;
+    primaryBtn = `<button class="brief-btn-primary" onclick="window.open('${claimUrl}','_blank')">🔍 Find Claim Info</button>`;
+    dismissBtn = `<button class="brief-btn-dismiss" onclick="briefDismiss('${item.id||item.item_name}')">Remind Me</button>`;
+  }
+
+  body.innerHTML = `
+    <div class="brief-card-type ${typeClass}" style="display:flex;align-items:center">
+      ${typeLabel}${counter}
+    </div>
+    <div class="brief-card-main">
+      <div class="brief-card-emoji">${emoji}</div>
+      <div class="brief-card-info">
+        <div class="brief-card-name">${item.item_name || 'Unknown'}</div>
+        <div class="brief-card-merchant">${item.merchant || '—'}${item.price ? ' · $' + (item.price).toFixed(2) : ''}</div>
+        ${daysHtml}
+      </div>
+    </div>
+    <div class="brief-card-action">${actionText}</div>
+    <div class="brief-card-btns">
+      ${primaryBtn}
+      ${secondaryBtn || dismissBtn}
+    </div>`;
+}
+
+async function briefMarkUsed(itemId, itemName) {
+  const card = document.getElementById('briefCard');
+  if (card) card.classList.add('brief-exit-left');
+
+  setTimeout(async () => {
+    const { error } = await supa
+      .from('items')
+      .update({ status: 'used', used_at: new Date().toISOString() })
+      .eq('id', itemId)
+      .eq('user_id', currentUser.id);
+
+    if (!error) {
+      totalCredits += 25;
+      showXpFloat(25);
+      showToast(`✅ ${itemName} marked as used — +25 XP!`, 'success');
+      await loadItems();
+      briefAlerts = buildBriefAlerts();
+      if (briefIndex >= briefAlerts.length) briefIndex = 0;
+      renderBriefCard(true);
+      refreshAlerts();
+      refreshVault();
+      updateSidebar();
+      refreshMissionsCompact();
+    }
+  }, 260);
+}
+
+function briefDismiss(itemKey) {
+  const card = document.getElementById('briefCard');
+  if (card) card.classList.add('brief-exit-right');
+
+  setTimeout(() => {
+    const today = new Date().toDateString();
+    localStorage.setItem('brief_dismissed_' + itemKey + '_' + today, '1');
+    briefAlerts = buildBriefAlerts();
+    if (briefIndex >= briefAlerts.length) briefIndex = 0;
+    renderBriefCard(true);
+    showToast('Dismissed for today', 'info');
+  }, 260);
+}
+
+function refreshMissionsCompact() {
+  // Reuse buildMissions() but render compact style
+  const { missions } = buildMissions();
+  const el = document.getElementById('missionsList');
+  const xpPool = document.getElementById('missionXpPool');
+  if (!el) return;
+
+  const remaining = missions.filter(m => !m.done).reduce((s,m) => s + m.xp, 0);
+  if (xpPool) xpPool.textContent = remaining > 0 ? `+${remaining} XP` : '✅ Done';
+
+  el.innerHTML = missions.map(m => {
+    const doneClass = m.done ? ' done' : '';
+    const checkClick = m.done || m.auto ? ''
+      : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
+    return `<div class="mission-compact-item${doneClass}" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+      <div style="font-size:18px;width:32px;height:32px;background:${m.done?'rgba(68,204,136,.1)':'var(--surface)'};border:1px solid ${m.done?'rgba(68,204,136,.25)':'var(--border2)'};border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${m.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:${m.done?'var(--text3)':'var(--text)'};${m.done?'text-decoration:line-through':''};margin-bottom:2px">${m.title}</div>
+        <div style="font-size:11px;color:var(--text3)">${m.desc}</div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:${m.done?'var(--green)':'var(--gold)'};background:${m.done?'rgba(68,204,136,.1)':'rgba(245,200,66,.1)'};border:1px solid ${m.done?'rgba(68,204,136,.25)':'rgba(245,200,66,.2)'};padding:3px 8px;border-radius:6px;flex-shrink:0;${!m.auto && !m.done?'cursor:pointer':''}" ${checkClick}>${m.done ? '✓' : '+' + m.xp + ' XP'}</div>
+    </div>`;
+  }).join('');
+}
+
 async function bootApp() {
   setLoadingMsg('LOADING VAULT...');
   try {
@@ -2639,6 +3025,7 @@ async function bootApp() {
   hideLoading();
   showApp();
   applyMobileLayout();
+  try { initBriefCard(); } catch(e) { console.error('Brief init error:', e); }
   try { refreshDashboard(); } catch(e) { console.error('Dashboard error:', e); }
   try { refreshAlerts(); } catch(e) { console.error('Alerts error:', e); }
   try { refreshVault(); } catch(e) { console.error('Vault error:', e); }
@@ -2901,7 +3288,7 @@ function showPage(id) {
   if (mobileTitle) mobileTitle.textContent = PAGE_TITLES[id] || id.toUpperCase();
 
   // Update bottom nav active state
-  ['dashboard','alerts','vault','pdf'].forEach(p => {
+  ['dashboard','vault'].forEach(p => {
     const btn = document.getElementById('bn-' + p);
     if (btn) btn.classList.toggle('active', p === id);
   });
@@ -2912,7 +3299,7 @@ function showPage(id) {
     window.scrollTo(0, 0);
   }
 
-  if (id === 'dashboard') { refreshDashboard(); }
+  if (id === 'dashboard') { refreshDashboard(); try { refreshBriefCard(); } catch(e){} }
   if (id === 'alerts')    { refreshAlerts(); }
   if (id === 'vault')     { refreshVault(); }
   if (id === 'receipts')  { refreshReceipts(); }
@@ -3239,6 +3626,10 @@ function refreshDashboard() {
       </div>`;
     }).join('');
   }
+
+  // Refresh daily brief card + missions
+  try { refreshBriefCard(); } catch(e) { console.error('Brief refresh error:', e); }
+  try { refreshMissionsCompact(); } catch(e) { console.error('Missions compact error:', e); }
 }
 
 // ─── ALERTS ───────────────────────────────────────────────────
@@ -4729,10 +5120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Bottom nav touch handlers
   const bnMap = {
     'bn-dashboard': 'dashboard',
-    'bn-alerts':    'alerts',
     'bn-vault':     'vault',
-    'bn-pdf':       'pdf',
-    'bn-receipts':  'receipts',
   };
   Object.entries(bnMap).forEach(([id, page]) => {
     const el = document.getElementById(id);
