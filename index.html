@@ -402,9 +402,17 @@
   .ab-green  { background: rgba(68,204,136,.12); color: var(--green);  border: 1px solid rgba(68,204,136,.25); }
 
   /* VAULT ITEMS */
-  .vault-header, .vault-row {
+  .vault-header {
     display: grid; grid-template-columns: 2.5fr 1fr 1.2fr 1.2fr 1.2fr;
     align-items: center; padding: 9px 20px; gap: 8px;
+  }
+  .vault-row {
+    display: grid; grid-template-columns: 40px 1fr auto auto;
+    align-items: center; padding: 10px 20px; gap: 10px;
+  }
+  .vault-row-status { flex-shrink: 0; }
+  .vault-row-actions {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
   }
   .vault-header { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); }
   .vault-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
@@ -1186,35 +1194,30 @@
 
   /* ── USED BUTTON ─────────────────────────────────────────── */
   .used-btn {
-    background: transparent; border: none;
+    background: rgba(68,204,136,.1);
+    border: 1px solid rgba(68,204,136,.25);
     color: var(--green); cursor: pointer;
-    font-size: 16px; padding: 4px 6px;
-    border-radius: 4px; transition: all .15s;
+    font-size: 13px; font-weight: 700;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: .05em;
+    padding: 5px 10px; border-radius: 6px;
     touch-action: manipulation;
-    opacity: 0; transition: opacity .15s;
+    white-space: nowrap;
+    transition: all .15s;
   }
-  .vault-row:hover .used-btn { opacity: 1; }
-  .used-btn:hover { background: rgba(68,204,136,.1); }
-  @media (max-width: 768px) {
-    .used-btn { opacity: 1 !important; }
-    .used-btn:active { background: rgba(68,204,136,.15); }
-  }
+  .used-btn:hover, .used-btn:active { background: rgba(68,204,136,.2); }
 
   /* ── DELETE BUTTON ───────────────────────────────────── */
   .delete-btn {
     background: transparent; border: none;
     color: var(--text3); cursor: pointer;
-    font-size: 14px; padding: 4px 6px;
-    border-radius: 4px; transition: all .15s;
+    font-size: 18px; padding: 4px 8px;
+    border-radius: 4px;
     touch-action: manipulation;
-    opacity: 0; transition: opacity .15s;
+    transition: all .15s;
+    line-height: 1;
   }
-  .vault-row:hover .delete-btn { opacity: 1; }
-  .delete-btn:hover { color: var(--red); background: rgba(255,68,68,.1); }
-  @media (max-width: 768px) {
-    .delete-btn { opacity: 1 !important; color: var(--text3); }
-    .delete-btn:active { color: var(--red); }
-  }
+  .delete-btn:hover, .delete-btn:active { color: var(--red); background: rgba(255,68,68,.1); }
 
   /* ── DELETE CONFIRM MODAL ────────────────────────────── */
   .delete-modal {
@@ -1561,15 +1564,10 @@
     .grid2 { grid-template-columns: 1fr; }
     .grid3 { grid-template-columns: 1fr; }
 
-    /* Vault rows simplify on mobile */
+    /* Vault rows on mobile */
     .vault-header { display: none; }
-    .vault-row {
-      grid-template-columns: 36px 1fr auto auto !important;
-      padding: 10px 14px;
-      gap: 8px;
-    }
-    .vault-row > div:nth-child(3) { display: none; }
-    .vault-row > div:nth-child(4) { display: none; }
+    .vault-row { padding: 10px 14px; gap: 8px; }
+    .vault-row-status { display: none; }
 
     /* Alert items */
     .alert-item { padding: 10px 0; gap: 8px; }
@@ -3370,13 +3368,17 @@ function renderVaultRow(item) {
     statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
   }
 
-    return `<div class="vault-row" style="grid-template-columns:40px 2fr 1fr 1.2fr 40px 32px">
+    return `<div class="vault-row">
     <div>${emojiAvatar(item.item_name, item.category)}</div>
-    <div><div class="vi-name">${item.item_name || 'Unknown'}</div><div class="vi-merchant">${item.merchant || '—'} · ${item.category || '—'}</div></div>
-    <div class="vi-price">$${price.toFixed(2)}</div>
-    <div>${statusBadge}</div>
-    <div><button class="used-btn" onclick="markItemUsed('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Mark as used">✓</button></div>
-    <div><button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" ontouchend="this.onclick(event)" title="Delete item">✕</button></div>
+    <div>
+      <div class="vi-name">${item.item_name || 'Unknown'}</div>
+      <div class="vi-merchant">${item.merchant || '—'} · $${price.toFixed(2)}</div>
+    </div>
+    <div class="vault-row-status">${statusBadge}</div>
+    <div class="vault-row-actions">
+      <button class="used-btn" onclick="markItemUsed('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" title="Mark as used">✓ Used</button>
+      <button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" title="Delete item">✕</button>
+    </div>
   </div>`;
 }
 
