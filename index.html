@@ -2602,33 +2602,40 @@ const UNLOCK_HINTS = [
 
 async function bootApp() {
   setLoadingMsg('LOADING VAULT...');
-  await loadItems();
-  await loadReceipts();
+  try {
+    await loadItems();
+    await loadReceipts();
+  } catch(e) {
+    console.error('Load error:', e);
+  }
+  // Always dismiss spinner regardless of errors
   hideLoading();
   showApp();
   applyMobileLayout();
-  refreshDashboard();
-  refreshAlerts();
-  refreshVault();
-  updateSidebar();
-  checkOnboarding();
+  try { refreshDashboard(); } catch(e) { console.error('Dashboard error:', e); }
+  try { refreshAlerts(); } catch(e) { console.error('Alerts error:', e); }
+  try { refreshVault(); } catch(e) { console.error('Vault error:', e); }
+  try { updateSidebar(); } catch(e) { console.error('Sidebar error:', e); }
+  try { checkOnboarding(); } catch(e) { console.error('Onboarding error:', e); }
   // Check for near-miss alerts on app load
   if (allItems.length > 0) {
     const shownToday = localStorage.getItem('guardnest_nearmiss_' + new Date().toDateString());
     if (!shownToday) {
       setTimeout(() => {
-        checkNearMiss(allItems);
-        localStorage.setItem('guardnest_nearmiss_' + new Date().toDateString(), 'true');
+        try {
+          checkNearMiss(allItems);
+          localStorage.setItem('guardnest_nearmiss_' + new Date().toDateString(), 'true');
+        } catch(e) { console.error('NearMiss error:', e); }
       }, 1500);
     }
   }
   // Learn patterns and show shopping prompt if due
   if (allItems.length >= 5) {
-    learnShoppingPatterns();
-    setTimeout(() => showShoppingPrompt(), 3000);
+    try { learnShoppingPatterns(); } catch(e) {}
+    setTimeout(() => { try { showShoppingPrompt(); } catch(e) {} }, 3000);
   }
   // Check streak warning
-  checkStreakWarning();
+  try { checkStreakWarning(); } catch(e) {}
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────
@@ -3056,9 +3063,11 @@ function refreshDashboard() {
   if (dashRisk) dashRisk.textContent = '$' + atRisk.toFixed(0);
   if (dashCredits) dashCredits.textContent = totalCredits.toLocaleString();
 
-  // Update scanner stats
-  document.getElementById('statTotalScans').textContent = scanCount;
-  document.getElementById('statTotalItems').textContent = total;
+  // Update scanner stats (only if elements exist)
+  const stScans = document.getElementById('statTotalScans');
+  const stItems = document.getElementById('statTotalItems');
+  if (stScans) stScans.textContent = scanCount;
+  if (stItems) stItems.textContent = total;
 
   // Update alert badge
   const alertBadgeEl = document.getElementById('alertBadge');
