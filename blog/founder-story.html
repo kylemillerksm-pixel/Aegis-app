@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- SEO META TAGS -->
+<title>I Lost $300 on Groceries Last Year. Then I Built GuardNest. | Kyle Miller</title>
+<meta name="description" content="I calculated how much food I threw out last year. The number was embarrassing. No app solved it properly — so I built one that scans your receipt and tracks everything automatically. This is why.">
+<meta name="keywords" content="food expiry tracker, warranty tracker app, stop wasting groceries, receipt scanner app, food waste app, warranty expiration tracker, GuardNest, BEEP alternative, Fridgely alternative">
+<meta name="author" content="Kyle Miller">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://guardnest.app/blog/founder-story">
+
+<!-- Open Graph for social sharing -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="I Lost $300 on Groceries Last Year. Then I Built GuardNest.">
+<meta property="og:description" content="I calculated how much food I threw out last year. The number was embarrassing. No app solved it properly — so I built one. This is why.">
+<meta property="og:url" content="https://guardnest.app/blog/founder-story">
+<meta property="og:site_name" content="GuardNest">
+<meta property="article:author" content="Kyle Miller">
+<meta property="article:published_time" content="2026-03-31">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="I Lost $300 on Groceries Last Year. Then I Built GuardNest.">
+<meta name="twitter:description" content="I calculated how much food I threw out last year. The number was embarrassing. No app solved it properly — so I built one.">
+
+<!-- Schema.org structured data for Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "I Lost $300 on Groceries Last Year. Then I Built GuardNest.",
+  "description": "I calculated how much food I threw out last year. The number was embarrassing. No app solved it properly — so I built one that scans your receipt and tracks everything automatically.",
+  "author": {
+    "@type": "Person",
+    "name": "Kyle Miller",
+    "jobTitle": "Founder, GuardNest",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Worcester",
+      "addressRegion": "MA"
+    }
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "GuardNest",
+    "url": "https://guardnest.app"
+  },
+  "datePublished": "2026-03-31",
+  "dateModified": "2026-03-31",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://guardnest.app/blog/founder-story"
+  }
+}
+</script>
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-87DCQ5CB9M"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-87DCQ5CB9M');
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:  #080A0F;
+    --dark:   #0D1018;
+    --dark2:  #131720;
+    --gold:   #F5C842;
+    --text:   #F0EEF8;
+    --text2:  #8890A8;
+    --text3:  #404860;
+    --border: rgba(255,255,255,.07);
+    --green:  #44CC88;
+    --red:    #FF4444;
+  }
+
+  html, body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 17px;
+    line-height: 1.8;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8,10,15,.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: .15em; color: var(--gold);
+    text-decoration: none;
+  }
+  .nav-cta {
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: 8px 18px;
+    border-radius: 6px; text-decoration: none;
+    transition: opacity .15s;
+  }
+  .nav-cta:hover { opacity: .85; }
+
+  /* ARTICLE LAYOUT */
+  .article-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+
+  /* HEADER */
+  .article-tag {
+    font-size: 11px; font-weight: 700; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 16px; display: block;
+  }
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 6vw, 56px);
+    letter-spacing: .04em; line-height: 1.05;
+    color: var(--text); margin-bottom: 20px;
+  }
+  h1 span { color: var(--gold); }
+
+  .article-meta {
+    font-size: 13px; color: var(--text3);
+    margin-bottom: 40px; padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .meta-author {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .meta-avatar {
+    width: 32px; height: 32px;
+    background: var(--gold);
+    clip-path: polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);
+    flex-shrink: 0;
+  }
+
+  /* BODY COPY */
+  p {
+    margin-bottom: 24px;
+    color: var(--text2);
+    font-weight: 300;
+  }
+  p strong { color: var(--text); font-weight: 600; }
+
+  h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(24px, 4vw, 32px);
+    letter-spacing: .06em; color: var(--text);
+    margin: 48px 0 16px;
+  }
+
+  h3 {
+    font-size: 18px; font-weight: 600;
+    color: var(--text); margin: 32px 0 12px;
+  }
+
+  /* PULL QUOTE */
+  .pull-quote {
+    border-left: 3px solid var(--gold);
+    padding: 16px 24px;
+    margin: 32px 0;
+    background: rgba(245,200,66,.05);
+    border-radius: 0 8px 8px 0;
+  }
+  .pull-quote p {
+    font-size: 19px; font-weight: 400;
+    color: var(--text); font-style: italic;
+    margin: 0;
+  }
+
+  /* CALLOUT BOX */
+  .callout {
+    background: var(--dark2);
+    border: 1px solid rgba(245,200,66,.2);
+    border-radius: 12px; padding: 24px;
+    margin: 32px 0;
+  }
+  .callout-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .callout p { margin: 0; color: var(--text2); font-size: 15px; }
+  .callout p + p { margin-top: 12px; }
+
+  /* COMPARISON TABLE */
+  .comparison {
+    width: 100%; border-collapse: collapse;
+    margin: 32px 0; font-size: 14px;
+  }
+  .comparison th {
+    background: var(--dark2);
+    padding: 12px 16px; text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--text3);
+    border-bottom: 1px solid var(--border);
+  }
+  .comparison td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+  }
+  .comparison tr:last-child td { border-bottom: none; }
+  .comparison tr:hover td { background: rgba(255,255,255,.02); }
+  .yes { color: var(--green); font-weight: 600; }
+  .no  { color: var(--red);   font-weight: 600; }
+
+  /* STAT CALLOUT */
+  .stat-row {
+    display: flex; gap: 16px; margin: 32px 0;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    flex: 1; min-width: 160px;
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; color: var(--gold); line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 12px; color: var(--text3);
+    letter-spacing: .06em; line-height: 1.5;
+  }
+
+  /* CTA SECTION */
+  .article-cta {
+    background: var(--dark2);
+    border: 1px solid rgba(245,200,66,.25);
+    border-radius: 16px; padding: 32px;
+    margin: 48px 0; text-align: center;
+  }
+  .article-cta h2 { margin: 0 0 12px; }
+  .article-cta p { margin-bottom: 20px; }
+  .cta-btn {
+    display: inline-block;
+    background: var(--gold); color: var(--black);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; padding: 14px 32px;
+    border-radius: 8px; text-decoration: none;
+    transition: opacity .15s;
+  }
+  .cta-btn:hover { opacity: .85; }
+  .cta-sub {
+    font-size: 12px; color: var(--text3);
+    margin-top: 12px; margin-bottom: 0;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 24px; text-align: center;
+    font-size: 12px; color: var(--text3);
+  }
+  footer a { color: var(--gold); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .article-wrap { padding: 40px 16px 80px; }
+    .stat-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://guardnest.app" class="nav-logo">🛡️ GuardNest</a>
+  <a href="https://guardnest.app" class="nav-cta">Try It Free →</a>
+</nav>
+
+<article class="article-wrap">
+
+  <span class="article-tag">Founder Story · March 2026</span>
+
+  <h1>I Lost <span>$300</span> on Groceries Last Year.<br>Then I Built GuardNest.</h1>
+
+  <div class="article-meta">
+    <div class="meta-author">
+      <div class="meta-avatar"></div>
+      <div>
+        <strong style="color:var(--text);font-size:14px">Kyle Miller</strong><br>
+        Founder, GuardNest · Worcester, MA
+      </div>
+    </div>
+    <span>·</span>
+    <span>8 min read</span>
+    <span>·</span>
+    <span>March 31, 2026</span>
+  </div>
+
+  <p>I'm not proud of this number.</p>
+
+  <p>Last year I sat down and actually calculated how much food I threw out. Produce I bought with good intentions and never cooked. Chicken that sat one day too long. Salad greens that turned before I got to them. Yogurt I forgot was in the back of the fridge until it was two weeks past expiry.</p>
+
+  <p>It wasn't one big moment. It was fifty small ones. A few dollars here, ten dollars there, twelve dollars there. But when I added it up — <strong>somewhere between $200 and $300 in food that went straight from my fridge to my trash can.</strong></p>
+
+  <div class="pull-quote">
+    <p>"The frustrating part wasn't the money. It was that I knew it was happening and couldn't stop it."</p>
+  </div>
+
+  <p>I tried everything obvious. Writing dates on containers with a Sharpie. Making a note in my phone. Moving things to the front of the fridge so I'd see them. None of it worked because none of it came to find me. The food sat there silently expiring while I forgot it existed.</p>
+
+  <h2>The App Problem</h2>
+
+  <p>I looked for an app that would solve this. There are several — BEEP, Fridgely, a dozen others. I tried two of them. Both had the same fundamental problem: <strong>you have to manually enter every single item.</strong> Scan the barcode. Type in the expiry date. Repeat for every item in your fridge.</p>
+
+  <p>I bought 14 items at Stop & Shop. I was not going to stand in my kitchen for 20 minutes entering them one by one into an app. Neither would you. Neither would anyone who doesn't already have the discipline problem they're trying to solve.</p>
+
+  <div class="callout">
+    <div class="callout-label">The core problem with every existing app</div>
+    <p>Every food expiry app on the market requires manual entry. Scan barcode. Type date. Scan next barcode. Type next date. The average grocery run takes 20+ minutes to log. Most people quit within a week.</p>
+    <p>This is like building a budgeting app that requires you to manually type every transaction. The effort defeats the purpose.</p>
+  </div>
+
+  <p>I closed them both and went back to forgetting about my chicken.</p>
+
+  <h2>Then I Missed a Warranty</h2>
+
+  <p>A few months later I had the second realization. I was looking at an appliance that wasn't working right. I went to check the warranty. I had no idea when I bought it, whether it was still covered, or where the receipt was.</p>
+
+  <p>This happens constantly. People buy electronics, appliances, and high-value items that come with one, two, or three year warranties — and then completely forget those warranties exist until the moment something breaks and it's too late. <strong>The average household has hundreds of dollars in active warranty coverage they've never thought about since the day they bought the item.</strong></p>
+
+  <p>No app was tracking this either. Food apps tracked food. Warranty trackers required you to manually enter serial numbers and coverage periods. Nobody had connected the dots between a receipt — which contains everything you need to know — and the problem of things expiring silently.</p>
+
+  <h2>What I Built</h2>
+
+  <p>I built GuardNest to solve both problems with one action: <strong>photograph your receipt.</strong></p>
+
+  <p>That's it. Point your camera at any receipt — grocery store, Best Buy, Target, anywhere. GuardNest reads every item using AI, identifies what has a shelf life and what has a warranty, and starts tracking both automatically. No manual entry. No barcodes. No typing.</p>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="stat-num">8s</div>
+      <div class="stat-label">Average time to scan a full grocery receipt</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">547</div>
+      <div class="stat-label">Items in GuardNest's knowledge base with shelf life data</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">$0</div>
+      <div class="stat-label">Cost to use GuardNest — free forever for tracking and alerts</div>
+    </div>
+  </div>
+
+  <p>Chicken breast — 3 days. Samsung TV — 1 year warranty. Roses — 7 days. The app knows because it's built a knowledge base of hundreds of common products and their typical shelf lives and warranty periods. You don't have to tell it anything.</p>
+
+  <p>When something is about to expire it tells you — with exactly what to do. Cook the chicken tonight. File a warranty claim before the window closes. Move the flowers to fresh water. <strong>One specific action. One tap.</strong></p>
+
+  <h2>The Monday Morning Email</h2>
+
+  <p>The feature I'm most proud of isn't the scanner. It's the weekly email.</p>
+
+  <p>Every Monday at 8am GuardNest sends you a personal briefing. What's expiring this week. What warranties need attention. What you should cook tonight. It arrives whether you remember to open the app or not — because the whole point of the product is that you shouldn't have to remember anything.</p>
+
+  <p>Most apps wait for you to come to them. GuardNest comes to you.</p>
+
+  <h2>How GuardNest Compares to What's Out There</h2>
+
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>BEEP</th>
+        <th>Fridgely</th>
+        <th>GuardNest</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Receipt photo scanning</td>
+        <td class="no">✗ No</td>
+        <td class="no">✗ Beta only</td>
+        <td class="yes">✓ Yes</td>
+      </tr>
+      <tr>
+        <td>Auto shelf life calculation</td>
+        <td class="no">✗ Manual entry</td>
+        <td class="no">✗ Manual entry</td>
+        <td class="yes">✓ Automatic</td>
+      </tr>
+      <tr>
+        <td>Warranty tracking</td>
+        <td class="no">✗ No</td>
+        <td class="no">✗ No</td>
+        <td class="yes">✓ Yes</td>
+      </tr>
+      <tr>
+        <td>Weekly email briefing</td>
+        <td class="no">✗ No</td>
+        <td class="no">✗ No</td>
+        <td class="yes">✓ Every Monday</td>
+      </tr>
+      <tr>
+        <td>No download required</td>
+        <td class="no">✗ App required</td>
+        <td class="no">✗ App required</td>
+        <td class="yes">✓ Works in browser</td>
+      </tr>
+      <tr>
+        <td>Free to use</td>
+        <td class="no">✗ 50 item limit</td>
+        <td class="yes">✓ Yes</td>
+        <td class="yes">✓ Yes</td>
+      </tr>
+      <tr>
+        <td>Gamification &amp; streaks</td>
+        <td class="no">✗ No</td>
+        <td class="no">✗ No</td>
+        <td class="yes">✓ XP, levels, missions</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What I've Learned Building This</h2>
+
+  <p>The most common response I get when people first hear about GuardNest is: <em>"I've tried apps like this before and quit."</em> They're right that they've tried. They quit because the existing apps require more effort than the problem they're solving is worth in the moment.</p>
+
+  <p>The insight that changed how I thought about this: <strong>the discipline problem is the product problem.</strong> Someone who forgets their chicken is expiring is not going to remember to open an app every time they put groceries away. The only solution is a product that requires almost no ongoing effort — scan the receipt once, get reminded automatically, never think about it again.</p>
+
+  <p>That's what GuardNest is built to be.</p>
+
+  <div class="callout">
+    <div class="callout-label">What users are saying</div>
+    <p>"wait this actually tracks warranty expiration too? that's the part i always forget about. i've lost money on like 3 different things because the warranty expired and i didn't even realize i had one." — Reddit user, r/SideProject</p>
+    <p>"LOVE this" — Reddit user, unprompted</p>
+  </div>
+
+  <h2>Who This Is For</h2>
+
+  <p>GuardNest is for anyone who has ever stood at their trash can holding something they paid for and never used. Anyone who has paid out of pocket for a repair that should have been covered under warranty. Anyone who buys groceries with good intentions and watches them quietly expire.</p>
+
+  <p>That's most people. The average American household wastes $1,500 a year on food that goes bad. The average household has hundreds of dollars in warranty coverage they've forgotten about. <strong>GuardNest is the only app that attacks both problems with a single receipt scan.</strong></p>
+
+  <h2>Try It Right Now</h2>
+
+  <p>GuardNest works in your browser. No download. No app store. Open it on your phone, scan any receipt you have nearby, and it tracks everything automatically. Takes about 8 seconds.</p>
+
+  <div class="article-cta">
+    <h2>Stop Losing Money on Purchases You Already Made</h2>
+    <p>Free forever. Scan your first receipt in 30 seconds.</p>
+    <a href="https://guardnest.app" class="cta-btn">Open GuardNest Free →</a>
+    <p class="cta-sub">No credit card. No download. Works on any phone.</p>
+  </div>
+
+  <p style="font-size:14px;color:var(--text3)">Questions or feedback? I read everything personally — <a href="mailto:feedback@guardnest.app" style="color:var(--gold)">feedback@guardnest.app</a></p>
+
+</article>
+
+<footer>
+  <p>🛡️ GuardNest · Built in Worcester, MA · <a href="https://guardnest.app">guardnest.app</a></p>
+</footer>
+
+</body>
+</html>
