@@ -3383,7 +3383,7 @@ function buildMissions() {
   // Mission 2: Use a perishable item (if any exist)
   const missionToday = new Date(); missionToday.setHours(0,0,0,0);
   const perishables = allItems
-    .filter(i => (i.days_until_spoil||0) > 0 && (i.status||'active') === 'active')
+    .filter(i => (i.days_until_spoil||0) > 0 && (!i.status || i.status === 'active'))
     .map(i => {
       let dl = i.days_until_spoil;
       if (i.purchase_date) {
@@ -3901,7 +3901,7 @@ function refreshVault() {
   // ── FULL REGISTRY ───────────────────────────────────────────
   const rarityOrder = { EXOTIC:0, LEGENDARY:1, RARE:2, COMMON:3 };
   const sorted = [...allItems]
-    .filter(i => (i.status || 'active') === 'active')
+    .filter(i => !i.status || i.status === 'active')
     .sort((a,b) =>
       (rarityOrder[a.rarity?.toUpperCase()]??3) - (rarityOrder[b.rarity?.toUpperCase()]??3)
     );
@@ -4817,7 +4817,7 @@ function showFirstWin(items) {
   const hasSeenWin = localStorage.getItem('guardnest_first_win');
   if (hasSeenWin) return;
 
-  const totalValue    = items.reduce((s,i) => s + (parseFloat(i.price)||0), 0);
+  const totalValue    = items.reduce((s,i) => s + (parseFloat(i.price || 0)||0), 0);
   const warrantyItems = items.filter(i => (i.warranty_days||0) > 0);
   const spoilItems    = items.filter(i => (i.days_until_spoil||0) > 0);
 
