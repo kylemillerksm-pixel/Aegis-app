@@ -3775,12 +3775,24 @@ function renderVaultRow(item) {
   // rarity vars kept for dashboard compatibility
 
   let statusBadge = '<span class="alert-badge ab-green">—</span>';
-  if ((item.warranty_days || 0) > 0 && item.purchase_date) {
-    const today     = new Date(); today.setHours(0,0,0,0);
+  const _rvToday = new Date(); _rvToday.setHours(0,0,0,0);
+  if (item.expiry_date) {
+    const expiry = new Date(item.expiry_date);
+    const daysLeft = Math.round((expiry - _rvToday) / 86400000);
+    const [cls,,label] = urgencyClass(daysLeft);
+    statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
+  } else if ((item.warranty_days || 0) > 0 && item.purchase_date) {
     const purchased = new Date(item.purchase_date);
     const expiry    = new Date(purchased);
     expiry.setDate(expiry.getDate() + (item.warranty_days || 0));
-    const daysLeft  = Math.round((expiry - today) / 86400000);
+    const daysLeft  = Math.round((expiry - _rvToday) / 86400000);
+    const [cls,,label] = urgencyClass(daysLeft);
+    statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
+  } else if ((item.days_until_spoil || 0) > 0 && item.purchase_date) {
+    const purchased = new Date(item.purchase_date);
+    const expiry    = new Date(purchased);
+    expiry.setDate(expiry.getDate() + (item.days_until_spoil || 0));
+    const daysLeft  = Math.round((expiry - _rvToday) / 86400000);
     const [cls,,label] = urgencyClass(daysLeft);
     statusBadge = `<span class="alert-badge ${cls}">${label}</span>`;
   }
@@ -3850,30 +3862,7 @@ function refreshVault() {
   if (expiringThisWeek.length === 0) {
     expiringEl.innerHTML = `<div class="empty-state" style="padding:16px"><span class="empty-icon" style="font-size:20px">✅</span><div class="empty-sub">Nothing expiring this week</div></div>`;
   } else {
-    expiringEl.innerHTML = expiringThisWeek.map(item => {
-      const spoil   = item.days_until_spoil || 0;
-      const warranty= item.warranty_days || 0;
-      let days = 0;
-      if (warranty > 0 && item.purchase_date) {
-        const purchased = new Date(item.purchase_date);
-        const expiry    = new Date(purchased);
-        expiry.setDate(expiry.getDate() + warranty);
-        days = Math.round((expiry - today) / 86400000);
-      } else if (spoil > 0 && item.purchase_date) {
-        const spoilExp = new Date(item.purchase_date);
-        spoilExp.setDate(spoilExp.getDate() + spoil);
-        days = Math.round((spoilExp - today) / 86400000);
-      } else if (spoil > 0) {
-        days = spoil;
-      }
-      const [cls,,label] = urgencyClass(days);
-      const icon = spoil > 0 ? '🥗' : '🛡️';
-      return `<div class="alert-item">
-        <div class="alert-info"><div class="alert-name">${item.item_name||'Unknown'}</div><div class="alert-meta">📍 ${item.merchant||'—'} · $${(item.price||0).toFixed(2)}</div></div>
-        <div style="font-size:11px;color:var(--text3);margin-right:8px">${icon}</div>
-        <span class="alert-badge ${cls}">${label}</span>
-      </div>`;
-    }).join('');
+    expiringEl.innerHTML = expiringThisWeek.map(item => renderVaultRow(item)).join('');
   }
 
   // ── SMART ROW: High Value Assets (over $50) ─────────────────
@@ -4336,6 +4325,13 @@ async function markItemUsed(itemId, itemName, event) {
   if (error) {
     showToast('Error: ' + error.message, 'error');
   } else {
+    // Write to consumption_events for AI learning loop
+    await supa.from('consumption_events').insert({
+      user_id:     currentUser.id,
+      item_id:     itemId,
+      event_type:  'used',
+      recorded_at: new Date().toISOString(),
+    });
     showToast(`✅ ${itemName} marked as used — nice work!`, 'success');
     // XP bonus for using something before it expired
     totalCredits += 25;
@@ -5153,7 +5149,7 @@ function refreshReceipts() {
 
 // ─── ONBOARDING ───────────────────────────────────────────────
 function checkOnboarding() {
-  const hasSeenOnboarding = localStorage.getItem('aegis_onboarded');
+  const hasSeenOnboarding = localStorage.getItem('guardnest_onboarded');
   const hasItems = allItems.length > 0;
   if (!hasSeenOnboarding && !hasItems) {
     document.getElementById('onboardingScreen').classList.remove('hidden');
@@ -5167,11 +5163,11 @@ function startOnboarding() {
 
 function dismissOnboarding() {
   document.getElementById('onboardingScreen').classList.add('hidden');
-  localStorage.setItem('aegis_onboarded', 'true');
+  localStorage.setItem('guardnest_onboarded', 'true');
 }
 
 function showCelebration(items) {
-  const hasSeenCelebration = localStorage.getItem('aegis_celebrated');
+  const hasSeenCelebration = localStorage.getItem('guardnest_celebrated');
   if (hasSeenCelebration) return;
 
   const warrantyCount = items.filter(i => (i.warranty_days || 0) > 0).length;
@@ -5190,7 +5186,7 @@ function showCelebration(items) {
   document.getElementById('celWarranties').textContent = warrantyCount;
   document.getElementById('celAlerts').textContent     = alertCount;
   document.getElementById('celebrationModal').classList.remove('hidden');
-  localStorage.setItem('aegis_celebrated', 'true');
+  localStorage.setItem('guardnest_celebrated', 'true');
 }
 
 function dismissCelebration() {
