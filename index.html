@@ -2028,7 +2028,7 @@
         <div class="credits-icon">⚡</div>
         <div>
           <div class="credits-num" id="sideCreditsNum">0</div>
-          <div class="credits-label">System Credits</div>
+          <div class="credits-label">Habit Points</div>
         </div>
       </div>
     </div>
@@ -2061,11 +2061,11 @@
     <div class="badges-section">
       <div class="badges-heading">Badges</div>
       <div class="badges-grid" id="badgesGrid">
-        <div class="badge-chip locked" title="First Acquisition">🎯</div>
-        <div class="badge-chip locked" title="High Roller">💎</div>
-        <div class="badge-chip locked" title="Operational">⚙️</div>
-        <div class="badge-chip locked" title="Asset Manager">📊</div>
-        <div class="badge-chip locked" title="Quartermaster">🏆</div>
+        <div class="badge-chip locked" title="First Scan">📷</div>
+        <div class="badge-chip locked" title="Good Habits">💚</div>
+        <div class="badge-chip locked" title="Getting Fresh">🌿</div>
+        <div class="badge-chip locked" title="Regular Shopper">🛒</div>
+        <div class="badge-chip locked" title="Waste Warrior">🏆</div>
       </div>
     </div>
 
@@ -2096,8 +2096,8 @@
         <div class="streak-warning hidden" id="streakWarning">
           <div class="streak-warning-icon">⚠️</div>
           <div class="streak-warning-text">
-            <strong>Your streak ends tonight.</strong><br>
-            Scan one receipt to keep your <span id="swStreakNum">0</span> week streak alive.
+            <strong>Keep your streak going.</strong><br>
+            Scan a receipt this week to stay on track — <span id="swStreakNum">0</span> weeks and counting.
           </div>
           <div class="streak-warning-dismiss" onclick="dismissStreakWarning()" ontouchend="this.onclick()">✕</div>
         </div>
@@ -2127,7 +2127,7 @@
           </div>
           <div class="brief-vault-box">
             <div class="brief-vault-num" id="bvn">0</div>
-            <div class="brief-vault-label">Items Protected</div>
+            <div class="brief-vault-label">Items Tracked</div>
             <div class="brief-vault-sub" id="bvv">$0 value</div>
           </div>
         </div>
@@ -2221,7 +2221,7 @@
             <div class="panel-header">
               <div class="panel-title" id="resultsTitle">📦 Inventory Manifest</div>
               <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px">
-                💾 Save to Vault
+                ✅ Add to My Fridge
               </button>
             </div>
             <div class="panel-body">
@@ -2255,9 +2255,9 @@
       <!-- ─── VAULT ─── -->
       <div class="page" id="page-vault">
         <div class="stat-row cols3" style="margin-bottom:20px">
-          <div class="stat-card c-gold"><div class="sc-label">Total Assets</div><div class="sc-num" id="vTotal">0</div></div>
+          <div class="stat-card c-gold"><div class="sc-label">Items Tracked</div><div class="sc-num" id="vTotal">0</div></div>
           <div class="stat-card c-green"><div class="sc-label">Total Value</div><div class="sc-num" id="vValue">$0</div></div>
-          <div class="stat-card c-blue"><div class="sc-label">Under Warranty</div><div class="sc-num" id="vWarranty">0</div></div>
+          <div class="stat-card c-blue"><div class="sc-label">With Warranty</div><div class="sc-num" id="vWarranty">0</div></div>
         </div>
 
         <!-- SMART ROW: Expiring This Week -->
@@ -2350,14 +2350,14 @@
         </div>
         <div class="panel">
           <div class="panel-header">
-            <div class="panel-title">🧾 Scan History</div>
+            <div class="panel-title">🧾 Past Receipts</div>
             <div class="panel-action" id="receiptCount"></div>
           </div>
           <div id="receiptList">
             <div class="empty-state">
               <span class="empty-icon">🧾</span>
-              <div class="empty-title">No Scans Yet</div>
-              <div class="empty-sub">Scan a receipt to start building your history</div>
+              <div class="empty-title">No receipts yet</div>
+              <div class="empty-sub">Scan your first grocery receipt to get started</div>
             </div>
           </div>
         </div>
@@ -2401,7 +2401,7 @@
             <div class="panel-header">
               <div class="panel-title" id="pdfResultsTitle">📦 Document Manifest</div>
               <button class="btn btn-purple" onclick="savePdfResults()" style="padding:7px 14px;font-size:11px">
-                💾 Save to Vault
+                ✅ Add to My Fridge
               </button>
             </div>
             <div class="panel-body">
@@ -2456,16 +2456,16 @@
   <div class="shop-prompt-box">
     <div class="sp-header">
       <span class="sp-icon">🛒</span>
-      <div class="sp-title">Did you go shopping?</div>
-      <p class="sp-sub" id="spSubText">Based on your history, you usually pick these up. Tap what you bought and we'll track it automatically.</p>
+      <div class="sp-title">Just went shopping?</div>
+      <p class="sp-sub" id="spSubText">Based on your past receipts, you probably picked these up. Tap what you bought and we'll add them to your fridge.</p>
     </div>
     <div class="sp-items" id="spItemsList"></div>
     <div class="sp-footer">
       <button class="sp-btn-save" onclick="saveShoppingPrompt()">
-        ✅ Add to Vault
+        ✅ Yes, I bought these
       </button>
       <button class="sp-btn-skip" onclick="skipShoppingPrompt()">
-        Not yet
+        Not this time
       </button>
     </div>
     <div class="sp-learned-time" id="spLearnedTime"></div>
@@ -2539,11 +2539,11 @@
   <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
   <div class="levelup-box">
     <span class="levelup-shield">🛡️</span>
-    <div class="levelup-label">Level Up</div>
+    <div class="levelup-label">New Level</div>
     <div class="levelup-num" id="luNum">2</div>
     <div class="levelup-title" id="luTitle">OPERATIVE</div>
     <div class="levelup-unlock" id="luUnlock">
-      <div class="levelup-unlock-label">🔓 Unlocked</div>
+      <div class="levelup-unlock-label">✨ You unlocked</div>
       <div class="levelup-unlock-text" id="luUnlockText">Weekly intelligence email — GuardNest now comes to you every Monday.</div>
     </div>
     <button class="levelup-btn" onclick="closeLevelUp()" ontouchend="this.onclick()">
@@ -2727,22 +2727,22 @@ let totalCredits = 0;
 let scanCount    = 0;
 
 const LEVELS = [
-  [0,    'Recruit'],
-  [500,  'Operative'],
-  [1000, 'Specialist'],
-  [2000, 'Agent'],
-  [3500, 'Commander'],
-  [5000, 'Director'],
-  [7500, 'Executive'],
-  [10000,'Sovereign'],
+  [0,    'First Scan'],
+  [500,  'Getting Started'],
+  [1000, 'Building Habits'],
+  [2000, 'In The Groove'],
+  [3500, 'Sharp Shopper'],
+  [5000, 'Waste Warrior'],
+  [7500, 'Nothing Wasted'],
+  [10000,'Zero Waste'],
 ];
 
 const UNLOCK_HINTS = [
-  'Keep scanning to level up',
-  'Unlock Document Scanner at Level 4',
-  'Scan 10 items for Asset Manager badge',
-  'Scan $500 in items for High Roller badge',
-  'Scan 25 items for Quartermaster badge',
+  'Scan your next receipt to level up',
+  'Mark items as used to build your picture',
+  'Scan 10 items to unlock deeper insights',
+  'Keep your streak going — habits take time',
+  'Scan 25 items for your Waste Warrior badge',
 ];
 
 // ─── INIT ─────────────────────────────────────────────────────
@@ -2961,7 +2961,7 @@ async function briefMarkUsed(itemId, itemName) {
     if (!error) {
       totalCredits += 25;
       showXpFloat(25);
-      showToast(`✅ ${itemName} marked as used — +25 XP!`, 'success');
+      showToast(`✅ ${itemName} used — nothing wasted. +25 pts`, 'success');
       await loadItems();
       briefAlerts = buildBriefAlerts();
       if (briefIndex >= briefAlerts.length) briefIndex = 0;
@@ -3214,7 +3214,7 @@ function updateSidebar() {
   const mobileCreditsEl = document.getElementById('mobileCredits');
   if (mobileXpFill) mobileXpFill.style.width = (info.progress * 100).toFixed(1) + '%';
   if (mobileLevelText) mobileLevelText.textContent = `Lvl ${info.level} — ${info.title}`;
-  if (mobileCreditsEl) mobileCreditsEl.textContent = totalCredits.toLocaleString();
+  if (mobileCreditsEl) mobileCreditsEl.textContent = totalCredits.toLocaleString() + ' pts';
 
   // Update mobile alert badge
   const bnBadge = document.getElementById('bnAlertBadge');
@@ -3249,7 +3249,7 @@ function updateBadges() {
     allItems.length >= 25,
   ];
   const chips = document.querySelectorAll('.badge-chip');
-  const labels= ['First Acquisition','High Roller','Operational','Asset Manager','Quartermaster'];
+  const labels= ['First Scan','Good Habits','Getting Fresh','Regular Shopper','Waste Warrior'];
   badges.forEach((earned, i) => {
     if (chips[i]) {
       chips[i].className = `badge-chip ${earned ? 'earned' : 'locked'}`;
@@ -3373,7 +3373,7 @@ function buildMissions() {
     id: 'scan_week',
     icon: '📷',
     title: 'Scan a receipt this week',
-    desc: 'Keep your vault up to date',
+    desc: 'Keep your picture of what you have up to date',
     xp: 10,
     done: scannedThisWeek || completed.includes('scan_week'),
     action: () => showPage('scanner'),
@@ -3399,7 +3399,7 @@ function buildMissions() {
       id: 'use_perishable',
       icon: '🥗',
       title: `Use your ${mostUrgent.item_name || 'perishable'}`,
-      desc: `${urgentDays} day${urgentDays !== 1 ? 's' : ''} left — don't let it go to waste`,
+      desc: `${urgentDays} day${urgentDays !== 1 ? 's' : ''} left — use it tonight and mark it done`,
       xp: urgentDays <= 1 ? 50 : 25,
       done: completed.includes('use_perishable'),
       action: () => showPage('vault'),
@@ -3427,8 +3427,8 @@ function buildMissions() {
     missions.push({
       id: 'check_warranty',
       icon: '🛡️',
-      title: `Check ${urgent.item_name || 'warranty'} coverage`,
-      desc: `Warranty expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — file a claim if needed`,
+      title: `Check your ${urgent.item_name || 'item'} warranty`,
+      desc: `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — worth checking before the window closes`,
       xp: 200,
       done: completed.includes('check_warranty'),
       action: () => {
@@ -3447,8 +3447,8 @@ function buildMissions() {
   missions.push({
     id: 'clean_week',
     icon: '✅',
-    title: 'Achieve a clean week',
-    desc: 'Nothing expires without your knowledge',
+    title: 'Use everything this week',
+    desc: 'Nothing expired or went to waste — that is a win',
     xp: 100,
     done: nothingExpired && allItems.length > 0,
     auto: true,
@@ -3768,7 +3768,7 @@ function renderVaultRow(item) {
     <div class="vault-row-status">${statusBadge}</div>
     <div class="vault-row-actions">
       <button class="used-btn" onclick="markItemUsed('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" title="Mark as used">✓ Used</button>
-      <button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" title="Delete item">✕</button>
+      <button class="delete-btn" onclick="promptDelete('${item.id}','${(item.item_name||'').replace(/'/g,"\'")}',event)" title="Remove item">✕</button>
     </div>
   </div>`;
 }
@@ -3929,7 +3929,7 @@ async function handleImageScan(input) {
   hideScanOverlay();
 
   document.getElementById('scanIcon').textContent  = '✅';
-  document.getElementById('scanTitle').textContent = `${result.length} item(s) found`;
+  document.getElementById('scanTitle').textContent = `Found ${result.length} item${result.length!==1?'s':''} — save to your fridge`;
   document.getElementById('scanSub').textContent   = 'Review below and save to vault';
 
   pendingItems = result.map(i => ({ ...i, image_url: file.name }));
@@ -4198,8 +4198,8 @@ function purchaseText(dateStr) {
 function renderManifest(items, gridId, titleId) {
   document.getElementById(titleId).textContent =
     items.length === 1
-      ? '✅ 1 item found — review and save'
-      : `✅ ${items.length} items found — review and save`;
+      ? '✅ 1 item found — looks right?'
+      : `✅ ${items.length} items found — looks right?`;
 
   document.getElementById(gridId).innerHTML = items.map((item, i) => {
     const price   = parseFloat(item.price || 0);
@@ -4426,7 +4426,7 @@ function showShoppingPrompt() {
   if (learnedEl) learnedEl.textContent = `GuardNest learned you usually shop on ${dayNames[peakDay]}s`;
 
   const subEl = document.getElementById('spSubText');
-  if (subEl) subEl.textContent = `Based on your history, you usually pick these up. Tap what you bought and we'll track it automatically.`;
+  if (subEl) subEl.textContent = `Based on your past receipts, you probably picked these up. Tap what you bought and we'll add them to your fridge.`;
 
   // Render items as checkboxes
   const listEl = document.getElementById('spItemsList');
@@ -4533,7 +4533,7 @@ async function saveShoppingPrompt() {
   if (error) {
     showToast('Save failed: ' + error.message, 'error');
   } else {
-    showToast(`✅ ${rows.length} item${rows.length !== 1 ? 's' : ''} added to vault · +${rows.length * 10} XP`, 'success');
+    showToast(`✅ ${rows.length} item${rows.length !== 1 ? 's' : ''} added to your fridge · +${rows.length * 10} pts`, 'success');
     // Update streak
     const wk = getWeekKey();
     localStorage.setItem('guardnest_last_scan_week', wk);
@@ -4675,7 +4675,7 @@ function checkNearMiss(items) {
       days === 1 ? 'Use tomorrow — expires soon' :
       `Use within ${days} days`;
     document.getElementById('nmActionText').innerHTML =
-      `Don't let this go to waste. <strong>Use it tonight</strong> or move it to the front of your fridge so you don't forget.`;
+      `This is close to going bad. <strong>Use it tonight</strong> or move it to the front of your fridge so you see it.`;
     document.getElementById('nmSearchLink').href =
       `https://www.google.com/search?q=recipe+with+${encodeURIComponent(item.item_name||'')}`;
     document.getElementById('nmSearchLink').textContent = '🍳 Find a Recipe';
@@ -4806,13 +4806,13 @@ function showXpFloat(xp, x, y) {
 
 // ─── LEVEL UP MODAL ────────────────────────────────────────────
 const LEVEL_UNLOCKS = {
-  2: 'Weekly intelligence email — GuardNest now comes to you every Monday morning.',
-  3: 'Shopping pattern engine — GuardNest learns what you buy and asks if you picked it up.',
-  4: 'Predictive alerts — Get warned before things expire, not just when they do.',
-  5: 'Natural language vault search — Ask your vault anything.',
-  6: 'Clutch save bonus — Earn double XP when you use something in the last 24 hours.',
-  7: 'Advanced analytics — See your annual waste saved and warranty claims value.',
-  8: 'Sovereign status — Receipt image storage unlocked. Your receipts archived forever.',
+  2: 'Weekly clarity report unlocked — every Monday you see what got used and what slipped.',
+  3: 'Shopping pattern learning — GuardNest notices what you buy regularly and checks in.',
+  4: 'Early warnings — get a heads up before things expire, not just on the day.',
+  5: 'Habit insights — see which items you consistently use and which ones slip.',
+  6: 'Last chance bonus — earn double XP when you use something in its final 24 hours.',
+  7: 'Monthly picture — see your monthly used vs wasted breakdown over time.',
+  8: 'Receipt archive — your receipt images saved and searchable forever.',
 };
 
 function checkLevelUp(prevCredits, newCredits) {
@@ -4838,11 +4838,11 @@ function closeLevelUp() {
 
 // ─── BADGE EARNED MODAL ────────────────────────────────────────
 const BADGE_DEFS = [
-  { icon: '🎯', name: 'First Acquisition', desc: 'You added your first item to the vault. Nothing slips through.' },
-  { icon: '💎', name: 'High Roller',       desc: 'Over $500 in protected value. That is real money.' },
-  { icon: '⚙️', name: 'Operational',       desc: 'You scanned something worth protecting. The vault is alive.' },
-  { icon: '📊', name: 'Asset Manager',     desc: '10 items tracked. Your vault is growing.' },
-  { icon: '🏆', name: 'Quartermaster',     desc: '25 items tracked. Top tier of protected users.' },
+  { icon: '📷', name: 'First Scan',     desc: 'You scanned your first receipt. Now you can see what you have.' },
+  { icon: '💚', name: 'Good Habits',    desc: 'Over $500 in groceries tracked. You know exactly what is in your fridge.' },
+  { icon: '🌿', name: 'Getting Fresh',  desc: 'Your first fresh items are tracked. Use them before they go.' },
+  { icon: '🛒', name: 'Regular Shopper', desc: '10 items tracked. GuardNest is starting to see your patterns.' },
+  { icon: '🏆', name: 'Waste Warrior',  desc: '25 items tracked. You are building a genuinely different relationship with your groceries.' },
 ];
 
 function checkAndShowBadge(prevItems, newItems, prevValue, newValue) {
