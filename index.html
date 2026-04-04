@@ -1887,6 +1887,32 @@
   .brief-exit-left  { animation: briefSlideLeft  .28s ease forwards; }
   .brief-exit-right { animation: briefSlideRight .28s ease forwards; }
   .brief-card-enter { animation: briefEnter .28s ease; }
+
+  /* ── MANIFEST REMOVE BUTTON ─────────────────────────────── */
+  .mc-remove {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px;
+    background: rgba(224,85,85,.12);
+    border: 1px solid rgba(224,85,85,.25);
+    border-radius: 50%; color: #E05555;
+    font-size: 12px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; touch-action: manipulation;
+    transition: all .15s;
+  }
+  .mc-remove:hover, .mc-remove:active {
+    background: rgba(224,85,85,.25);
+    transform: scale(1.1);
+  }
+  .manifest-card {
+    position: relative;
+  }
+  .manifest-card.removed {
+    opacity: 0;
+    transform: scale(.9);
+    transition: all .2s ease;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -4166,6 +4192,34 @@ function parseJSON(raw) {
   return [];
 }
 
+
+// ─── REMOVE MANIFEST ITEM ────────────────────────────────────
+function removeManifestItem(index) {
+  // Animate out
+  const card = document.getElementById('mc-' + index);
+  if (card) card.classList.add('removed');
+
+  // Remove from pendingItems after animation
+  setTimeout(() => {
+    pendingItems.splice(index, 1);
+
+    // If no items left hide the results section
+    if (pendingItems.length === 0) {
+      document.getElementById('scanResults')?.classList.add('hidden');
+      document.getElementById('pdfResults')?.classList.add('hidden');
+      showToast('All items removed — scan again to start over', 'info');
+      return;
+    }
+
+    // Re-render with updated list
+    const activeGrid = document.getElementById('manifestGrid')?.innerHTML !== undefined
+      ? 'manifestGrid' : 'pdfManifestGrid';
+    const titleId = activeGrid === 'manifestGrid' ? 'resultsTitle' : 'pdfResultsTitle';
+    renderManifest(pendingItems, activeGrid, titleId);
+    showToast('Item removed', 'info');
+  }, 200);
+}
+
 // ─── RENDER MANIFEST ──────────────────────────────────────────
 function warrantyText(days) {
   if (!days || days <= 0) return null;
@@ -4216,7 +4270,8 @@ function renderManifest(items, gridId, titleId) {
     else if (spoil > 0)  protectionBadge = `<span class="mc-prot mc-prot-spoil">⏰ Expiry tracked</span>`;
     else                 protectionBadge = `<span class="mc-prot mc-prot-basic">📦 Item tracked</span>`;
 
-    return `<div class="manifest-card" style="animation-delay:${i*0.06}s">
+    return `<div class="manifest-card" style="animation-delay:${i*0.06}s" id="mc-${i}">
+      <button class="mc-remove" onclick="removeManifestItem(${i})" ontouchend="this.onclick()" title="Remove this item">✕</button>
       <div class="mc-top-row">
         <span style="font-size:26px">${emoji}</span>
         ${protectionBadge}
@@ -4231,9 +4286,9 @@ function renderManifest(items, gridId, titleId) {
       </div>
       <div class="mc-footer">
         <button class="mc-thumbsdown" onclick="flagBadScan(this,this.dataset.name,event)" data-name="${(item.item_name||'Unknown').replace(/['"]/g,'')}" ontouchend="this.onclick(event)" title="This scan looks wrong">
-          👎 Wrong item?
+          👎 Wrong?
         </button>
-        <span class="mc-badge" style="background:rgba(245,200,66,.1);color:var(--gold)">+${xp} XP</span>
+        <span class="mc-badge" style="background:rgba(76,175,130,.1);color:var(--gold)">+${xp} pts</span>
       </div>
     </div>`;
   }).join('');
