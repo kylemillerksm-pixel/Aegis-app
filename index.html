@@ -3183,7 +3183,11 @@ async function doRegister() {
 async function doGoogleLogin() {
   await supa.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href }
+    options: {
+      redirectTo: 'https://guardnest.app/',
+      queryParams: { access_type: 'offline', prompt: 'consent' },
+      skipBrowserRedirect: false,
+    }
   });
 }
 
