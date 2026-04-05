@@ -2464,6 +2464,75 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
       </div>
 
     </div>
+
+      <!-- ACCOUNT PAGE -->
+      <div class="page" id="page-account">
+        <div style="max-width:480px;margin:0 auto;padding:8px 0 40px;">
+
+          <!-- Pro Status Card -->
+          <div id="accountProCard" style="border-radius:14px;padding:20px;margin-bottom:16px;background:linear-gradient(135deg,rgba(245,200,66,.12),rgba(245,200,66,.04));border:1px solid rgba(245,200,66,.25);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(245,200,66,.15);border:1.5px solid rgba(245,200,66,.35);display:flex;align-items:center;justify-content:center;font-size:20px;">🌿</div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text)" id="accountUserEmail">—</div>
+                <div id="accountPlanBadge" style="margin-top:3px;display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;padding:2px 8px;border-radius:5px;background:rgba(245,200,66,.2);color:var(--gold);border:1px solid rgba(245,200,66,.3);">FREE PLAN</div>
+              </div>
+            </div>
+            <div id="accountProDetails" style="display:none;">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px;" id="accountProSince"></div>
+              <a href="https://billing.stripe.com/p/login/test_placeholder" target="_blank" style="display:inline-block;font-size:12px;font-weight:600;color:var(--gold);text-decoration:none;padding:7px 14px;border:1px solid rgba(245,200,66,.3);border-radius:8px;">
+                Manage Billing →
+              </a>
+            </div>
+            <div id="accountFreeDetails">
+              <div style="margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px;">
+                  <span>Free scans used</span>
+                  <span id="accountScanCount">0 / 3</span>
+                </div>
+                <div style="height:5px;background:var(--surface);border-radius:3px;overflow:hidden;">
+                  <div id="accountScanBar" style="height:100%;background:var(--gold);border-radius:3px;transition:width .3s;width:0%"></div>
+                </div>
+              </div>
+              <button class="btn btn-gold btn-full" onclick="showPaywall()" style="font-size:13px;padding:10px;">
+                ⚡ Upgrade to Pro
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats Card -->
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="panel-header"><div class="panel-title">📊 Your Stats</div></div>
+            <div class="panel-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="text-align:center;padding:12px;background:var(--dark);border-radius:10px;">
+                <div style="font-size:24px;font-weight:800;color:var(--gold)" id="accountItemCount">0</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px;">Items Tracked</div>
+              </div>
+              <div style="text-align:center;padding:12px;background:var(--dark);border-radius:10px;">
+                <div style="font-size:24px;font-weight:800;color:var(--green)" id="accountReceiptCount">0</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px;">Receipts Scanned</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Actions -->
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="panel-header"><div class="panel-title">⚙️ Account</div></div>
+            <div class="panel-body" style="padding:0;">
+              <button onclick="doSignOut()" style="width:100%;text-align:left;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign Out
+              </button>
+              <div style="padding:14px 16px;font-size:11px;color:var(--text3);text-align:center;">
+                GuardNest v1.0 · <a href="https://guardnest.app/privacy" style="color:var(--text3);">Privacy</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   </main>
 </div>
 
@@ -2500,13 +2569,15 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
       <span class="bn-label">Vault</span>
     </button>
 
-    <button class="bottom-nav-item" onclick="doSignOut()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-      <span class="bn-label">Sign Out</span>
+    <button class="bottom-nav-item" id="bn-account" onclick="showPage('account')">
+      <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        <span id="bn-pro-dot" style="display:none;position:absolute;top:-2px;right:-4px;width:8px;height:8px;background:var(--gold);border-radius:50%;border:1.5px solid var(--dark);"></span>
+      </div>
+      <span class="bn-label">Account</span>
     </button>
 
   </div>
@@ -3366,6 +3437,7 @@ const PAGE_TITLES = {
   alerts:    'EXPIRING SOON',
   vault:     'YOUR FRIDGE',
   pdf:       'SCAN DOCUMENT',
+  account:   'ACCOUNT',
 };
 
 // Prevent 300ms tap delay on mobile
@@ -3390,7 +3462,7 @@ function showPage(id) {
   if (mobileTitle) mobileTitle.textContent = PAGE_TITLES[id] || id.toUpperCase();
 
   // Update bottom nav active state
-  ['dashboard','vault'].forEach(p => {
+  ['dashboard','vault','account'].forEach(p => {
     const btn = document.getElementById('bn-' + p);
     if (btn) btn.classList.toggle('active', p === id);
   });
@@ -3405,6 +3477,7 @@ function showPage(id) {
   if (id === 'alerts')    { refreshAlerts(); }
   if (id === 'vault')     { refreshVault(); }
   if (id === 'receipts')  { refreshReceipts(); }
+  if (id === 'account')   { refreshAccountPage(); }
 }
 
 // ─── MISSION BOARD DASHBOARD ──────────────────────────────────
@@ -5273,14 +5346,57 @@ async function loadProStatus() {
   if (!currentUser) return;
   const { data } = await supa
     .from('profiles')
-    .select('is_pro')
+    .select('is_pro, pro_since')
     .eq('id', currentUser.id)
     .single();
   currentUserIsPro = data?.is_pro || false;
-  // Also check localStorage as fallback
   if (!currentUserIsPro) {
     currentUserIsPro = !!localStorage.getItem('guardnest_pro_' + currentUser.id);
   }
+  const dot = document.getElementById('bn-pro-dot');
+  if (dot) dot.style.display = currentUserIsPro ? 'block' : 'none';
+  if (data?.pro_since) window._guardnestProSince = data.pro_since;
+}
+
+function refreshAccountPage() {
+  if (!currentUser) return;
+
+  const emailEl = document.getElementById('accountUserEmail');
+  if (emailEl) emailEl.textContent = currentUser.email || '—';
+
+  const badge = document.getElementById('accountPlanBadge');
+  const proDetails = document.getElementById('accountProDetails');
+  const freeDetails = document.getElementById('accountFreeDetails');
+
+  if (currentUserIsPro) {
+    if (badge) { badge.textContent = 'PRO'; }
+    if (proDetails) proDetails.style.display = 'block';
+    if (freeDetails) freeDetails.style.display = 'none';
+    const proSinceEl = document.getElementById('accountProSince');
+    if (proSinceEl && window._guardnestProSince) {
+      const d = new Date(window._guardnestProSince);
+      proSinceEl.textContent = 'Pro member since ' + d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+  } else {
+    if (badge) { badge.textContent = 'FREE PLAN'; }
+    if (proDetails) proDetails.style.display = 'none';
+    if (freeDetails) freeDetails.style.display = 'block';
+    const used = allReceipts.length;
+    const limit = FREE_SCAN_LIMIT;
+    const pct = Math.min(100, (used / limit) * 100);
+    const scanCount = document.getElementById('accountScanCount');
+    const scanBar = document.getElementById('accountScanBar');
+    if (scanCount) scanCount.textContent = used + ' / ' + limit;
+    if (scanBar) {
+      scanBar.style.width = pct + '%';
+      scanBar.style.background = pct >= 100 ? '#ff5555' : 'var(--gold)';
+    }
+  }
+
+  const itemCountEl = document.getElementById('accountItemCount');
+  const receiptCountEl = document.getElementById('accountReceiptCount');
+  if (itemCountEl) itemCountEl.textContent = allItems.length;
+  if (receiptCountEl) receiptCountEl.textContent = allReceipts.length;
 }
 
 function checkPaywall() {
