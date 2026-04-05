@@ -5423,7 +5423,11 @@ async function startCheckout(plan) {
   try {
     const res = await fetch('https://eeizfajopbpmjsxykgmz.supabase.co/functions/v1/create-checkout-session', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'apikey': SUPABASE_ANON,
+      },
       body: JSON.stringify({
         plan,
         email: currentUser?.email || undefined,
