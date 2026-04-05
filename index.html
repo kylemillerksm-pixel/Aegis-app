@@ -26,6 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2511,6 +2512,28 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
   </div>
 </div>
 
+<!-- PAYWALL MODAL -->
+<div class="celebration-modal hidden" id="paywallModal" style="z-index:10000">
+  <div class="celebration-box" style="max-width:420px;text-align:center;padding:32px">
+    <div style="font-size:40px;margin-bottom:12px">🌿</div>
+    <div class="cel-title" style="font-size:20px;margin-bottom:8px">You've used your 3 free scans</div>
+    <p style="color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:24px">
+      You're starting to see the picture. Upgrade to GuardNest Pro to keep scanning and get your weekly clarity report.
+    </p>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer" onclick="startCheckout('monthly')">
+      <div style="font-size:16px;font-weight:600;color:var(--text)">$2.99 / month</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">Billed monthly · Cancel anytime</div>
+    </div>
+    <div style="background:var(--gold);border-radius:12px;padding:16px;margin-bottom:20px;cursor:pointer;position:relative" onclick="startCheckout('yearly')">
+      <div style="position:absolute;top:-10px;right:16px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;letter-spacing:.05em">BEST VALUE</div>
+      <div style="font-size:16px;font-weight:600;color:var(--black)">$19 / year</div>
+      <div style="font-size:12px;color:var(--black);opacity:.7;margin-top:4px">Less than $1.60/month · Save 47%</div>
+    </div>
+    <p style="font-size:11px;color:var(--text3)">Less than one expired bag of spinach a month.</p>
+    <button onclick="dismissPaywall()" style="background:transparent;border:none;color:var(--text3);font-size:12px;cursor:pointer;margin-top:12px">Maybe later</button>
+  </div>
+</div>
+
 <!-- SHOPPING PROMPT MODAL -->
 <div class="shop-prompt-modal hidden" id="shopPromptModal">
   <div class="shop-prompt-box">
@@ -3091,6 +3114,7 @@ async function bootApp() {
   try { refreshVault(); } catch(e) { console.error('Vault error:', e); }
   try { updateSidebar(); } catch(e) { console.error('Sidebar error:', e); }
   try { checkOnboarding(); } catch(e) { console.error('Onboarding error:', e); }
+  try { checkUpgradeReturn(); } catch(e) { console.error('Upgrade check error:', e); }
   // Check for near-miss alerts on app load
   if (allItems.length > 0) {
     const shownToday = localStorage.getItem('guardnest_nearmiss_' + new Date().toDateString());
@@ -4446,8 +4470,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ─── SAVE TO FRIDGE ───────────────────────────────────────────
-async function saveScanResults() { await saveItems('btnSave', 'scanResults'); }
-async function savePdfResults()  { await saveItems('btnSavePdf', 'pdfResults'); }
+async function saveScanResults() {
+  if (checkPaywall()) return;
+  await saveItems('btnSave', 'scanResults');
+}
+async function savePdfResults() {
+  if (checkPaywall()) return;
+  await saveItems('btnSavePdf', 'pdfResults');
+}
 
 async function saveItems(btnId, resultsId) {
   if (!currentUser || !pendingItems.length) return;
@@ -5196,6 +5226,69 @@ function refreshReceipts() {
       <div class="receipt-value">$${value.toFixed(0)}</div>
     </div>`;
   }).join('');
+}
+
+// ─── STRIPE PAYWALL ──────────────────────────────────────────
+const STRIPE_PK = 'pk_test_51TIsPJI4a414KhPkmQlqK9KmBio29FV7H87sZ1gdLMAcGzeQ62Trui4JNxpgKbZN3hz2iLh4ZBeJWENcUPcvmIVy00ZZx854eU';
+const PRICE_MONTHLY = 'price_1TIsW6I4a414KhPk1cAXNIcw';
+const PRICE_YEARLY  = 'price_1TIsYGI4a414KhPk6IGD80rx';
+const FREE_SCAN_LIMIT = 3;
+
+let stripeInstance = null;
+
+function getStripe() {
+  if (!stripeInstance) stripeInstance = Stripe(STRIPE_PK);
+  return stripeInstance;
+}
+
+function checkPaywall() {
+  // Check if user has exceeded free scan limit
+  if (!currentUser) return false;
+  const isPro = localStorage.getItem('guardnest_pro_' + currentUser.id);
+  if (isPro) return false; // Pro user, no paywall
+  if (allReceipts.length >= FREE_SCAN_LIMIT) {
+    showPaywall();
+    return true;
+  }
+  return false;
+}
+
+function showPaywall() {
+  document.getElementById('paywallModal').classList.remove('hidden');
+}
+
+function dismissPaywall() {
+  document.getElementById('paywallModal').classList.add('hidden');
+}
+
+async function startCheckout(plan) {
+  const priceId = plan === 'yearly' ? PRICE_YEARLY : PRICE_MONTHLY;
+  const stripe = getStripe();
+
+  showToast('Redirecting to checkout...', 'info');
+
+  const { error } = await stripe.redirectToCheckout({
+    lineItems: [{ price: priceId, quantity: 1 }],
+    mode: 'subscription',
+    successUrl: 'https://guardnest.app/?upgraded=true',
+    cancelUrl: 'https://guardnest.app/',
+    customerEmail: currentUser?.email || undefined,
+  });
+
+  if (error) {
+    showToast('Checkout error: ' + error.message, 'error');
+  }
+}
+
+// Check for successful upgrade return
+function checkUpgradeReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('upgraded') === 'true' && currentUser) {
+    localStorage.setItem('guardnest_pro_' + currentUser.id, 'true');
+    showToast('🎉 Welcome to GuardNest Pro!', 'success');
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+  }
 }
 
 // ─── ONBOARDING ───────────────────────────────────────────────
