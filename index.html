@@ -3115,6 +3115,7 @@ async function bootApp() {
   try { updateSidebar(); } catch(e) { console.error('Sidebar error:', e); }
   try { checkOnboarding(); } catch(e) { console.error('Onboarding error:', e); }
   try { checkUpgradeReturn(); } catch(e) { console.error('Upgrade check error:', e); }
+  try { await loadProStatus(); } catch(e) { console.error('Pro status error:', e); }
   // Check for near-miss alerts on app load
   if (allItems.length > 0) {
     const shownToday = localStorage.getItem('guardnest_nearmiss_' + new Date().toDateString());
@@ -4347,6 +4348,13 @@ function renderManifest(items, gridId, titleId) {
         ${sText ? `<div class="mc-info-row">${sText}</div>` : ''}
         ${pText ? `<div class="mc-info-row">${pText}</div>` : ''}
         ${!wText && !sText ? '<div class="mc-info-row" style="color:var(--text3)">No expiry for this item</div>' : ''}
+        ${spoil > 0 ? `<div class="mc-info-row" style="margin-top:6px">
+          <span style="color:var(--text3);font-size:11px">📅 Estimated ${spoil}d · </span>
+          <span style="color:var(--gold);font-size:11px;cursor:pointer" onclick="toggleDateOverride(${i})">Got a date on the package? Tap to update</span>
+          <div id="date-override-${i}" style="display:none;margin-top:6px">
+            <input type="date" id="date-input-${i}" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;width:100%" onchange="updateItemExpiry(${i}, this.value)">
+          </div>
+        </div>` : ''}
       </div>
       <div class="mc-footer">
         <button class="mc-thumbsdown" onclick="flagBadScan(this,this.dataset.name,event)" data-name="${(item.item_name||'Unknown').replace(/['"]/g,'')}" ontouchend="this.onclick(event)" title="This scan looks wrong">
@@ -4386,6 +4394,23 @@ function showToast(msg, type = 'info') {
   setTimeout(() => el.remove(), 4000);
 }
 
+
+// ─── EXPIRY DATE OVERRIDE ────────────────────────────────────
+function toggleDateOverride(index) {
+  const el = document.getElementById('date-override-' + index);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateItemExpiry(index, dateValue) {
+  if (!dateValue || !pendingItems[index]) return;
+  pendingItems[index].expiry_date = dateValue;
+  // Recalculate days_until_spoil from the override date
+  const today = new Date(); today.setHours(0,0,0,0);
+  const expiry = new Date(dateValue);
+  const days = Math.round((expiry - today) / 86400000);
+  pendingItems[index].days_until_spoil = Math.max(0, days);
+  showToast(`✅ Expiry date updated to ${dateValue}`, 'success');
+}
 
 // ─── MARK ITEM AS USED ────────────────────────────────────────
 async function markItemUsed(itemId, itemName, event) {
@@ -4518,6 +4543,7 @@ async function saveItems(btnId, resultsId) {
     rarity:           rarityWord(parseFloat(item.price || 0)),
     warranty_days:    parseInt(item.warranty_days   || 0),
     days_until_spoil: parseInt(item.days_until_spoil || 0),
+    expiry_date:      item.expiry_date || null,
     image_url:        item.image_url   || null,
     status:           'active',
   }));
@@ -5241,11 +5267,25 @@ function getStripe() {
   return stripeInstance;
 }
 
+let currentUserIsPro = false;
+
+async function loadProStatus() {
+  if (!currentUser) return;
+  const { data } = await supa
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', currentUser.id)
+    .single();
+  currentUserIsPro = data?.is_pro || false;
+  // Also check localStorage as fallback
+  if (!currentUserIsPro) {
+    currentUserIsPro = !!localStorage.getItem('guardnest_pro_' + currentUser.id);
+  }
+}
+
 function checkPaywall() {
-  // Check if user has exceeded free scan limit
   if (!currentUser) return false;
-  const isPro = localStorage.getItem('guardnest_pro_' + currentUser.id);
-  if (isPro) return false; // Pro user, no paywall
+  if (currentUserIsPro) return false;
   if (allReceipts.length >= FREE_SCAN_LIMIT) {
     showPaywall();
     return true;
