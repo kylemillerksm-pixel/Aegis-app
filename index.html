@@ -2128,6 +2128,13 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
         <div class="status-dot"><div class="dot" style="background:var(--green)"></div>Database</div>
         <div class="status-dot"><div class="dot" style="background:var(--gold)"></div>AI Ready</div>
         <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 16px;font-size:12px">⚡ New Scan</button>
+        <div style="position:relative;display:inline-block">
+          <button onclick="toggleAccountMenu()" ontouchend="this.onclick()" style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:16px;color:var(--text2)">👤</button>
+          <div id="accountMenu" style="display:none;position:absolute;right:0;top:44px;background:var(--dark2);border:1px solid var(--border2);border-radius:10px;min-width:140px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.4);overflow:hidden">
+            <div style="padding:10px 14px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);letter-spacing:.05em;text-transform:uppercase">Account</div>
+            <button onclick="doSignOut()" style="width:100%;padding:12px 14px;background:transparent;border:none;color:var(--red);font-family:'Barlow',sans-serif;font-size:13px;text-align:left;cursor:pointer;">Sign Out</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3190,6 +3197,19 @@ async function doGoogleLogin() {
     }
   });
 }
+
+function toggleAccountMenu() {
+  const menu = document.getElementById('accountMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close account menu when clicking outside
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('accountMenu');
+  if (menu && !e.target.closest('#accountMenu') && !e.target.closest('[onclick*="toggleAccountMenu"]')) {
+    menu.style.display = 'none';
+  }
+});
 
 async function doSignOut() {
   await supa.auth.signOut();
