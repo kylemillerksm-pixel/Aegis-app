@@ -4499,6 +4499,10 @@ function renderManifest(items, gridId, titleId) {
 
 // ─── HELPERS ──────────────────────────────────────────────────
 function fileToBase64(file) {
+  // For images compress before sending — mobile photos are too large
+  if (file.type && file.type.startsWith('image/')) {
+    return compressImage(file, 1200);
+  }
   return new Promise((res, rej) => {
     const r = new FileReader();
     r.onload  = () => res(r.result.split(',')[1]);
