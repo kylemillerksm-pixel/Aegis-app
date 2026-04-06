@@ -2771,32 +2771,71 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 
 <!-- ONBOARDING SCREEN -->
 <div class="onboarding-screen hidden" id="onboardingScreen">
-  <div class="ob-shield"></div>
-  <div class="ob-title">WELCOME TO GUARDNEST</div>
-  <p class="ob-sub">
-    <strong>See what you have. Use it before it's gone.</strong><br>
-    Scan a receipt and GuardNest remembers everything — so you always know what's in your fridge and what needs to be used.
-  </p>
-  <div class="ob-steps">
-    <div class="ob-step">
-      <div class="ob-step-icon">📷</div>
-      <div class="ob-step-label">Scan your receipt</div>
+
+  <!-- Step 1: Choose entry point -->
+  <div id="ob-step1">
+    <div class="ob-shield"></div>
+    <div class="ob-title">LET'S SEE YOUR FRIDGE</div>
+    <p class="ob-sub">
+      <strong>Pick how you want to start.</strong><br>
+      We'll set up your fridge in under 60 seconds.
+    </p>
+
+    <!-- Fridge photo option -->
+    <div onclick="startFridgePhoto()" style="background:rgba(76,175,130,.1);border:1.5px solid rgba(76,175,130,.3);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">📸</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Photo of my fridge</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Point your camera inside — we'll identify everything</div>
+      </div>
     </div>
-    <div class="ob-step">
-      <div class="ob-step-icon">🧠</div>
-      <div class="ob-step-label">GuardNest remembers it all</div>
+
+    <!-- Starter list option -->
+    <div onclick="showStarterList()" style="background:rgba(245,200,66,.08);border:1.5px solid rgba(245,200,66,.2);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">✅</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Pick from common items</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Tap what's usually in your fridge</div>
+      </div>
     </div>
-    <div class="ob-step">
-      <div class="ob-step-icon">✅</div>
-      <div class="ob-step-label">See what to use before it's gone</div>
+
+    <!-- Receipt scan option -->
+    <div onclick="startOnboarding()" style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">🧾</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Scan a receipt</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Photo your latest grocery receipt</div>
+      </div>
+    </div>
+
+    <input type="file" accept="image/*" capture="environment" id="fridgePhotoInput" style="display:none" onchange="handleFridgePhoto(this)">
+
+    <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
+      Skip for now →
+    </button>
+  </div>
+
+  <!-- Step 2: Starter list -->
+  <div id="ob-step2" style="display:none;width:100%;">
+    <div class="ob-title" style="margin-bottom:4px;">WHAT'S USUALLY IN YOUR FRIDGE?</div>
+    <p class="ob-sub" style="margin-bottom:16px;">Tap everything that applies. We'll start tracking from today.</p>
+    <div id="starterGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;max-height:55vh;overflow-y:auto;"></div>
+    <button class="ob-btn" onclick="saveStarterList()" id="starterSaveBtn" style="opacity:.5;pointer-events:none;">
+      Add to My Fridge →
+    </button>
+    <button class="ob-skip" onclick="showObStep1()" style="margin-top:8px;">← Back</button>
+  </div>
+
+  <!-- Step 3: Fridge photo processing -->
+  <div id="ob-step3" style="display:none;width:100%;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">📸</div>
+    <div class="ob-title" style="margin-bottom:8px;">READING YOUR FRIDGE</div>
+    <p class="ob-sub" id="fridgeScanStatus">Identifying everything inside...</p>
+    <div style="height:4px;background:var(--surface);border-radius:2px;overflow:hidden;margin:20px 0;">
+      <div id="fridgeScanBar" style="height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s;"></div>
     </div>
   </div>
-  <button class="ob-btn" onclick="startOnboarding()" ontouchend="this.onclick()">
-    📷 Scan My First Receipt
-  </button>
-  <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
-    Skip for now →
-  </button>
+
 </div>
 
 <!-- FIRST SAVE CELEBRATION -->
@@ -5484,6 +5523,185 @@ function startOnboarding() {
 function dismissOnboarding() {
   document.getElementById('onboardingScreen').classList.add('hidden');
   localStorage.setItem('guardnest_onboarded', 'true');
+}
+
+function showObStep1() {
+  document.getElementById('ob-step1').style.display = 'block';
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'none';
+}
+
+function showStarterList() {
+  document.getElementById('ob-step1').style.display = 'none';
+  document.getElementById('ob-step2').style.display = 'block';
+
+  const items = [
+    { name: 'Eggs', emoji: '🥚', days: 21 },
+    { name: 'Milk', emoji: '🥛', days: 7 },
+    { name: 'Spinach', emoji: '🥬', days: 5 },
+    { name: 'Chicken', emoji: '🍗', days: 3 },
+    { name: 'Greek Yogurt', emoji: '🫙', days: 14 },
+    { name: 'Bread', emoji: '🍞', days: 7 },
+    { name: 'Cheese', emoji: '🧀', days: 14 },
+    { name: 'Butter', emoji: '🧈', days: 30 },
+    { name: 'Berries', emoji: '🫐', days: 5 },
+    { name: 'Leftovers', emoji: '🍱', days: 3 },
+    { name: 'Ground Beef', emoji: '🥩', days: 2 },
+    { name: 'Carrots', emoji: '🥕', days: 14 },
+    { name: 'Broccoli', emoji: '🥦', days: 5 },
+    { name: 'Apples', emoji: '🍎', days: 21 },
+    { name: 'Pasta Sauce', emoji: '🍅', days: 5 },
+    { name: 'Orange Juice', emoji: '🍊', days: 7 },
+  ];
+
+  const grid = document.getElementById('starterGrid');
+  grid.innerHTML = '';
+  window._starterSelected = new Set();
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;text-align:center;transition:all .15s;';
+    div.innerHTML = `<div style="font-size:26px;margin-bottom:4px;">${item.emoji}</div><div style="font-size:12px;font-weight:600;color:var(--text);">${item.name}</div><div style="font-size:10px;color:var(--text3);margin-top:2px;">~${item.days}d fresh</div>`;
+    div.dataset.name = item.name;
+    div.dataset.days = item.days;
+    div.dataset.emoji = item.emoji;
+    div.onclick = () => {
+      const selected = window._starterSelected.has(item.name);
+      if (selected) {
+        window._starterSelected.delete(item.name);
+        div.style.background = 'var(--surface)';
+        div.style.borderColor = 'var(--border)';
+      } else {
+        window._starterSelected.add(item.name);
+        div.style.background = 'rgba(76,175,130,.15)';
+        div.style.borderColor = 'rgba(76,175,130,.5)';
+      }
+      const btn = document.getElementById('starterSaveBtn');
+      if (window._starterSelected.size > 0) {
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+        btn.textContent = `Add ${window._starterSelected.size} Item${window._starterSelected.size > 1 ? 's' : ''} to My Fridge →`;
+      } else {
+        btn.style.opacity = '.5';
+        btn.style.pointerEvents = 'none';
+        btn.textContent = 'Add to My Fridge →';
+      }
+    };
+    grid.appendChild(div);
+  });
+}
+
+async function saveStarterList() {
+  if (!currentUser || !window._starterSelected || window._starterSelected.size === 0) return;
+
+  const btn = document.getElementById('starterSaveBtn');
+  btn.textContent = 'Saving...';
+  btn.style.opacity = '.7';
+
+  const grid = document.getElementById('starterGrid');
+  const allItems = Array.from(grid.querySelectorAll('[data-name]'));
+  const selected = allItems.filter(el => window._starterSelected.has(el.dataset.name));
+
+  const toSave = selected.map(el => ({
+    user_id: currentUser.id,
+    item_name: el.dataset.name,
+    category: 'grocery',
+    expiry_date: new Date(Date.now() + parseInt(el.dataset.days) * 86400000).toISOString().split('T')[0],
+    status: 'active',
+    source: 'starter_list',
+  }));
+
+  const { error } = await supa.from('items').insert(toSave);
+
+  if (error) {
+    showToast('Error saving items: ' + error.message, 'error');
+    btn.textContent = 'Try Again';
+    btn.style.opacity = '1';
+    return;
+  }
+
+  dismissOnboarding();
+  await loadItems();
+  showCelebration(toSave.length);
+  showToast(`Added ${toSave.length} items to your fridge!`, 'success');
+}
+
+function startFridgePhoto() {
+  document.getElementById('fridgePhotoInput').click();
+}
+
+async function handleFridgePhoto(input) {
+  if (!input.files || !input.files[0]) return;
+
+  document.getElementById('ob-step1').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'block';
+
+  const file = input.files[0];
+  const bar = document.getElementById('fridgeScanBar');
+  const status = document.getElementById('fridgeScanStatus');
+
+  // Animate progress
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress = Math.min(progress + 8, 85);
+    bar.style.width = progress + '%';
+  }, 300);
+
+  status.textContent = 'Identifying everything inside...';
+
+  // Convert to base64
+  const b64 = await new Promise((res) => {
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  });
+
+  // Call Gemini with fridge-specific prompt
+  try {
+    const response = await fetch(SUPABASE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageData: b64,
+        mimeType: file.type || 'image/jpeg',
+        sourceType: 'fridge',
+      })
+    });
+
+    clearInterval(interval);
+    bar.style.width = '100%';
+
+    const json = await response.json();
+    const items = json.items || [];
+
+    if (items.length === 0) {
+      status.textContent = "Couldn't identify items. Try a receipt or starter list instead.";
+      setTimeout(() => showObStep1(), 2000);
+      return;
+    }
+
+    status.textContent = `Found ${items.length} items! Saving...`;
+
+    const toSave = items.map(item => ({
+      user_id: currentUser.id,
+      item_name: item.item_name || item.name,
+      category: item.category || 'grocery',
+      expiry_date: item.expiry_date || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      status: 'active',
+      source: 'fridge_photo',
+    }));
+
+    await supa.from('items').insert(toSave);
+    await loadItems();
+    dismissOnboarding();
+    showCelebration(toSave.length);
+    showToast(`Added ${items.length} items from your fridge!`, 'success');
+
+  } catch (err) {
+    clearInterval(interval);
+    status.textContent = 'Something went wrong. Try again.';
+    setTimeout(() => showObStep1(), 2000);
+  }
 }
 
 function showCelebration(items) {
