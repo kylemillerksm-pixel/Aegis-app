@@ -5661,6 +5661,24 @@ function startPhotoScan(type) {
 // Keep old function name as alias for backwards compat
 function startFridgePhoto() { startPhotoScan('fridge'); }
 
+async function compressImage(file, maxWidth=1200) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(1, maxWidth / img.width);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+    };
+    img.src = url;
+  });
+}
+
 async function handleFridgePhoto(input, scanType) {
   if (!input.files || !input.files[0]) return;
   const type = scanType || window._currentScanType || 'fridge';
@@ -5672,30 +5690,25 @@ async function handleFridgePhoto(input, scanType) {
   const bar = document.getElementById('fridgeScanBar');
   const status = document.getElementById('fridgeScanStatus');
 
-  // Animate progress
   let progress = 0;
   const interval = setInterval(() => {
-    progress = Math.min(progress + 8, 85);
+    progress = Math.min(progress + 6, 80);
     bar.style.width = progress + '%';
-  }, 300);
+  }, 400);
 
-  status.textContent = 'Identifying everything inside...';
+  const typeLabel = type === 'pantry' ? 'pantry' : 'fridge';
+  status.textContent = `Reading your ${typeLabel}...`;
 
-  // Convert to base64
-  const b64 = await new Promise((res) => {
-    const reader = new FileReader();
-    reader.onload = e => res(e.target.result.split(',')[1]);
-    reader.readAsDataURL(file);
-  });
-
-  // Call Gemini with fridge-specific prompt
   try {
+    // Compress image before sending — mobile photos are too large
+    const b64 = await compressImage(file, 1200);
+
     const response = await fetch(SUPABASE_FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         imageData: b64,
-        mimeType: file.type || 'image/jpeg',
+        mimeType: 'image/jpeg',
         sourceType: type,
       })
     });
@@ -5703,36 +5716,64 @@ async function handleFridgePhoto(input, scanType) {
     clearInterval(interval);
     bar.style.width = '100%';
 
+    if (!response.ok) {
+      throw new Error('API error: ' + response.status);
+    }
+
     const json = await response.json();
     const items = json.items || [];
 
     if (items.length === 0) {
-      status.textContent = "Couldn't identify items. Try a receipt or starter list instead.";
-      setTimeout(() => showObStep1(), 2000);
+      status.textContent = "Couldn't identify items — try getting closer or better lighting.";
+      setTimeout(() => showObStep1(), 2500);
       return;
     }
 
-    status.textContent = `Found ${items.length} items! Saving...`;
+    status.textContent = `Found ${items.length} items!`;
 
+    // Guest mode — store and prompt signup
+    if (!currentUser) {
+      const today = new Date().toISOString().split('T')[0];
+      pendingItems = items.map(item => ({
+        item_name: item.item_name || item.name,
+        merchant: 'Home',
+        price: 0,
+        purchase_date: today,
+        category: item.category || 'grocery',
+        warranty_days: 0,
+        days_until_spoil: item.days_until_spoil || 7,
+      }));
+      localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
+      dismissOnboarding();
+      setTimeout(() => showGuestSavePrompt(), 500);
+      return;
+    }
+
+    // Logged in — save directly
+    const today = new Date().toISOString().split('T')[0];
     const toSave = items.map(item => ({
       user_id: currentUser.id,
       item_name: item.item_name || item.name,
+      merchant: 'Home',
+      price: 0,
+      purchase_date: today,
       category: item.category || 'grocery',
-      expiry_date: item.expiry_date || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      warranty_days: 0,
+      days_until_spoil: item.days_until_spoil || 7,
       status: 'active',
-      source: 'fridge_photo',
     }));
 
     await supa.from('items').insert(toSave);
     await loadItems();
     dismissOnboarding();
     showCelebration(toSave.length);
-    showToast(`Added ${items.length} items from your fridge!`, 'success');
+    showToast(`Added ${items.length} items from your ${typeLabel}!`, 'success');
 
   } catch (err) {
     clearInterval(interval);
-    status.textContent = 'Something went wrong. Try again.';
-    setTimeout(() => showObStep1(), 2000);
+    console.error('Fridge scan error:', err);
+    status.textContent = 'Something went wrong — try again or use a receipt instead.';
+    setTimeout(() => showObStep1(), 2500);
   }
 }
 
