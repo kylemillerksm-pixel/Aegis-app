@@ -2030,6 +2030,15 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
      MAIN APP
 ═══════════════════════════════════════════ -->
 <div id="screen-app">
+  <!-- Guest banner -->
+  <div id="guestBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border-bottom:1px solid rgba(76,175,130,.3);padding:10px 16px;align-items:center;justify-content:space-between;gap:12px;">
+    <div style="font-size:12px;color:rgba(255,255,255,.7);">
+      🌿 <strong style="color:#4CAF82;">Guest mode</strong> — scan your fridge, then save your results free
+    </div>
+    <button onclick="showAuth();document.getElementById('guestBanner').style.display='none';" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
+      Save Free →
+    </button>
+  </div>
 
   <!-- MOBILE HEADER -->
   <div class="mobile-header" id="mobileHeader">
@@ -2950,7 +2959,7 @@ const UNLOCK_HINTS = [
     await bootApp();
   } else {
     hideLoading();
-    showAuth();
+    bootGuestMode();
   }
 
   supa.auth.onAuthStateChange(async (event, session) => {
@@ -2959,7 +2968,7 @@ const UNLOCK_HINTS = [
       await bootApp();
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
-      showAuth();
+      bootGuestMode();
     }
   });
 })();
@@ -3248,6 +3257,20 @@ async function bootApp() {
   }
   // Check streak warning
   try { checkStreakWarning(); } catch(e) {}
+
+  // Save any pending guest scan items
+  const pendingGuest = localStorage.getItem('guardnest_pending_guest');
+  if (pendingGuest) {
+    try {
+      pendingItems = JSON.parse(pendingGuest);
+      localStorage.removeItem('guardnest_pending_guest');
+      if (pendingItems.length > 0) {
+        showToast('Saving your scan...', 'info');
+        await saveItems('btnSave', 'scanResults');
+        showToast('Your fridge scan has been saved!', 'success');
+      }
+    } catch(e) { console.error('Guest item restore error:', e); }
+  }
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────
@@ -4624,7 +4647,13 @@ async function savePdfResults() {
 }
 
 async function saveItems(btnId, resultsId) {
-  if (!currentUser || !pendingItems.length) return;
+  if (!pendingItems.length) return;
+
+  // Guest mode — prompt signup before saving
+  if (!currentUser) {
+    showGuestSavePrompt();
+    return;
+  }
 
   const btn = document.getElementById(btnId);
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
@@ -5954,6 +5983,62 @@ function hideSampleReport() {
   localStorage.setItem('guardnest_seen_sample', 'true');
   // Switch to register tab when they close
   switchAuthTab('register');
+}
+</script>
+
+<!-- GUEST SAVE PROMPT MODAL -->
+<div id="guestSaveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:400px;width:100%;background:#1a2330;border-radius:16px;padding:28px;border:1px solid rgba(76,175,130,.25);text-align:center;">
+    <div style="font-size:36px;margin-bottom:12px;">🌿</div>
+    <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;">Save your fridge scan</div>
+    <p style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">
+      Create a free account to save these items and get your weekly clarity report every Monday.
+    </p>
+    <button onclick="guestSignupWithGoogle()" style="width:100%;background:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google — it's free
+    </button>
+    <button onclick="hideGuestSaveModal()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;padding:8px;">
+      Not now
+    </button>
+  </div>
+</div>
+
+<script>
+function bootGuestMode() {
+  // Show the app directly in guest mode — no auth required
+  document.getElementById('screen-auth').classList.add('hidden');
+  document.getElementById('screen-app').classList.add('visible');
+  applyMobileLayout();
+  showPage('scanner');
+
+  // Show guest banner
+  const banner = document.getElementById('guestBanner');
+  if (banner) banner.style.display = 'flex';
+
+  // Show onboarding for first time guests
+  try { checkOnboarding(); } catch(e) {}
+}
+
+function showGuestSavePrompt() {
+  const modal = document.getElementById('guestSaveModal');
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function hideGuestSaveModal() {
+  const modal = document.getElementById('guestSaveModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function guestSignupWithGoogle() {
+  hideGuestSaveModal();
+  // Store pending items so we can save after auth
+  if (pendingItems.length > 0) {
+    localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
+  }
+  await doGoogleLogin();
 }
 </script>
 
