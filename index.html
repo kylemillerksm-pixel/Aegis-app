@@ -2834,6 +2834,17 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
     </div>
   </div>
 
+  <!-- Step 4: Results before save -->
+  <div id="ob-step4" style="display:none;width:100%;">
+    <div class="ob-title" style="margin-bottom:4px;" id="obResultsTitle">WE FOUND YOUR ITEMS</div>
+    <p class="ob-sub" style="margin-bottom:14px;" id="obResultsSub">Here's what GuardNest identified. Save them to start tracking.</p>
+    <div id="obResultsList" style="max-height:45vh;overflow-y:auto;margin-bottom:16px;"></div>
+    <button class="ob-btn" onclick="saveObResults()" id="obSaveBtn">
+      💾 Save to My Fridge — Free
+    </button>
+    <button class="ob-skip" onclick="showObStep1()" style="margin-top:8px;">← Try again</button>
+  </div>
+
 </div>
 
 <!-- FIRST SAVE CELEBRATION -->
@@ -5551,6 +5562,40 @@ function showObStep1() {
   document.getElementById('ob-step1').style.display = 'block';
   document.getElementById('ob-step2').style.display = 'none';
   document.getElementById('ob-step3').style.display = 'none';
+  const s4 = document.getElementById('ob-step4');
+  if (s4) s4.style.display = 'none';
+}
+
+async function saveObResults() {
+  if (!currentUser) {
+    showGuestSavePrompt();
+    return;
+  }
+  // Logged in — save directly
+  const btn = document.getElementById('obSaveBtn');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+  const today = new Date().toISOString().split('T')[0];
+  const toSave = pendingItems.map(item => ({
+    user_id: currentUser.id,
+    item_name: item.item_name,
+    merchant: item.merchant || 'Home',
+    price: 0,
+    purchase_date: today,
+    category: item.category || 'grocery',
+    warranty_days: 0,
+    days_until_spoil: item.days_until_spoil || 7,
+    status: 'active',
+  }));
+  const { error } = await supa.from('items').insert(toSave);
+  if (error) {
+    showToast('Save failed: ' + error.message, 'error');
+    if (btn) { btn.textContent = '💾 Save to My Fridge — Free'; btn.disabled = false; }
+    return;
+  }
+  await loadItems();
+  dismissOnboarding();
+  showCelebration(toSave.length);
+  showToast(`Added ${toSave.length} items!`, 'success');
 }
 
 function showStarterList() {
@@ -5756,30 +5801,9 @@ async function handleFridgePhoto(input, scanType) {
       return;
     }
 
-    status.textContent = `Found ${items.length} items!`;
-
-    // Guest mode — store and prompt signup
-    if (!currentUser) {
-      const today = new Date().toISOString().split('T')[0];
-      pendingItems = items.map(item => ({
-        item_name: item.item_name || item.name,
-        merchant: 'Home',
-        price: 0,
-        purchase_date: today,
-        category: item.category || 'grocery',
-        warranty_days: 0,
-        days_until_spoil: item.days_until_spoil || 7,
-      }));
-      localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
-      dismissOnboarding();
-      setTimeout(() => showGuestSavePrompt(), 500);
-      return;
-    }
-
-    // Logged in — save directly
+    // Show results to user BEFORE asking to save
     const today = new Date().toISOString().split('T')[0];
-    const toSave = items.map(item => ({
-      user_id: currentUser.id,
+    pendingItems = items.map(item => ({
       item_name: item.item_name || item.name,
       merchant: 'Home',
       price: 0,
@@ -5787,14 +5811,31 @@ async function handleFridgePhoto(input, scanType) {
       category: item.category || 'grocery',
       warranty_days: 0,
       days_until_spoil: item.days_until_spoil || 7,
-      status: 'active',
     }));
 
-    await supa.from('items').insert(toSave);
-    await loadItems();
-    dismissOnboarding();
-    showCelebration(toSave.length);
-    showToast(`Added ${items.length} items from your ${typeLabel}!`, 'success');
+    // Build results list
+    const list = document.getElementById('obResultsList');
+    const titleEl = document.getElementById('obResultsTitle');
+    const subEl = document.getElementById('obResultsSub');
+    if (titleEl) titleEl.textContent = `WE FOUND ${items.length} ITEM${items.length !== 1 ? 'S' : ''}`;
+    if (subEl) subEl.textContent = `Here's what GuardNest identified in your ${typeLabel}. Save them to start tracking expiry dates.`;
+    if (list) {
+      list.innerHTML = items.map(item => {
+        const days = item.days_until_spoil || 0;
+        const badge = days > 0
+          ? `<span style="font-size:10px;font-weight:700;color:#4CAF82;background:rgba(76,175,130,.15);padding:2px 8px;border-radius:20px;">${days}d fresh</span>`
+          : `<span style="font-size:10px;color:rgba(255,255,255,.3);">shelf stable</span>`;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface);border-radius:10px;margin-bottom:6px;">
+          <span style="font-size:13px;color:var(--text);">${item.item_name || item.name}</span>
+          ${badge}
+        </div>`;
+      }).join('');
+    }
+
+    // Show results step
+    document.getElementById('ob-step3').style.display = 'none';
+    document.getElementById('ob-step4').style.display = 'block';
+    localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
 
   } catch (err) {
     clearInterval(interval);
