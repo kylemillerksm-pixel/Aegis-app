@@ -2784,61 +2784,50 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
   <!-- Step 1: Choose entry point -->
   <div id="ob-step1">
     <div class="ob-shield"></div>
-    <div class="ob-title">LET'S SEE YOUR FRIDGE</div>
+    <div class="ob-title">WHAT ARE WE TRACKING?</div>
     <p class="ob-sub">
-      <strong>Pick how you want to start.</strong><br>
-      We'll set up your fridge in under 60 seconds.
+      <strong>Point your camera and we'll identify everything.</strong><br>
+      Takes under 60 seconds — no typing needed.
     </p>
 
     <!-- Fridge photo option -->
-    <div onclick="startFridgePhoto()" style="background:rgba(76,175,130,.1);border:1.5px solid rgba(76,175,130,.3);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
-      <span style="font-size:32px;">📸</span>
+    <div onclick="startPhotoScan('fridge')" style="background:rgba(76,175,130,.1);border:1.5px solid rgba(76,175,130,.3);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">🧊</span>
       <div>
         <div style="font-size:14px;font-weight:700;color:var(--text);">Photo of my fridge</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Point your camera inside — we'll identify everything</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">We'll identify every item inside and track expiry dates</div>
       </div>
     </div>
 
-    <!-- Starter list option -->
-    <div onclick="showStarterList()" style="background:rgba(245,200,66,.08);border:1.5px solid rgba(245,200,66,.2);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
-      <span style="font-size:32px;">✅</span>
+    <!-- Pantry photo option -->
+    <div onclick="startPhotoScan('pantry')" style="background:rgba(136,102,255,.1);border:1.5px solid rgba(136,102,255,.3);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+      <span style="font-size:32px;">🗄️</span>
       <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);">Pick from common items</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Tap what's usually in your fridge</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Photo of my pantry</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Canned goods, dry goods, snacks — we'll track it all</div>
       </div>
     </div>
 
     <!-- Receipt scan option -->
-    <div onclick="startOnboarding()" style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
+    <div onclick="startOnboarding()" style="background:rgba(245,200,66,.08);border:1.5px solid rgba(245,200,66,.2);border-radius:14px;padding:18px;margin-bottom:20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;">
       <span style="font-size:32px;">🧾</span>
       <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);">Scan a receipt</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Photo your latest grocery receipt</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Scan a grocery receipt</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">Most accurate — tracks everything from your last shop</div>
       </div>
     </div>
 
-    <input type="file" accept="image/*" capture="environment" id="fridgePhotoInput" style="display:none" onchange="handleFridgePhoto(this)">
+    <input type="file" accept="image/*" capture="environment" id="fridgePhotoInput" style="display:none" onchange="handleFridgePhoto(this, window._currentScanType || 'fridge')">
 
     <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
       Skip for now →
     </button>
   </div>
 
-  <!-- Step 2: Starter list -->
-  <div id="ob-step2" style="display:none;width:100%;">
-    <div class="ob-title" style="margin-bottom:4px;">WHAT'S USUALLY IN YOUR FRIDGE?</div>
-    <p class="ob-sub" style="margin-bottom:16px;">Tap everything that applies. We'll start tracking from today.</p>
-    <div id="starterGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;max-height:55vh;overflow-y:auto;"></div>
-    <button class="ob-btn" onclick="saveStarterList()" id="starterSaveBtn" style="opacity:.5;pointer-events:none;">
-      Add to My Fridge →
-    </button>
-    <button class="ob-skip" onclick="showObStep1()" style="margin-top:8px;">← Back</button>
-  </div>
-
-  <!-- Step 3: Fridge photo processing -->
+  <!-- Step 2: Photo processing -->
   <div id="ob-step3" style="display:none;width:100%;text-align:center;">
-    <div style="font-size:48px;margin-bottom:16px;">📸</div>
-    <div class="ob-title" style="margin-bottom:8px;">READING YOUR FRIDGE</div>
+    <div style="font-size:48px;margin-bottom:16px;" id="obScanEmoji">📸</div>
+    <div class="ob-title" style="margin-bottom:8px;" id="obScanTitle">READING YOUR FRIDGE</div>
     <p class="ob-sub" id="fridgeScanStatus">Identifying everything inside...</p>
     <div style="height:4px;background:var(--surface);border-radius:2px;overflow:hidden;margin:20px 0;">
       <div id="fridgeScanBar" style="height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s;"></div>
@@ -5655,12 +5644,26 @@ async function saveStarterList() {
   showToast(`Added ${toSave.length} items to your fridge!`, 'success');
 }
 
-function startFridgePhoto() {
+function startPhotoScan(type) {
+  window._currentScanType = type;
+  const emoji = type === 'pantry' ? '🗄️' : '🧊';
+  const title = type === 'pantry' ? 'READING YOUR PANTRY' : 'READING YOUR FRIDGE';
+  const status = type === 'pantry' ? 'Identifying pantry items...' : 'Identifying everything inside...';
+  const el = document.getElementById('obScanEmoji');
+  const titleEl = document.getElementById('obScanTitle');
+  const statusEl = document.getElementById('fridgeScanStatus');
+  if (el) el.textContent = emoji;
+  if (titleEl) titleEl.textContent = title;
+  if (statusEl) statusEl.textContent = status;
   document.getElementById('fridgePhotoInput').click();
 }
 
-async function handleFridgePhoto(input) {
+// Keep old function name as alias for backwards compat
+function startFridgePhoto() { startPhotoScan('fridge'); }
+
+async function handleFridgePhoto(input, scanType) {
   if (!input.files || !input.files[0]) return;
+  const type = scanType || window._currentScanType || 'fridge';
 
   document.getElementById('ob-step1').style.display = 'none';
   document.getElementById('ob-step3').style.display = 'block';
@@ -5693,7 +5696,7 @@ async function handleFridgePhoto(input) {
       body: JSON.stringify({
         imageData: b64,
         mimeType: file.type || 'image/jpeg',
-        sourceType: 'fridge',
+        sourceType: type,
       })
     });
 
