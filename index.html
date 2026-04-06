@@ -3215,6 +3215,10 @@ async function bootApp() {
 function showAuth() {
   document.getElementById('screen-auth').classList.remove('hidden');
   document.getElementById('screen-app').classList.remove('visible');
+  // Auto-show sample report for first time visitors
+  if (!localStorage.getItem('guardnest_seen_sample')) {
+    setTimeout(() => showSampleReport(), 600);
+  }
 }
 
 function isMobile() {
@@ -5729,6 +5733,7 @@ function showSampleReport() {
 function hideSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'none';
   document.body.style.overflow = '';
+  localStorage.setItem('guardnest_seen_sample', 'true');
   // Switch to register tab when they close
   switchAuthTab('register');
 }
