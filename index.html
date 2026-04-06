@@ -5778,43 +5778,13 @@ function startPhotoScan(type) {
 function startFridgePhoto() { startPhotoScan('fridge'); }
 
 async function compressImage(file, maxWidth=1200) {
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      // Fallback to raw base64 if compression hangs
-      const r = new FileReader();
-      r.onload = () => resolve(r.result.split(',')[1]);
-      r.readAsDataURL(file);
-    }, 3000);
-
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      clearTimeout(timeout);
-      try {
-        const canvas = document.createElement('canvas');
-        const scale = Math.min(1, maxWidth / img.width);
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
-      } catch(e) {
-        // Canvas failed — fallback to raw
-        URL.revokeObjectURL(url);
-        const r = new FileReader();
-        r.onload = () => resolve(r.result.split(',')[1]);
-        r.readAsDataURL(file);
-      }
-    };
-    img.onerror = () => {
-      clearTimeout(timeout);
-      URL.revokeObjectURL(url);
-      const r = new FileReader();
-      r.onload = () => resolve(r.result.split(',')[1]);
-      r.readAsDataURL(file);
-    };
-    img.src = url;
+  // Simple approach — just read as base64 directly
+  // Canvas compression was causing hangs on some devices
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
   });
 }
 
@@ -5831,9 +5801,13 @@ async function handleFridgePhoto(input, scanType) {
 
   let progress = 0;
   const interval = setInterval(() => {
-    progress = Math.min(progress + 6, 80);
+    progress = Math.min(progress + 3, 92);
     bar.style.width = progress + '%';
-  }, 400);
+    // Update status message as time passes
+    if (progress > 30 && progress < 50) status.textContent = 'Identifying items...';
+    if (progress > 50 && progress < 70) status.textContent = 'Almost done...';
+    if (progress > 70) status.textContent = 'Finishing up...';
+  }, 600);
 
   const typeLabel = type === 'pantry' ? 'pantry' : 'fridge';
   status.textContent = `Reading your ${typeLabel}...`;
