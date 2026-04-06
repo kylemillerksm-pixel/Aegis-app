@@ -2225,7 +2225,6 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
           <div id="dashAlerts"></div>
           <div id="dashRecent"></div>
           <div id="dashTopAssets"></div>
-          <div id="scannerRecent"></div>
         </div>
 
       </div>
@@ -2234,17 +2233,31 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
       <div class="page" id="page-scanner">
         <div class="grid2 scanner-grid" style="margin-bottom:0">
           <div>
-            <div class="scan-zone" id="scanZone" onclick="document.getElementById('scanFileInput').click()" style="cursor:pointer">
+            <!-- Scan type selector -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+              <button onclick="setScanType('receipt')" id="scanTypeReceipt" class="btn btn-gold" style="font-size:11px;padding:8px 4px;flex-direction:column;gap:3px;justify-content:center;">
+                🧾<br>Receipt
+              </button>
+              <button onclick="setScanType('fridge')" id="scanTypeFridge" class="btn btn-outline" style="font-size:11px;padding:8px 4px;flex-direction:column;gap:3px;justify-content:center;">
+                🧊<br>Fridge
+              </button>
+              <button onclick="setScanType('pantry')" id="scanTypePantry" class="btn btn-outline" style="font-size:11px;padding:8px 4px;flex-direction:column;gap:3px;justify-content:center;">
+                🗄️<br>Pantry
+              </button>
+            </div>
+
+            <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer">
               <input type="file" accept="image/*,application/pdf" id="scanFileInput" onchange="handleImageScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
+              <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px" onchange="handleFridgePhoto(this, window._scanPageType || 'fridge')">
               <span class="scan-icon" id="scanIcon">📷</span>
-              <div class="scan-title" id="scanTitle">Scan Your Receipt</div>
-              <div class="scan-sub" id="scanSub">Photo any grocery receipt · GuardNest remembers everything you bought<br>and tells you before it goes bad</div>
+              <div class="scan-title" id="scanTitle">What are we scanning?</div>
+              <div class="scan-sub" id="scanSub">Choose receipt, fridge, or pantry above — then tap to scan</div>
             </div>
             <div style="margin-top:10px;display:flex;gap:8px">
-              <button class="btn btn-gold" style="flex:1;justify-content:center;position:relative;z-index:4" onclick="document.getElementById('scanFileInput').click()">
-                📷 Select Receipt
+              <button class="btn btn-gold" style="flex:1;justify-content:center;position:relative;z-index:4" onclick="triggerScan()">
+                📷 <span id="scanBtnLabel">Select to Scan</span>
               </button>
-              <button class="btn btn-outline" onclick="showPage('pdf')">📄 PDF Mode</button>
+              <button class="btn btn-outline" onclick="showPage('pdf')">📄 PDF</button>
             </div>
           </div>
 
@@ -5551,6 +5564,53 @@ function checkOnboarding() {
 function startOnboarding() {
   dismissOnboarding();
   showPage('scanner');
+}
+
+// ─── SCAN PAGE TYPE SELECTOR ──────────────────────────────────
+window._scanPageType = 'receipt';
+
+function setScanType(type) {
+  window._scanPageType = type;
+  const types = { receipt: '🧾', fridge: '🧊', pantry: '🗄️' };
+  const titles = {
+    receipt: 'Scan a Receipt',
+    fridge: 'Photo Your Fridge',
+    pantry: 'Photo Your Pantry',
+  };
+  const subs = {
+    receipt: 'Photo any grocery receipt — GuardNest identifies every item automatically',
+    fridge: 'Open your fridge and point your camera inside — we'll identify everything',
+    pantry: 'Open your pantry and point your camera — we'll track cans, dry goods and more',
+  };
+  const btnLabels = {
+    receipt: 'Select Receipt',
+    fridge: 'Take Fridge Photo',
+    pantry: 'Take Pantry Photo',
+  };
+
+  document.getElementById('scanIcon').textContent = types[type];
+  document.getElementById('scanTitle').textContent = titles[type];
+  document.getElementById('scanSub').textContent = subs[type];
+  document.getElementById('scanBtnLabel').textContent = btnLabels[type];
+
+  // Update button styles
+  ['receipt','fridge','pantry'].forEach(t => {
+    const btn = document.getElementById('scanType' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) {
+      btn.className = t === type ? 'btn btn-gold' : 'btn btn-outline';
+      btn.style.cssText = 'font-size:11px;padding:8px 4px;flex-direction:column;gap:3px;justify-content:center;';
+    }
+  });
+}
+
+function triggerScan() {
+  const type = window._scanPageType || 'receipt';
+  if (type === 'receipt') {
+    document.getElementById('scanFileInput').click();
+  } else {
+    window._currentScanType = type;
+    document.getElementById('scanPhotoInput').click();
+  }
 }
 
 function dismissOnboarding() {
