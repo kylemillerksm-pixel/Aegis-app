@@ -5667,17 +5667,40 @@ function startFridgePhoto() { startPhotoScan('fridge'); }
 
 async function compressImage(file, maxWidth=1200) {
   return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      // Fallback to raw base64 if compression hangs
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(',')[1]);
+      r.readAsDataURL(file);
+    }, 3000);
+
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const scale = Math.min(1, maxWidth / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      clearTimeout(timeout);
+      try {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, maxWidth / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+      } catch(e) {
+        // Canvas failed — fallback to raw
+        URL.revokeObjectURL(url);
+        const r = new FileReader();
+        r.onload = () => resolve(r.result.split(',')[1]);
+        r.readAsDataURL(file);
+      }
+    };
+    img.onerror = () => {
+      clearTimeout(timeout);
       URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(',')[1]);
+      r.readAsDataURL(file);
     };
     img.src = url;
   });
