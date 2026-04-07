@@ -37,6 +37,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  .demo-item-selected { background:rgba(76,175,130,.2) !important; border-color:rgba(76,175,130,.6) !important; transform:scale(1.05) !important; }
 
   :root {
     --black:    #0E1117;
@@ -6291,17 +6292,11 @@ window._demoSelectedItems = new Set();
 
 function selectDemoItem(el, item) {
   if (window._demoSelectedItems.has(item)) {
-    // Deselect
     window._demoSelectedItems.delete(item);
-    el.style.background = 'rgba(255,255,255,.05)';
-    el.style.borderColor = 'rgba(255,255,255,.1)';
-    el.style.transform = 'scale(1)';
+    el.classList.remove('demo-item-selected');
   } else {
-    // Select
     window._demoSelectedItems.add(item);
-    el.style.background = 'rgba(76,175,130,.2)';
-    el.style.borderColor = 'rgba(76,175,130,.6)';
-    el.style.transform = 'scale(1.05)';
+    el.classList.add('demo-item-selected');
   }
   updateDemoStartBtn();
 }
