@@ -6138,6 +6138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Leftovers</div>
           </div>
         </div>
+        <div id="demoSelectHint" style="font-size:11px;color:rgba(76,175,130,.7);margin-bottom:10px;min-height:16px;text-align:center;"></div>
         <button id="demoStartBtn" onclick="gtag('event','cta_click',{location:'demo_start'});startDemo()" 
           style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;opacity:.5;transition:opacity .2s;" disabled>
           Show me what GuardNest finds →
@@ -6287,6 +6288,23 @@ function showSampleReport() {
   const remindSuccess = document.getElementById('demoRemindSuccess');
   if (remindForm) remindForm.style.display = 'block';
   if (remindSuccess) remindSuccess.style.display = 'none';
+  // Pre-select a random item to guide the user
+  setTimeout(() => {
+    const items = document.querySelectorAll('#demoItemPicker [data-item]');
+    if (items.length > 0) {
+      const randomIdx = Math.floor(Math.random() * items.length);
+      const randomItem = items[randomIdx];
+      const itemName = randomItem.dataset.item;
+      randomItem.classList.add('demo-item-selected');
+      window._demoSelectedItems.add(itemName);
+      // Add hint text
+      const hint = document.getElementById('demoSelectHint');
+      if (hint) hint.textContent = `✓ ${itemName.charAt(0).toUpperCase() + itemName.slice(1)} selected — tap others to add, or continue`;
+      // Enable button
+      const btn = document.getElementById('demoStartBtn');
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    }
+  }, 300);
 }
 
 function hideSampleReport() {
@@ -6313,6 +6331,14 @@ function selectDemoItem(el, item) {
   } else {
     window._demoSelectedItems.add(item);
     el.classList.add('demo-item-selected');
+  }
+  // Update hint text
+  const count = window._demoSelectedItems.size;
+  const hint = document.getElementById('demoSelectHint');
+  if (hint) {
+    if (count === 0) hint.textContent = '';
+    else if (count === 1) hint.textContent = `✓ ${item.charAt(0).toUpperCase() + item.slice(1)} selected — tap others to add`;
+    else hint.textContent = `✓ ${count} items selected`;
   }
   updateDemoStartBtn();
 }
@@ -6362,7 +6388,7 @@ function startDemo(skip) {
   document.getElementById('demoStep1').style.display = 'none';
   document.getElementById('demoStep2').style.display = 'block';
 
-  gtag('event', 'sample_scan_started', { has_personal_item: !!userItem });
+  gtag('event', 'demo_scan_started', { has_personal_item: !!userItem, item_count: allItems.length });
 
   // Animate scanning
   const bar = document.getElementById('demoScanBar');
