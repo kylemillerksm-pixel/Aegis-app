@@ -6458,16 +6458,29 @@ async function submitDemoReminder() {
     hideSampleReport();
     return;
   }
+  // Collect all selected items from demo
+  const selectedItems = Array.from(window._demoSelectedItems || []);
+  const customItem = document.getElementById('demoCustomItem')?.value?.trim();
+  if (customItem) selectedItems.push(customItem);
+  const allItems = window._demoAllItems?.length ? window._demoAllItems : selectedItems;
+
   try {
-    await supa.from('email_leads').insert({ email, source: 'demo_reminder', created_at: new Date().toISOString() });
-    await supa.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    await supa.from('email_leads').insert({
+      email,
+      source: 'demo_reminder',
+      selected_items: allItems.join(','),
+      email_sent: false,
+      created_at: new Date().toISOString()
+    });
   } catch(e) { console.log('Lead:', e.message); }
+
   const form = document.getElementById('demoRemindForm');
   const success = document.getElementById('demoRemindSuccess');
   if (form) form.style.display = 'none';
   if (success) success.style.display = 'block';
   localStorage.setItem('guardnest_seen_sample', 'true');
   localStorage.setItem('guardnest_lead_email', email);
+  gtag('event', 'sample_scan_started', { items: allItems.join(',') });
 }
 </script>
 
