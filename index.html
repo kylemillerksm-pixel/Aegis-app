@@ -6231,7 +6231,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <!-- CTA: scan now or remind later -->
-          <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});hideSampleReport();showPage('scanner');" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+          <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});launchRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">
             Scan my real fridge now →
           </button>
 
@@ -6319,6 +6319,28 @@ function hideSampleReport() {
     appEl.style.pointerEvents = 'auto';
   }
   if (guestBanner) guestBanner.style.display = 'flex';
+}
+
+function launchRealScanner() {
+  hideSampleReport();
+  // Dismiss any onboarding that might be showing
+  const onboarding = document.getElementById('onboardingScreen');
+  if (onboarding) onboarding.classList.add('hidden');
+  localStorage.setItem('guardnest_onboarded', 'true');
+  // Reset scan inputs
+  const scanFile = document.getElementById('scanFileInput');
+  const scanPhoto = document.getElementById('scanPhotoInput');
+  const fridgePhoto = document.getElementById('fridgePhotoInput');
+  if (scanFile) scanFile.value = '';
+  if (scanPhoto) scanPhoto.value = '';
+  if (fridgePhoto) fridgePhoto.value = '';
+  // Reset scan type to receipt default
+  window._scanPageType = 'receipt';
+  window._currentScanType = 'fridge';
+  // Go to scanner
+  showPage('scanner');
+  // Reset scanner UI
+  setScanType('receipt');
 }
 
 // Multi-select demo items
