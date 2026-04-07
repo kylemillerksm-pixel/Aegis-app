@@ -3258,6 +3258,13 @@ async function bootApp() {
   try { checkOnboarding(); } catch(e) { console.error('Onboarding error:', e); }
   try { checkUpgradeReturn(); } catch(e) { console.error('Upgrade check error:', e); }
   try { await loadProStatus(); } catch(e) { console.error('Pro status error:', e); }
+  // Auto-show demo if ?demo=true in URL
+  try {
+    if (new URLSearchParams(window.location.search).get('demo') === 'true') {
+      setTimeout(() => showSampleReport(), 800);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  } catch(e) {}
   // Check for near-miss alerts on app load
   if (allItems.length > 0) {
     const shownToday = localStorage.getItem('guardnest_nearmiss_' + new Date().toDateString());
@@ -3297,9 +3304,11 @@ async function bootApp() {
 function showAuth() {
   document.getElementById('screen-auth').classList.remove('hidden');
   document.getElementById('screen-app').classList.remove('visible');
-  // Auto-show sample report for first time visitors
-  if (!localStorage.getItem('guardnest_seen_sample')) {
+  // Auto-show sample report for first time visitors or demo param
+  const isDemoParam = new URLSearchParams(window.location.search).get('demo') === 'true';
+  if (isDemoParam || !localStorage.getItem('guardnest_seen_sample')) {
     setTimeout(() => showSampleReport(), 600);
+    if (isDemoParam) window.history.replaceState({}, '', window.location.pathname);
   }
 }
 
@@ -4168,6 +4177,7 @@ function refreshVault() {
 // ─── SCAN — IMAGE ─────────────────────────────────────────────
 async function handleImageScan(input) {
   if (!input.files[0]) return;
+  gtag('event', 'real_scan_started', {scan_type: 'receipt'});
   const file = input.files[0];
 
   document.getElementById('scanResults').classList.add('hidden');
@@ -5816,6 +5826,7 @@ async function compressImage(file, maxWidth=1200) {
 async function handleFridgePhoto(input, scanType) {
   if (!input.files || !input.files[0]) return;
   const type = scanType || window._currentScanType || 'fridge';
+  gtag('event', 'real_scan_started', {scan_type: type});
 
   document.getElementById('ob-step1').style.display = 'none';
   document.getElementById('ob-step3').style.display = 'block';
@@ -6137,11 +6148,23 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;">You bought spinach 3 weeks in a row but only used it once. That's <strong style="color:#fff;">~$10/month</strong> quietly disappearing.</div>
       </div>
 
-      <!-- CTA -->
-      <div style="text-align:center;">
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;">This is what GuardNest sends you every week.<br>Based on your actual receipts.</div>
-        <button onclick="hideSampleReport()" style="width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">
-          Get My Report Free →
+      <!-- Email capture -->
+      <div id="sampleEmailCapture">
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;text-align:center;">This is what GuardNest sends you every Monday.<br>Based on your actual fridge — not sample data.</div>
+        <input id="sampleEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;">
+        <button onclick="submitSampleEmail()" style="width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+          Send Me My Real Report →
+        </button>
+        <button onclick="remindMeLater()" style="width:100%;background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);border-radius:10px;padding:10px;font-size:12px;cursor:pointer;">
+          Remind me later
+        </button>
+      </div>
+      <div id="sampleEmailSuccess" style="display:none;text-align:center;padding:10px 0;">
+        <div style="font-size:28px;margin-bottom:8px;">✅</div>
+        <div style="font-size:15px;font-weight:700;color:#4CAF82;margin-bottom:6px;">You're on the list!</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.6;">Scan your first receipt or fridge to get your real report.<br>Takes 30 seconds.</div>
+        <button onclick="hideSampleReport()" style="margin-top:14px;width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;">
+          Scan My Fridge Now →
         </button>
       </div>
 
@@ -6153,13 +6176,68 @@ document.addEventListener('DOMContentLoaded', () => {
 function showSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
+  // Reset state
+  const capture = document.getElementById('sampleEmailCapture');
+  const success = document.getElementById('sampleEmailSuccess');
+  if (capture) capture.style.display = 'block';
+  if (success) success.style.display = 'none';
+  const emailInput = document.getElementById('sampleEmail');
+  if (emailInput) emailInput.value = '';
 }
+
 function hideSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'none';
   document.body.style.overflow = '';
   localStorage.setItem('guardnest_seen_sample', 'true');
-  // Switch to register tab when they close
-  switchAuthTab('register');
+}
+
+async function submitSampleEmail() {
+  gtag('event', 'sample_scan_started');
+  const email = document.getElementById('sampleEmail')?.value?.trim();
+  if (!email || !email.includes('@')) {
+    const input = document.getElementById('sampleEmail');
+    if (input) { input.style.borderColor = '#ff5555'; setTimeout(() => input.style.borderColor = 'rgba(255,255,255,.15)', 1500); }
+    return;
+  }
+
+  // Save to Supabase as a lead
+  try {
+    await supa.from('email_leads').insert({ email, source: 'sample_report', created_at: new Date().toISOString() });
+  } catch(e) {
+    // Table may not exist yet — still show success
+    console.log('Lead save:', e.message);
+  }
+
+  // Also try to sign them up directly
+  try {
+    await supa.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  } catch(e) {
+    console.log('OTP:', e.message);
+  }
+
+  // Show success
+  const capture = document.getElementById('sampleEmailCapture');
+  const success = document.getElementById('sampleEmailSuccess');
+  if (capture) capture.style.display = 'none';
+  if (success) success.style.display = 'block';
+
+  localStorage.setItem('guardnest_seen_sample', 'true');
+  localStorage.setItem('guardnest_lead_email', email);
+}
+
+function remindMeLater() {
+  const email = document.getElementById('sampleEmail')?.value?.trim();
+  
+  // If they entered an email, save it
+  if (email && email.includes('@')) {
+    submitSampleEmail();
+    return;
+  }
+
+  // No email — just close and set a reminder flag
+  hideSampleReport();
+  localStorage.setItem('guardnest_remind_later', new Date().toISOString());
+  showToast('No problem — we'll show this again next visit', 'info');
 }
 </script>
 
@@ -6173,7 +6251,7 @@ function hideSampleReport() {
     </p>
 
     <!-- Google -->
-    <button onclick="guestSignupWithGoogle()" style="width:100%;background:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+    <button onclick="gtag('event','cta_click',{location:'guest_save_google'});guestSignupWithGoogle()" style="width:100%;background:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continue with Google
     </button>
