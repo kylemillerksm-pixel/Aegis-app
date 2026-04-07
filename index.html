@@ -6272,6 +6272,9 @@ const DEMO_ITEMS = [
 function showSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
+  // Block clicks falling through to app behind modal
+  const appEl = document.getElementById('screen-app');
+  if (appEl) appEl.style.pointerEvents = 'none';
   // Reset to step 1
   window._demoSelectedItems = new Set();
   window._demoAllItems = [];
@@ -6290,13 +6293,14 @@ function hideSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'none';
   document.body.style.overflow = '';
   localStorage.setItem('guardnest_seen_sample', 'true');
-  // Restore app visibility
+  // Restore app
   const appEl = document.getElementById('screen-app');
   const guestBanner = document.getElementById('guestBanner');
-  if (appEl) appEl.style.visibility = 'visible';
-  if (guestBanner && !document.getElementById('screen-auth')?.classList.contains('hidden') === false) {
-    guestBanner.style.display = 'flex';
+  if (appEl) {
+    appEl.style.visibility = 'visible';
+    appEl.style.pointerEvents = 'auto';
   }
+  if (guestBanner) guestBanner.style.display = 'flex';
 }
 
 // Multi-select demo items
