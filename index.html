@@ -6152,10 +6152,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <div id="sampleEmailCapture">
         <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;text-align:center;">This is what GuardNest sends you every Monday.<br>Based on your actual fridge — not sample data.</div>
         <input id="sampleEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;">
-        <button onclick="submitSampleEmail()" style="width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+        <button onclick="gtag('event','cta_click',{location:'demo_email_submit'});submitSampleEmail()" style="width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
           Send Me My Real Report →
         </button>
-        <button onclick="remindMeLater()" style="width:100%;background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);border-radius:10px;padding:10px;font-size:12px;cursor:pointer;">
+        <button onclick="gtag('event','cta_click',{location:'demo_remind_later'});remindMeLater()" style="width:100%;background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);border-radius:10px;padding:10px;font-size:12px;cursor:pointer;">
           Remind me later
         </button>
       </div>
@@ -6163,7 +6163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="font-size:28px;margin-bottom:8px;">✅</div>
         <div style="font-size:15px;font-weight:700;color:#4CAF82;margin-bottom:6px;">You're on the list!</div>
         <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.6;">Scan your first receipt or fridge to get your real report.<br>Takes 30 seconds.</div>
-        <button onclick="hideSampleReport()" style="margin-top:14px;width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;">
+        <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});hideSampleReport()" style="margin-top:14px;width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;">
           Scan My Fridge Now →
         </button>
       </div>
