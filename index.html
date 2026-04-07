@@ -3315,18 +3315,7 @@ function showAuth() {
   document.getElementById('screen-auth').classList.remove('hidden');
   document.getElementById('screen-app').classList.remove('visible');
   // Auto-show sample report for first time visitors or demo param
-  const isDemoParam = new URLSearchParams(window.location.search).get('demo') === 'true';
-  if (isDemoParam || !localStorage.getItem('guardnest_seen_sample')) {
-    if (isDemoParam) {
-      // Hide app content so Clarity records the demo, not the app behind it
-      const appEl = document.getElementById('screen-app');
-      const guestBanner = document.getElementById('guestBanner');
-      if (appEl) appEl.style.visibility = 'hidden';
-      if (guestBanner) guestBanner.style.display = 'none';
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    setTimeout(() => showSampleReport(), 600);
-  }
+  // Demo and sample report handled in bootGuestMode
 }
 
 function isMobile() {
@@ -6526,18 +6515,33 @@ async function submitDemoReminder() {
 
 <script>
 function bootGuestMode() {
+  const isDemoMode = new URLSearchParams(window.location.search).get('demo') === 'true';
+
   // Show the app directly in guest mode — no auth required
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
   applyMobileLayout();
   showPage('scanner');
 
-  // Show guest banner
-  const banner = document.getElementById('guestBanner');
-  if (banner) banner.style.display = 'flex';
-
-  // Show onboarding for first time guests
-  try { checkOnboarding(); } catch(e) {}
+  if (isDemoMode) {
+    // Hide app visually so Clarity records only the demo
+    const appEl = document.getElementById('screen-app');
+    if (appEl) appEl.style.visibility = 'hidden';
+    const banner = document.getElementById('guestBanner');
+    if (banner) banner.style.display = 'none';
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => showSampleReport(), 400);
+  } else {
+    // Show guest banner
+    const banner = document.getElementById('guestBanner');
+    if (banner) banner.style.display = 'flex';
+    // Show onboarding for first time guests
+    if (!localStorage.getItem('guardnest_seen_sample')) {
+      setTimeout(() => showSampleReport(), 600);
+    } else {
+      try { checkOnboarding(); } catch(e) {}
+    }
+  }
 }
 
 function showGuestSavePrompt() {
