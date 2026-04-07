@@ -36,6 +36,7 @@
 <script async src="https://js.stripe.com/v3/"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 
   :root {
     --black:    #0E1117;
@@ -6082,90 +6083,165 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <!-- SAMPLE REPORT MODAL -->
-<div id="sampleReportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;overflow-y:auto;padding:20px;">
-  <div style="max-width:420px;margin:0 auto;background:#1a2330;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">
-    
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">🌿</span>
-          <span style="font-size:13px;font-weight:700;color:#4CAF82;letter-spacing:.08em;">GUARDNEST</span>
-        </div>
-        <button onclick="hideSampleReport()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:0;">✕</button>
-      </div>
-      <div style="font-size:18px;font-weight:700;color:#fff;margin-top:12px;">Your Weekly Clarity Report</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">Week of April 1 – April 7</div>
-    </div>
+<!-- DEMO MODE MODAL — Duolingo-style 4-step flow -->
+<div id="sampleReportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:420px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:20px;">
+    <div style="background:#1a2330;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">
 
-    <!-- Summary stats -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.06);">
-      <div style="background:#1a2330;padding:16px 12px;text-align:center;">
-        <div style="font-size:22px;font-weight:800;color:#4CAF82;">23</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Items tracked</div>
-      </div>
-      <div style="background:#1a2330;padding:16px 12px;text-align:center;">
-        <div style="font-size:22px;font-weight:800;color:#f5c842;">$47</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Value protected</div>
-      </div>
-      <div style="background:#1a2330;padding:16px 12px;text-align:center;">
-        <div style="font-size:22px;font-weight:800;color:#ff8c00;">3</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Use this week</div>
-      </div>
-    </div>
-
-    <div style="padding:20px;">
-
-      <!-- Use this week -->
-      <div style="margin-bottom:20px;">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.08em;margin-bottom:10px;">⏰ USE THIS WEEK</div>
-        <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#fff;">Baby Spinach</div>
-            <div style="font-size:11px;color:rgba(255,140,0,.8);margin-top:2px;">Expires in 2 days · $3.49</div>
+      <!-- STEP 1: Tap to select -->
+      <div id="demoStep1" style="padding:28px 20px 24px;text-align:center;position:relative;">
+        <button onclick="hideSampleReport()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:rgba(255,255,255,.3);font-size:22px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+        <div style="font-size:36px;margin-bottom:12px;">🛒</div>
+        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.3;">What usually goes bad in your fridge?</div>
+        <p style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px;">Tap anything that sounds familiar</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;" id="demoItemPicker">
+          <div onclick="selectDemoItem(this,'spinach')" data-item="spinach" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🥬</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Spinach</div>
           </div>
-          <span style="font-size:18px;">🥬</span>
-        </div>
-        <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#fff;">Greek Yogurt</div>
-            <div style="font-size:11px;color:rgba(255,140,0,.8);margin-top:2px;">Expires in 4 days · $5.99</div>
+          <div onclick="selectDemoItem(this,'chicken')" data-item="chicken" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🍗</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Chicken</div>
           </div>
-          <span style="font-size:18px;">🥛</span>
-        </div>
-        <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#fff;">Chicken Thighs</div>
-            <div style="font-size:11px;color:rgba(255,140,0,.8);margin-top:2px;">Expires in 5 days · $8.47</div>
+          <div onclick="selectDemoItem(this,'berries')" data-item="berries" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🍓</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Berries</div>
           </div>
-          <span style="font-size:18px;">🍗</span>
+          <div onclick="selectDemoItem(this,'yogurt')" data-item="yogurt" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🥛</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Yogurt</div>
+          </div>
+          <div onclick="selectDemoItem(this,'avocado')" data-item="avocado" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🥑</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Avocado</div>
+          </div>
+          <div onclick="selectDemoItem(this,'bread')" data-item="bread" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🍞</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Bread</div>
+          </div>
+          <div onclick="selectDemoItem(this,'broccoli')" data-item="broccoli" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🥦</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Broccoli</div>
+          </div>
+          <div onclick="selectDemoItem(this,'milk')" data-item="milk" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🥛</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Milk</div>
+          </div>
+          <div onclick="selectDemoItem(this,'leftovers')" data-item="leftovers" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
+            <div style="font-size:24px;">🍱</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Leftovers</div>
+          </div>
         </div>
-      </div>
-
-      <!-- Insight -->
-      <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;padding:14px;margin-bottom:20px;">
-        <div style="font-size:11px;font-weight:700;color:#4CAF82;letter-spacing:.06em;margin-bottom:6px;">💡 THIS WEEK'S INSIGHT</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;">You bought spinach 3 weeks in a row but only used it once. That's <strong style="color:#fff;">~$10/month</strong> quietly disappearing.</div>
-      </div>
-
-      <!-- Email capture -->
-      <div id="sampleEmailCapture">
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;text-align:center;">This is what GuardNest sends you every Monday.<br>Based on your actual fridge — not sample data.</div>
-        <input id="sampleEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;">
-        <button onclick="gtag('event','cta_click',{location:'demo_email_submit'});submitSampleEmail()" style="width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
-          Send Me My Real Report →
+        <button id="demoStartBtn" onclick="gtag('event','cta_click',{location:'demo_start'});startDemo()" 
+          style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;opacity:.5;transition:opacity .2s;" disabled>
+          Show me what GuardNest finds →
         </button>
-        <button onclick="gtag('event','cta_click',{location:'demo_remind_later'});remindMeLater()" style="width:100%;background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);border-radius:10px;padding:10px;font-size:12px;cursor:pointer;">
-          Remind me later
+        <!-- Add your own item -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:2px;">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,.07);"></div>
+          <span style="font-size:11px;color:rgba(255,255,255,.25);">or type your own</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,.07);"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input id="demoCustomItem" type="text" placeholder="e.g. tomatoes, salmon..." maxlength="30"
+            style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;font-size:13px;color:#fff;outline:none;"
+            oninput="onDemoCustomInput(this)"
+            onkeydown="if(event.key==='Enter'&&this.value.trim()) selectCustomDemoItem(this.value.trim())">
+          <button onclick="selectCustomDemoItem(document.getElementById('demoCustomItem').value.trim())"
+            style="background:rgba(76,175,130,.2);border:1px solid rgba(76,175,130,.3);color:#4CAF82;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            Add
+          </button>
+        </div>
+        <button onclick="gtag('event','cta_click',{location:'demo_skip'});startDemo(true)" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:4px;">
+          Skip — just show me the demo
         </button>
       </div>
-      <div id="sampleEmailSuccess" style="display:none;text-align:center;padding:10px 0;">
-        <div style="font-size:28px;margin-bottom:8px;">✅</div>
-        <div style="font-size:15px;font-weight:700;color:#4CAF82;margin-bottom:6px;">You're on the list!</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.6;">Scan your first receipt or fridge to get your real report.<br>Takes 30 seconds.</div>
-        <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});hideSampleReport()" style="margin-top:14px;width:100%;background:#4CAF82;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;">
-          Scan My Fridge Now →
-        </button>
+
+      <!-- STEP 2: Scanning animation -->
+      <div id="demoStep2" style="display:none;padding:32px 24px;text-align:center;">
+        <div style="font-size:40px;margin-bottom:16px;" id="demoScanEmoji">🧾</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;" id="demoScanTitle">Reading your grocery receipt...</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:24px;" id="demoScanSub">Identifying every item</div>
+        <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:24px;">
+          <div id="demoScanBar" style="height:100%;background:#4CAF82;border-radius:2px;width:0%;transition:width .4s;"></div>
+        </div>
+        <div id="demoItemsAppearing" style="text-align:left;"></div>
+      </div>
+
+      <!-- STEP 3: Results + insight -->
+      <div id="demoStep3" style="display:none;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🌿</span>
+              <span style="font-size:12px;font-weight:700;color:#4CAF82;letter-spacing:.08em;">GUARDNEST</span>
+            </div>
+            <span style="font-size:11px;color:rgba(255,255,255,.3);">Your Weekly Report</span>
+          </div>
+          <div style="font-size:17px;font-weight:700;color:#fff;margin-top:10px;" id="demoReportHeadline">Here's what we found in your fridge</div>
+        </div>
+
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.06);">
+          <div style="background:#1a2330;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:#4CAF82;">11</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Items tracked</div>
+          </div>
+          <div style="background:#1a2330;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:#f5c842;">$62</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Value protected</div>
+          </div>
+          <div style="background:#1a2330;padding:14px 10px;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:#ff8c00;">3</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Use this week</div>
+          </div>
+        </div>
+
+        <div style="padding:18px 20px;">
+
+          <!-- Personalized item highlight -->
+          <div id="demoPersonalizedItem" style="background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.25);border-radius:10px;padding:14px;margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:700;color:#ff6b6b;letter-spacing:.06em;margin-bottom:6px;">⚠️ YOUR ITEM — CAUGHT IN TIME</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;" id="demoPersonalizedText">Your spinach expires in 2 days — GuardNest would have alerted you yesterday.</div>
+          </div>
+
+          <!-- Use this week -->
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.08em;margin-bottom:10px;">⏰ USE THIS WEEK</div>
+          <div id="demoUrgentItems"></div>
+
+          <!-- Insight -->
+          <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;padding:14px;margin-bottom:18px;" id="demoInsightBox">
+            <div style="font-size:11px;font-weight:700;color:#4CAF82;letter-spacing:.06em;margin-bottom:6px;">💡 YOUR PATTERN</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;" id="demoInsightText">You bought spinach 3 weeks in a row but used it once. That's ~$10/month quietly disappearing.</div>
+          </div>
+
+          <!-- Win celebration -->
+          <div style="background:rgba(76,175,130,.12);border:1px solid rgba(76,175,130,.3);border-radius:12px;padding:16px;margin-bottom:18px;text-align:center;">
+            <div style="font-size:24px;margin-bottom:6px;">🏆</div>
+            <div style="font-size:15px;font-weight:700;color:#4CAF82;margin-bottom:4px;">You just protected $62 in groceries</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);">This is what GuardNest does every week — automatically.</div>
+          </div>
+
+          <!-- CTA: scan now or remind later -->
+          <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});hideSampleReport();showPage('scanner');" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+            Scan my real fridge now →
+          </button>
+
+          <!-- Remind me later -->
+          <div id="demoRemindForm" style="border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;">Not near your fridge right now? Drop your email and we'll remind you.</div>
+            <input id="demoReminderEmail" type="email" placeholder="your@email.com (optional)"
+              style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:#fff;margin-bottom:8px;outline:none;">
+            <button onclick="gtag('event','cta_click',{location:'demo_remind_submit'});submitDemoReminder()" style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+              Remind me later
+            </button>
+          </div>
+          <div id="demoRemindSuccess" style="display:none;text-align:center;padding:10px;">
+            <div style="font-size:13px;color:#4CAF82;">✓ We'll remind you! Check your inbox.</div>
+          </div>
+
+        </div>
       </div>
 
     </div>
@@ -6173,16 +6249,33 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <script>
+const DEMO_ITEMS = [
+  { name: 'Baby Spinach', emoji: '🥬', days: 2, price: 3.49 },
+  { name: 'Chicken Breast', emoji: '🍗', days: 1, price: 9.99 },
+  { name: 'Greek Yogurt', emoji: '🥛', days: 4, price: 5.99 },
+  { name: 'Strawberries', emoji: '🍓', days: 3, price: 4.99 },
+  { name: 'Whole Milk', emoji: '🥛', days: 6, price: 4.29 },
+  { name: 'Broccoli', emoji: '🥦', days: 5, price: 2.99 },
+  { name: 'Eggs (12ct)', emoji: '🥚', days: 18, price: 4.49 },
+  { name: 'Cheddar Cheese', emoji: '🧀', days: 14, price: 5.99 },
+  { name: 'Butter', emoji: '🧈', days: 30, price: 4.99 },
+  { name: 'Orange Juice', emoji: '🍊', days: 7, price: 4.99 },
+  { name: 'Pasta Sauce', emoji: '🍅', days: 5, price: 3.49 },
+];
+
 function showSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
-  // Reset state
-  const capture = document.getElementById('sampleEmailCapture');
-  const success = document.getElementById('sampleEmailSuccess');
-  if (capture) capture.style.display = 'block';
-  if (success) success.style.display = 'none';
-  const emailInput = document.getElementById('sampleEmail');
-  if (emailInput) emailInput.value = '';
+  // Reset to step 1
+  document.getElementById('demoStep1').style.display = 'block';
+  document.getElementById('demoStep2').style.display = 'none';
+  document.getElementById('demoStep3').style.display = 'none';
+  const inp = document.getElementById('demoUserItem');
+  if (inp) inp.value = '';
+  const remindForm = document.getElementById('demoRemindForm');
+  const remindSuccess = document.getElementById('demoRemindSuccess');
+  if (remindForm) remindForm.style.display = 'block';
+  if (remindSuccess) remindSuccess.style.display = 'none';
 }
 
 function hideSampleReport() {
@@ -6191,55 +6284,177 @@ function hideSampleReport() {
   localStorage.setItem('guardnest_seen_sample', 'true');
 }
 
-async function submitSampleEmail() {
-  gtag('event', 'sample_scan_started');
-  const email = document.getElementById('sampleEmail')?.value?.trim();
+function selectDemoItem(el, item) {
+  // Deselect all grid items
+  document.querySelectorAll('#demoItemPicker [data-item]').forEach(d => {
+    d.style.background = 'rgba(255,255,255,.05)';
+    d.style.borderColor = 'rgba(255,255,255,.1)';
+    d.style.transform = 'scale(1)';
+  });
+  // Clear custom input
+  const custom = document.getElementById('demoCustomItem');
+  if (custom) custom.value = '';
+  // Select this one
+  el.style.background = 'rgba(76,175,130,.2)';
+  el.style.borderColor = 'rgba(76,175,130,.6)';
+  el.style.transform = 'scale(1.05)';
+  window._demoSelectedItem = item;
+  // Enable button
+  const btn = document.getElementById('demoStartBtn');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+function onDemoCustomInput(input) {
+  // Deselect grid items when typing
+  if (input.value.trim()) {
+    document.querySelectorAll('#demoItemPicker [data-item]').forEach(d => {
+      d.style.background = 'rgba(255,255,255,.05)';
+      d.style.borderColor = 'rgba(255,255,255,.1)';
+      d.style.transform = 'scale(1)';
+    });
+    window._demoSelectedItem = input.value.trim();
+    const btn = document.getElementById('demoStartBtn');
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  }
+}
+
+function selectCustomDemoItem(item) {
+  if (!item) return;
+  window._demoSelectedItem = item;
+  // Deselect grid
+  document.querySelectorAll('#demoItemPicker [data-item]').forEach(d => {
+    d.style.background = 'rgba(255,255,255,.05)';
+    d.style.borderColor = 'rgba(255,255,255,.1)';
+    d.style.transform = 'scale(1)';
+  });
+  // Show confirmation
+  const input = document.getElementById('demoCustomItem');
+  if (input) {
+    input.style.borderColor = 'rgba(76,175,130,.6)';
+    input.style.background = 'rgba(76,175,130,.1)';
+  }
+  const btn = document.getElementById('demoStartBtn');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+function startDemo(skip) {
+  const userItem = skip ? '' : (window._demoSelectedItem || '');
+  window._demoUserItem = userItem;
+
+  // Step 1 → Step 2
+  document.getElementById('demoStep1').style.display = 'none';
+  document.getElementById('demoStep2').style.display = 'block';
+
+  gtag('event', 'sample_scan_started', { has_personal_item: !!userItem });
+
+  // Animate scanning
+  const bar = document.getElementById('demoScanBar');
+  const title = document.getElementById('demoScanTitle');
+  const sub = document.getElementById('demoScanSub');
+  const appearing = document.getElementById('demoItemsAppearing');
+  appearing.innerHTML = '';
+
+  const messages = [
+    [0, 'Reading your grocery receipt...', 'Identifying every item'],
+    [20, 'Found perishables...', 'Calculating shelf life'],
+    [45, 'Checking expiry dates...', 'Cross-referencing 547 products'],
+    [70, 'Building your report...', 'Almost done'],
+    [90, 'Done!', '11 items identified'],
+  ];
+
+  let progress = 0;
+  let msgIdx = 0;
+  let itemIdx = 0;
+
+  const interval = setInterval(() => {
+    progress = Math.min(progress + 4, 100);
+    bar.style.width = progress + '%';
+
+    // Update messages
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (progress >= messages[i][0]) {
+        if (msgIdx !== i) {
+          msgIdx = i;
+          title.textContent = messages[i][1];
+          sub.textContent = messages[i][2];
+        }
+        break;
+      }
+    }
+
+    // Add items appearing one by one
+    if (progress > 20 && itemIdx < DEMO_ITEMS.length && progress > 20 + itemIdx * 7) {
+      const item = DEMO_ITEMS[itemIdx];
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;margin-bottom:4px;animation:fadeIn .3s ease;';
+      div.innerHTML = `<span style="font-size:13px;color:rgba(255,255,255,.8);">${item.emoji} ${item.name}</span><span style="font-size:11px;color:#4CAF82;">$${item.price.toFixed(2)}</span>`;
+      appearing.appendChild(div);
+      itemIdx++;
+    }
+
+    if (progress >= 100) {
+      clearInterval(interval);
+      setTimeout(() => showDemoResults(userItem), 500);
+    }
+  }, 80);
+}
+
+function showDemoResults(userItem) {
+  document.getElementById('demoStep2').style.display = 'none';
+  document.getElementById('demoStep3').style.display = 'block';
+
+  const itemName = userItem || 'spinach';
+  const itemCapitalized = itemName.charAt(0).toUpperCase() + itemName.slice(1);
+
+  // Personalized headline
+  const headline = document.getElementById('demoReportHeadline');
+  if (headline) headline.textContent = userItem
+    ? `We found your ${itemName} — here's what we would have caught`
+    : "Here's what we found in your fridge";
+
+  // Personalized item callout
+  const personalText = document.getElementById('demoPersonalizedText');
+  if (personalText) personalText.textContent = `Your ${itemName} expires in 2 days — GuardNest would have alerted you yesterday so you could use it in time.`;
+
+  // Personalized insight
+  const insightText = document.getElementById('demoInsightText');
+  if (insightText) insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. That's probably $8–12/month quietly disappearing — without you ever noticing.`;
+
+  // Urgent items
+  const urgent = document.getElementById('demoUrgentItems');
+  const urgentItems = DEMO_ITEMS.filter(i => i.days <= 5);
+  if (urgent) {
+    urgent.innerHTML = urgentItems.map(item => `
+      <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff;">${item.name}</div>
+          <div style="font-size:11px;color:rgba(255,140,0,.8);margin-top:2px;">Expires in ${item.days} day${item.days !== 1 ? 's' : ''} · $${item.price.toFixed(2)}</div>
+        </div>
+        <span style="font-size:18px;">${item.emoji}</span>
+      </div>`).join('');
+  }
+}
+
+async function submitDemoReminder() {
+  const email = document.getElementById('demoReminderEmail')?.value?.trim();
   if (!email || !email.includes('@')) {
-    const input = document.getElementById('sampleEmail');
-    if (input) { input.style.borderColor = '#ff5555'; setTimeout(() => input.style.borderColor = 'rgba(255,255,255,.15)', 1500); }
+    hideSampleReport();
     return;
   }
-
-  // Save to Supabase as a lead
   try {
-    await supa.from('email_leads').insert({ email, source: 'sample_report', created_at: new Date().toISOString() });
-  } catch(e) {
-    // Table may not exist yet — still show success
-    console.log('Lead save:', e.message);
-  }
-
-  // Also try to sign them up directly
-  try {
+    await supa.from('email_leads').insert({ email, source: 'demo_reminder', created_at: new Date().toISOString() });
     await supa.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-  } catch(e) {
-    console.log('OTP:', e.message);
-  }
-
-  // Show success
-  const capture = document.getElementById('sampleEmailCapture');
-  const success = document.getElementById('sampleEmailSuccess');
-  if (capture) capture.style.display = 'none';
+  } catch(e) { console.log('Lead:', e.message); }
+  const form = document.getElementById('demoRemindForm');
+  const success = document.getElementById('demoRemindSuccess');
+  if (form) form.style.display = 'none';
   if (success) success.style.display = 'block';
-
   localStorage.setItem('guardnest_seen_sample', 'true');
   localStorage.setItem('guardnest_lead_email', email);
 }
-
-function remindMeLater() {
-  const email = document.getElementById('sampleEmail')?.value?.trim();
-  
-  // If they entered an email, save it
-  if (email && email.includes('@')) {
-    submitSampleEmail();
-    return;
-  }
-
-  // No email — just close and set a reminder flag
-  hideSampleReport();
-  localStorage.setItem('guardnest_remind_later', new Date().toISOString());
-  showToast('No problem — we'll show this again next visit', 'info');
-}
 </script>
+
+
 
 <!-- GUEST SAVE PROMPT MODAL -->
 <div id="guestSaveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;">
