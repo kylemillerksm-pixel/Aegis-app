@@ -6267,6 +6267,8 @@ function showSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
   // Reset to step 1
+  window._demoSelectedItems = new Set();
+  window._demoAllItems = [];
   document.getElementById('demoStep1').style.display = 'block';
   document.getElementById('demoStep2').style.display = 'none';
   document.getElementById('demoStep3').style.display = 'none';
@@ -6284,62 +6286,66 @@ function hideSampleReport() {
   localStorage.setItem('guardnest_seen_sample', 'true');
 }
 
+// Multi-select demo items
+window._demoSelectedItems = new Set();
+
 function selectDemoItem(el, item) {
-  // Deselect all grid items
-  document.querySelectorAll('#demoItemPicker [data-item]').forEach(d => {
-    d.style.background = 'rgba(255,255,255,.05)';
-    d.style.borderColor = 'rgba(255,255,255,.1)';
-    d.style.transform = 'scale(1)';
-  });
-  // Clear custom input
-  const custom = document.getElementById('demoCustomItem');
-  if (custom) custom.value = '';
-  // Select this one
-  el.style.background = 'rgba(76,175,130,.2)';
-  el.style.borderColor = 'rgba(76,175,130,.6)';
-  el.style.transform = 'scale(1.05)';
-  window._demoSelectedItem = item;
-  // Enable button
+  if (window._demoSelectedItems.has(item)) {
+    // Deselect
+    window._demoSelectedItems.delete(item);
+    el.style.background = 'rgba(255,255,255,.05)';
+    el.style.borderColor = 'rgba(255,255,255,.1)';
+    el.style.transform = 'scale(1)';
+  } else {
+    // Select
+    window._demoSelectedItems.add(item);
+    el.style.background = 'rgba(76,175,130,.2)';
+    el.style.borderColor = 'rgba(76,175,130,.6)';
+    el.style.transform = 'scale(1.05)';
+  }
+  updateDemoStartBtn();
+}
+
+function updateDemoStartBtn() {
+  const count = window._demoSelectedItems.size;
+  const custom = document.getElementById('demoCustomItem')?.value?.trim();
+  const hasSelection = count > 0 || !!custom;
   const btn = document.getElementById('demoStartBtn');
-  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (btn) {
+    btn.disabled = !hasSelection;
+    btn.style.opacity = hasSelection ? '1' : '.5';
+    if (count > 1) {
+      btn.textContent = `Show me what happens with these ${count} items →`;
+    } else {
+      btn.textContent = 'Show me what GuardNest finds →';
+    }
+  }
 }
 
 function onDemoCustomInput(input) {
-  // Deselect grid items when typing
-  if (input.value.trim()) {
-    document.querySelectorAll('#demoItemPicker [data-item]').forEach(d => {
-      d.style.background = 'rgba(255,255,255,.05)';
-      d.style.borderColor = 'rgba(255,255,255,.1)';
-      d.style.transform = 'scale(1)';
-    });
-    window._demoSelectedItem = input.value.trim();
-    const btn = document.getElementById('demoStartBtn');
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-  }
+  updateDemoStartBtn();
 }
 
 function selectCustomDemoItem(item) {
   if (!item) return;
-  window._demoSelectedItem = item;
-  // Deselect grid
-  document.querySelectorAll('#demoItemPicker [data-item]').forEach(d => {
-    d.style.background = 'rgba(255,255,255,.05)';
-    d.style.borderColor = 'rgba(255,255,255,.1)';
-    d.style.transform = 'scale(1)';
-  });
-  // Show confirmation
+  // Add to selected set
+  window._demoSelectedItems.add(item);
   const input = document.getElementById('demoCustomItem');
   if (input) {
     input.style.borderColor = 'rgba(76,175,130,.6)';
     input.style.background = 'rgba(76,175,130,.1)';
   }
-  const btn = document.getElementById('demoStartBtn');
-  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  updateDemoStartBtn();
 }
 
 function startDemo(skip) {
-  const userItem = skip ? '' : (window._demoSelectedItem || '');
+  const selectedSet = window._demoSelectedItems || new Set();
+  const customItem = document.getElementById('demoCustomItem')?.value?.trim() || '';
+  if (customItem) selectedSet.add(customItem);
+  const allItems = Array.from(selectedSet);
+  const userItem = skip ? '' : (allItems[0] || '');
   window._demoUserItem = userItem;
+  window._demoAllItems = allItems;
 
   // Step 1 → Step 2
   document.getElementById('demoStep1').style.display = 'none';
@@ -6416,9 +6422,17 @@ function showDemoResults(userItem) {
   const personalText = document.getElementById('demoPersonalizedText');
   if (personalText) personalText.textContent = `Your ${itemName} expires in 2 days — GuardNest would have alerted you yesterday so you could use it in time.`;
 
-  // Personalized insight
+  // Personalized insight — mention all selected items if multiple
   const insightText = document.getElementById('demoInsightText');
-  if (insightText) insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. That's probably $8–12/month quietly disappearing — without you ever noticing.`;
+  const allSelected = window._demoAllItems || [itemName];
+  if (insightText) {
+    if (allSelected.length > 1) {
+      const list = allSelected.slice(0, 3).join(', ');
+      insightText.textContent = `You likely buy ${list} regularly but don't always use them before they go bad. GuardNest tracks all of it automatically — so you stop losing money without realizing it.`;
+    } else {
+      insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. That's probably $8–12/month quietly disappearing — without you ever noticing.`;
+    }
+  }
 
   // Urgent items
   const urgent = document.getElementById('demoUrgentItems');
