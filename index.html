@@ -4396,6 +4396,10 @@ function emojiAvatar(itemName, category) {
 // ─── GEMINI API CALL — routed through Supabase Edge Function ──
 // Your Gemini key never touches the browser — it lives in Supabase secrets
 async function callGemini(b64data, mimeType, sourceType) {
+  if (!b64data || b64data.length < 100) {
+    showToast('Image could not be processed — try again', 'error');
+    return [];
+  }
   try {
     const res = await fetch(SUPABASE_FUNCTION_URL, {
       method:  'POST',
@@ -5810,7 +5814,17 @@ async function compressImage(file, maxWidth=1200) {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         URL.revokeObjectURL(url);
         // Use lower quality (0.6) to keep payload small
-        resolve(canvas.toDataURL('image/jpeg', 0.6).split(',')[1]);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        const b64 = dataUrl.split(',')[1];
+        if (b64 && b64.length > 100) {
+          resolve(b64);
+        } else {
+          // Canvas failed silently — fall back to FileReader
+          const r = new FileReader();
+          r.onload = () => resolve(r.result.split(',')[1]);
+          r.onerror = reject;
+          r.readAsDataURL(file);
+        }
       } catch(e) {
         URL.revokeObjectURL(url);
         const r = new FileReader();
