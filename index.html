@@ -5849,96 +5849,147 @@ async function handleFridgePhoto(input, scanType) {
   const type = scanType || window._currentScanType || 'fridge';
   gtag('event', 'real_scan_started', {scan_type: type});
 
-  document.getElementById('ob-step1').style.display = 'none';
-  document.getElementById('ob-step3').style.display = 'block';
-
   const file = input.files[0];
-  const bar = document.getElementById('fridgeScanBar');
-  const status = document.getElementById('fridgeScanStatus');
-
-  let progress = 0;
-  const interval = setInterval(() => {
-    progress = Math.min(progress + 3, 92);
-    bar.style.width = progress + '%';
-    // Update status message as time passes
-    if (progress > 30 && progress < 50) status.textContent = 'Identifying items...';
-    if (progress > 50 && progress < 70) status.textContent = 'Almost done...';
-    if (progress > 70) status.textContent = 'Finishing up...';
-  }, 600);
-
   const typeLabel = type === 'pantry' ? 'pantry' : 'fridge';
-  status.textContent = `Reading your ${typeLabel}...`;
 
-  try {
-    const b64 = await compressImage(file, 1200);
+  // ── Determine context: onboarding modal or main scanner page ──
+  const obStep1 = document.getElementById('ob-step1');
+  const isOnboarding = obStep1 && obStep1.style.display !== 'none';
 
-    const response = await fetch(SUPABASE_FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        imageData: b64,
-        mimeType: 'image/jpeg',
-        sourceType: type,
-      })
-    });
+  if (isOnboarding) {
+    // ── ONBOARDING PATH (original behaviour) ──────────────────
+    obStep1.style.display = 'none';
+    document.getElementById('ob-step3').style.display = 'block';
 
-    clearInterval(interval);
-    bar.style.width = '100%';
+    const bar    = document.getElementById('fridgeScanBar');
+    const status = document.getElementById('fridgeScanStatus');
+    status.textContent = `Reading your ${typeLabel}...`;
 
-    if (!response.ok) {
-      throw new Error('API error: ' + response.status);
-    }
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress = Math.min(progress + 3, 92);
+      bar.style.width = progress + '%';
+      if (progress > 30 && progress < 50) status.textContent = 'Identifying items...';
+      if (progress > 50 && progress < 70) status.textContent = 'Almost done...';
+      if (progress > 70) status.textContent = 'Finishing up...';
+    }, 600);
 
-    const json = await response.json();
-    const items = json.items || [];
+    try {
+      const b64      = await compressImage(file, 1200);
+      const response = await fetch(SUPABASE_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: b64, mimeType: 'image/jpeg', sourceType: type }),
+      });
 
-    if (items.length === 0) {
-      status.textContent = "Couldn't identify items — try getting closer or better lighting.";
+      clearInterval(interval);
+      bar.style.width = '100%';
+      if (!response.ok) throw new Error('API error: ' + response.status);
+
+      const json  = await response.json();
+      const items = json.items || [];
+
+      if (items.length === 0) {
+        status.textContent = "Couldn't identify items — try getting closer or better lighting.";
+        setTimeout(() => showObStep1(), 2500);
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      pendingItems = items.map(item => ({
+        item_name: item.item_name || item.name,
+        merchant: 'Home', price: 0, purchase_date: today,
+        category: item.category || 'grocery', warranty_days: 0,
+        days_until_spoil: item.days_until_spoil || 7,
+      }));
+
+      const list    = document.getElementById('obResultsList');
+      const titleEl = document.getElementById('obResultsTitle');
+      const subEl   = document.getElementById('obResultsSub');
+      if (titleEl) titleEl.textContent = `WE FOUND ${items.length} ITEM${items.length !== 1 ? 'S' : ''}`;
+      if (subEl)   subEl.textContent   = `Here's what GuardNest identified in your ${typeLabel}. Save them to start tracking expiry dates.`;
+      if (list) {
+        list.innerHTML = items.map(item => {
+          const days  = item.days_until_spoil || 0;
+          const badge = days > 0
+            ? `<span style="font-size:10px;font-weight:700;color:#4CAF82;background:rgba(76,175,130,.15);padding:2px 8px;border-radius:20px;">${days}d fresh</span>`
+            : `<span style="font-size:10px;color:rgba(255,255,255,.3);">shelf stable</span>`;
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface);border-radius:10px;margin-bottom:6px;">
+            <span style="font-size:13px;color:var(--text);">${item.item_name || item.name}</span>${badge}
+          </div>`;
+        }).join('');
+      }
+
+      document.getElementById('ob-step3').style.display = 'none';
+      document.getElementById('ob-step4').style.display = 'block';
+      localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
+
+    } catch (err) {
+      clearInterval(interval);
+      console.error('Fridge scan error (onboarding):', err);
+      status.textContent = 'Something went wrong — try again or use a receipt instead.';
       setTimeout(() => showObStep1(), 2500);
-      return;
     }
 
-    // Show results to user BEFORE asking to save
-    const today = new Date().toISOString().split('T')[0];
-    pendingItems = items.map(item => ({
-      item_name: item.item_name || item.name,
-      merchant: 'Home',
-      price: 0,
-      purchase_date: today,
-      category: item.category || 'grocery',
-      warranty_days: 0,
-      days_until_spoil: item.days_until_spoil || 7,
-    }));
+  } else {
+    // ── MAIN SCANNER PAGE PATH ─────────────────────────────────
+    document.getElementById('scanResults').classList.add('hidden');
 
-    // Build results list
-    const list = document.getElementById('obResultsList');
-    const titleEl = document.getElementById('obResultsTitle');
-    const subEl = document.getElementById('obResultsSub');
-    if (titleEl) titleEl.textContent = `WE FOUND ${items.length} ITEM${items.length !== 1 ? 'S' : ''}`;
-    if (subEl) subEl.textContent = `Here's what GuardNest identified in your ${typeLabel}. Save them to start tracking expiry dates.`;
-    if (list) {
-      list.innerHTML = items.map(item => {
-        const days = item.days_until_spoil || 0;
-        const badge = days > 0
-          ? `<span style="font-size:10px;font-weight:700;color:#4CAF82;background:rgba(76,175,130,.15);padding:2px 8px;border-radius:20px;">${days}d fresh</span>`
-          : `<span style="font-size:10px;color:rgba(255,255,255,.3);">shelf stable</span>`;
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface);border-radius:10px;margin-bottom:6px;">
-          <span style="font-size:13px;color:var(--text);">${item.item_name || item.name}</span>
-          ${badge}
-        </div>`;
-      }).join('');
+    const previewUrl = URL.createObjectURL(file);
+    // Patch overlay step labels for fridge/pantry context
+    const overlaySteps = document.querySelectorAll('.scan-step .scan-step-label');
+    const fridgeLabels = ['Reading photo', 'Detecting items', 'Identifying foods', 'Estimating freshness', 'Building list'];
+    overlaySteps.forEach((el, i) => { if (fridgeLabels[i]) el.textContent = fridgeLabels[i]; });
+
+    showScanOverlay(previewUrl);
+
+    try {
+      const b64      = await compressImage(file, 1200);
+      const response = await fetch(SUPABASE_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: b64, mimeType: 'image/jpeg', sourceType: type }),
+      });
+
+      hideScanOverlay();
+
+      if (!response.ok) throw new Error('API error: ' + response.status);
+
+      const json  = await response.json();
+      const items = json.items || [];
+
+      if (items.length === 0) {
+        document.getElementById('scanIcon').textContent  = '📷';
+        document.getElementById('scanTitle').textContent = "Couldn't identify items";
+        document.getElementById('scanSub').textContent   = 'Try getting closer, better lighting, or scan a receipt instead.';
+        return;
+      }
+
+      document.getElementById('scanIcon').textContent  = '✅';
+      document.getElementById('scanTitle').textContent = `Found ${items.length} item${items.length !== 1 ? 's' : ''} — save to your fridge`;
+      document.getElementById('scanSub').textContent   = `Review below and save to start tracking freshness`;
+
+      const today = new Date().toISOString().split('T')[0];
+      pendingItems = items.map(item => ({
+        item_name: item.item_name || item.name,
+        merchant: 'Home', price: 0, purchase_date: today,
+        category: item.category || 'grocery', warranty_days: 0,
+        days_until_spoil: item.days_until_spoil || 7,
+      }));
+
+      renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
+      document.getElementById('scanResults').classList.remove('hidden');
+
+      // Reset the file input so the same photo can be re-scanned if needed
+      input.value = '';
+
+    } catch (err) {
+      hideScanOverlay();
+      console.error('Fridge scan error (scanner):', err);
+      document.getElementById('scanIcon').textContent  = '⚠️';
+      document.getElementById('scanTitle').textContent = 'Scan failed';
+      document.getElementById('scanSub').textContent   = 'Something went wrong — try again or scan a receipt instead.';
     }
-
-    // Show results step
-    document.getElementById('ob-step3').style.display = 'none';
-    document.getElementById('ob-step4').style.display = 'block';
-    localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
-
-  } catch (err) {
-    clearInterval(interval);
-    console.error('Fridge scan error:', err);
-    status.textContent = 'Something went wrong — try again or use a receipt instead.';
-    setTimeout(() => showObStep1(), 2500);
   }
 }
 
@@ -6063,12 +6114,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Scan zone touch handler
+  // Scan zone touch handler — delegate to triggerScan so fridge/pantry uses capture="environment"
   const scanZone = document.getElementById('scanZone');
   if (scanZone) {
     scanZone.addEventListener('touchend', function(e) {
       e.preventDefault();
-      document.getElementById('scanFileInput').click();
+      triggerScan();
     }, {passive: false});
   }
 
