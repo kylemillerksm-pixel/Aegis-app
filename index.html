@@ -6735,5 +6735,80 @@ async function guestSignupWithEmail() {
 }
 </script>
 
+<!-- ── DEBUG CONSOLE ── Remove before production launch ───────── -->
+<div id="debugConsole" style="display:none;position:fixed;bottom:0;left:0;right:0;height:220px;background:#0a0a0a;border-top:2px solid #4CAF82;z-index:99999;flex-direction:column;font-family:monospace;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#111;border-bottom:1px solid #222;">
+    <span style="font-size:11px;font-weight:700;color:#4CAF82;letter-spacing:.1em;">DEBUG CONSOLE</span>
+    <div style="display:flex;gap:8px;">
+      <button onclick="document.getElementById('debugLog').innerHTML=''" style="background:#222;border:none;color:#888;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;">CLEAR</button>
+      <button onclick="toggleDebug()" style="background:#222;border:none;color:#888;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;">CLOSE</button>
+    </div>
+  </div>
+  <div id="debugLog" style="flex:1;overflow-y:auto;padding:8px 12px;font-size:11px;line-height:1.6;color:#ccc;"></div>
+</div>
+
+<!-- Floating debug toggle button -->
+<button onclick="toggleDebug()" id="debugToggleBtn" style="position:fixed;bottom:16px;left:16px;z-index:99998;background:#0a0a0a;border:1px solid #4CAF82;color:#4CAF82;font-size:10px;font-weight:700;letter-spacing:.1em;padding:6px 10px;border-radius:6px;cursor:pointer;opacity:.7;">F12</button>
+
+<script>
+(function() {
+  function toggleDebug() {
+    const panel = document.getElementById('debugConsole');
+    const isVisible = panel.style.display === 'flex';
+    panel.style.display = isVisible ? 'none' : 'flex';
+  }
+  window.toggleDebug = toggleDebug;
+
+  function dbLog(type, args) {
+    const log = document.getElementById('debugLog');
+    if (!log) return;
+    const colors = { log: '#ccc', warn: '#D4A843', error: '#E05555', info: '#4A8FE8' };
+    const prefix = { log: '›', warn: '⚠', error: '✕', info: 'ℹ' };
+    const msg = Array.from(args).map(a => {
+      try { return typeof a === 'object' ? JSON.stringify(a, null, 1) : String(a); }
+      catch(e) { return String(a); }
+    }).join(' ');
+    const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const line = document.createElement('div');
+    line.style.cssText = `color:${colors[type]};border-bottom:1px solid #1a1a1a;padding:2px 0;word-break:break-all;`;
+    line.innerHTML = `<span style="color:#444;">${time}</span> <span style="color:${colors[type]}">${prefix[type]}</span> ${msg}`;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+    // Keep max 100 lines
+    while (log.children.length > 100) log.removeChild(log.firstChild);
+  }
+
+  // Override console methods
+  const _log   = console.log.bind(console);
+  const _warn  = console.warn.bind(console);
+  const _error = console.error.bind(console);
+  const _info  = console.info.bind(console);
+
+  console.log   = function() { _log(...arguments);   dbLog('log',   arguments); };
+  console.warn  = function() { _warn(...arguments);  dbLog('warn',  arguments); };
+  console.error = function() { _error(...arguments); dbLog('error', arguments); };
+  console.info  = function() { _info(...arguments);  dbLog('info',  arguments); };
+
+  // Catch unhandled errors
+  window.addEventListener('error', function(e) {
+    dbLog('error', [`UNCAUGHT: ${e.message} (${e.filename}:${e.lineno})`]);
+  });
+
+  window.addEventListener('unhandledrejection', function(e) {
+    dbLog('error', [`UNHANDLED PROMISE: ${e.reason}`]);
+  });
+
+  // Log scan events for easy debugging
+  const _gtag = window.gtag;
+  window.gtag = function() {
+    if (arguments[0] === 'event') {
+      dbLog('info', [`GA4 → ${arguments[1]}`, arguments[2] || '']);
+    }
+    if (_gtag) _gtag.apply(window, arguments);
+  };
+})();
+</script>
+<!-- ── END DEBUG CONSOLE ─────────────────────────────────────── -->
+
 </body>
 </html>
