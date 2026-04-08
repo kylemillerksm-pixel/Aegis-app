@@ -2264,9 +2264,11 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
               </button>
             </div>
 
+            <!-- File inputs outside scan-zone to prevent click bubbling back into triggerScan() -->
+            <input type="file" accept="image/*,application/pdf" id="scanFileInput" onchange="handleImageScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
+            <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px" onchange="handleFridgePhoto(this, window._scanPageType || 'fridge')">
+
             <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer">
-              <input type="file" accept="image/*,application/pdf" id="scanFileInput" onchange="handleImageScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
-              <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px" onchange="handleFridgePhoto(this, window._scanPageType || 'fridge')">
               <span class="scan-icon" id="scanIcon">📷</span>
               <div class="scan-title" id="scanTitle">What are we scanning?</div>
               <div class="scan-sub" id="scanSub">Choose receipt, fridge, or pantry above — then tap to scan</div>
@@ -5632,6 +5634,7 @@ function setScanType(type) {
 }
 
 function triggerScan() {
+  if (window._scanInProgress) return;
   const type = window._scanPageType || 'receipt';
   if (type === 'receipt') {
     document.getElementById('scanFileInput').click();
@@ -5933,6 +5936,7 @@ async function handleFridgePhoto(input, scanType) {
 
   } else {
     // ── MAIN SCANNER PAGE PATH ─────────────────────────────────
+    window._scanInProgress = true;
     document.getElementById('scanResults').classList.add('hidden');
 
     const previewUrl = URL.createObjectURL(file);
@@ -5979,12 +5983,14 @@ async function handleFridgePhoto(input, scanType) {
 
       renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
       document.getElementById('scanResults').classList.remove('hidden');
+      window._scanInProgress = false;
 
       // Reset the file input so the same photo can be re-scanned if needed
       input.value = '';
 
     } catch (err) {
       hideScanOverlay();
+      window._scanInProgress = false;
       console.error('Fridge scan error (scanner):', err);
       document.getElementById('scanIcon').textContent  = '⚠️';
       document.getElementById('scanTitle').textContent = 'Scan failed';
