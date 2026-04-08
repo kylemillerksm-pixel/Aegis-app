@@ -4207,6 +4207,7 @@ async function handleImageScan(input) {
   pendingItems = result.map(i => ({ ...i, image_url: file.name }));
   renderManifest(result, 'manifestGrid', 'resultsTitle');
   document.getElementById('scanResults').classList.remove('hidden');
+  gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
 }
 
 // ─── SCAN — PDF ───────────────────────────────────────────────
@@ -5963,6 +5964,7 @@ async function handleFridgePhoto(input, scanType) {
       const items = json.items || [];
 
       if (items.length === 0) {
+        gtag('event', 'scan_failed', { scan_type: type, reason: 'no_items_found' });
         document.getElementById('scanIcon').textContent  = '📷';
         document.getElementById('scanTitle').textContent = "Couldn't identify items";
         document.getElementById('scanSub').textContent   = 'Try getting closer, better lighting, or scan a receipt instead.';
@@ -5983,6 +5985,7 @@ async function handleFridgePhoto(input, scanType) {
 
       renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
       document.getElementById('scanResults').classList.remove('hidden');
+      gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
       window._scanInProgress = false;
 
       // Reset the file input so the same photo can be re-scanned if needed
@@ -5991,6 +5994,7 @@ async function handleFridgePhoto(input, scanType) {
     } catch (err) {
       hideScanOverlay();
       window._scanInProgress = false;
+      gtag('event', 'scan_failed', { scan_type: type, reason: 'api_error' });
       console.error('Fridge scan error (scanner):', err);
       document.getElementById('scanIcon').textContent  = '⚠️';
       document.getElementById('scanTitle').textContent = 'Scan failed';
@@ -6686,6 +6690,7 @@ function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
   if (modal) {
     modal.style.display = 'flex';
+    gtag('event', 'guest_save_prompted', { items_pending: pendingItems.length });
   }
 }
 
@@ -6695,6 +6700,7 @@ function hideGuestSaveModal() {
 }
 
 async function guestSignupWithGoogle() {
+  gtag('event', 'signup_started', { method: 'google' });
   hideGuestSaveModal();
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
@@ -6713,6 +6719,7 @@ async function guestSignupWithEmail() {
     showToast('Password must be at least 6 characters', 'error');
     return;
   }
+  gtag('event', 'signup_started', { method: 'email' });
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
@@ -6720,8 +6727,10 @@ async function guestSignupWithEmail() {
   const { error } = await supa.auth.signUp({ email, password });
   if (error) {
     showToast('Signup error: ' + error.message, 'error');
+    gtag('event', 'signup_failed', { method: 'email', reason: error.message });
   } else {
     showToast('Account created! Check your email to confirm.', 'success');
+    gtag('event', 'signup_completed', { method: 'email' });
   }
 }
 </script>
