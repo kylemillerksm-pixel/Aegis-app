@@ -5638,10 +5638,14 @@ function triggerScan() {
   if (window._scanInProgress) return;
   const type = window._scanPageType || 'receipt';
   if (type === 'receipt') {
-    document.getElementById('scanFileInput').click();
+    const input = document.getElementById('scanFileInput');
+    input.value = '';
+    input.click();
   } else {
     window._currentScanType = type;
-    document.getElementById('scanPhotoInput').click();
+    const input = document.getElementById('scanPhotoInput');
+    input.value = '';
+    input.click();
   }
 }
 
@@ -5987,9 +5991,6 @@ async function handleFridgePhoto(input, scanType) {
       document.getElementById('scanResults').classList.remove('hidden');
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
       window._scanInProgress = false;
-
-      // Reset the file input so the same photo can be re-scanned if needed
-      input.value = '';
 
     } catch (err) {
       hideScanOverlay();
