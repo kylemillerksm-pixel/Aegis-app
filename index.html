@@ -5635,7 +5635,6 @@ function setScanType(type) {
 }
 
 function triggerScan() {
-  if (window._scanInProgress) return;
   const type = window._scanPageType || 'receipt';
   if (type === 'receipt') {
     const input = document.getElementById('scanFileInput');
@@ -5861,8 +5860,8 @@ async function handleFridgePhoto(input, scanType) {
   const typeLabel = type === 'pantry' ? 'pantry' : 'fridge';
 
   // ── Determine context: onboarding modal or main scanner page ──
-  const obStep1 = document.getElementById('ob-step1');
-  const isOnboarding = obStep1 && obStep1.style.display !== 'none';
+  const onboardingScreen = document.getElementById('onboardingScreen');
+  const isOnboarding = onboardingScreen && !onboardingScreen.classList.contains('hidden');
 
   if (isOnboarding) {
     // ── ONBOARDING PATH (original behaviour) ──────────────────
@@ -5941,7 +5940,6 @@ async function handleFridgePhoto(input, scanType) {
 
   } else {
     // ── MAIN SCANNER PAGE PATH ─────────────────────────────────
-    window._scanInProgress = true;
     document.getElementById('scanResults').classList.add('hidden');
 
     const previewUrl = URL.createObjectURL(file);
@@ -5990,11 +5988,9 @@ async function handleFridgePhoto(input, scanType) {
       renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
       document.getElementById('scanResults').classList.remove('hidden');
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
-      window._scanInProgress = false;
 
     } catch (err) {
       hideScanOverlay();
-      window._scanInProgress = false;
       gtag('event', 'scan_failed', { scan_type: type, reason: 'api_error' });
       console.error('Fridge scan error (scanner):', err);
       document.getElementById('scanIcon').textContent  = '⚠️';
