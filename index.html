@@ -6386,12 +6386,13 @@ function hideSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'none';
   document.body.style.overflow = '';
   localStorage.setItem('guardnest_seen_sample', 'true');
-  // Restore app
+  // Always fully restore app — covers both visibility:hidden (demo URL) and pointerEvents:none (modal) paths
   const appEl = document.getElementById('screen-app');
   const guestBanner = document.getElementById('guestBanner');
   if (appEl) {
     appEl.style.visibility = 'visible';
     appEl.style.pointerEvents = 'auto';
+    appEl.style.opacity = '1';
   }
   if (guestBanner) guestBanner.style.display = 'flex';
 }
@@ -6613,6 +6614,9 @@ async function submitDemoReminder() {
   localStorage.setItem('guardnest_seen_sample', 'true');
   localStorage.setItem('guardnest_lead_email', email);
   gtag('event', 'demo_email_submitted', { items: itemsStr || 'none' });
+
+  // Always restore app so user can interact after submitting email
+  setTimeout(() => hideSampleReport(), 1500);
 }
 </script>
 
