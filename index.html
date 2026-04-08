@@ -2265,8 +2265,8 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
             </div>
 
             <!-- File inputs outside scan-zone to prevent click bubbling back into triggerScan() -->
-            <input type="file" accept="image/*,application/pdf" id="scanFileInput" onchange="handleImageScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
-            <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px" onchange="handleFridgePhoto(this, window._scanPageType || 'fridge')">
+            <input type="file" accept="image/*,application/pdf" id="scanFileInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
+            <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
 
             <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer">
               <span class="scan-icon" id="scanIcon">📷</span>
@@ -6099,6 +6099,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const pdfSaveBtn = document.querySelector('#pdfResults button');
   if (pdfSaveBtn) pdfSaveBtn.id = 'btnSavePdf';
   applyMobileLayout();
+
+  // ── File input listeners — inline onchange unreliable on iOS Safari capture inputs ──
+  const scanFileInput  = document.getElementById('scanFileInput');
+  const scanPhotoInput = document.getElementById('scanPhotoInput');
+
+  if (scanFileInput) {
+    scanFileInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) handleImageScan(this);
+    });
+  }
+
+  if (scanPhotoInput) {
+    scanPhotoInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        handleFridgePhoto(this, window._scanPageType || 'fridge');
+      }
+    });
+  }
 
   // Mobile Safari touch fix - add touchend as fallback for all interactive elements
   function addTouchFallback(selector, handler) {
