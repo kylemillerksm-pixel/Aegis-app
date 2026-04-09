@@ -4208,6 +4208,7 @@ async function handleImageScan(input) {
   renderManifest(result, 'manifestGrid', 'resultsTitle');
   document.getElementById('scanResults').classList.remove('hidden');
   gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
+  gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
 }
 
 // ─── SCAN — PDF ───────────────────────────────────────────────
@@ -5989,6 +5990,14 @@ async function handleFridgePhoto(input, scanType) {
       document.getElementById('scanResults').classList.remove('hidden');
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
 
+      // If user came from "Scan my real fridge" in demo — show the report modal
+      if (window._showRealReportAfterScan) {
+        window._showRealReportAfterScan = false;
+        showRealReport(pendingItems);
+      } else {
+        gtag('event', 'results_viewed', { scan_type: type, items_found: items.length });
+      }
+
     } catch (err) {
       hideScanOverlay();
       gtag('event', 'scan_failed', { scan_type: type, reason: 'api_error' });
@@ -6412,26 +6421,110 @@ function hideSampleReport() {
   if (guestBanner) guestBanner.style.display = 'flex';
 }
 
+function showRealReport(items) {
+  // Populate the demoStep3 report modal with real scan results
+  // so the user sees the same format they saw in the demo
+  const totalValue = items.reduce((sum, i) => sum + (i.price || 3.50), 0).toFixed(0);
+  const urgentItems = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 5);
+  const itemCount = items.length;
+
+  // Update stats
+  const statsEl = document.querySelector('#demoStep3 [style*="grid-template-columns:1fr 1fr 1fr"]');
+  if (statsEl) {
+    const cells = statsEl.querySelectorAll('[style*="font-size:22px"]');
+    if (cells[0]) cells[0].textContent = itemCount;
+    if (cells[1]) cells[1].textContent = '$' + totalValue;
+    if (cells[2]) cells[2].textContent = urgentItems.length;
+  }
+
+  // Update headline
+  const headline = document.getElementById('demoReportHeadline');
+  if (headline) headline.textContent = `Here's what we found in your fridge`;
+
+  // Personalized item — pick most urgent
+  const mostUrgent = items.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
+  const personalText = document.getElementById('demoPersonalizedText');
+  if (personalText && mostUrgent) {
+    const days = mostUrgent.days_until_spoil || 0;
+    personalText.textContent = days <= 2
+      ? `${mostUrgent.item_name} expires in ${days} day${days !== 1 ? 's' : ''} — use it today.`
+      : `${mostUrgent.item_name} is good for ${days} more days — GuardNest will remind you before it's gone.`;
+  }
+
+  // Urgent items list
+  const urgentEl = document.getElementById('demoUrgentItems');
+  if (urgentEl) {
+    if (urgentItems.length === 0) {
+      urgentEl.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,.4);padding:8px 0;">Everything looks fresh — nothing urgent this week.</div>`;
+    } else {
+      urgentEl.innerHTML = urgentItems.slice(0,4).map(item => `
+        <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#fff;">${item.item_name}</div>
+            <div style="font-size:11px;color:rgba(255,140,0,.8);margin-top:2px;">Use within ${item.days_until_spoil} day${item.days_until_spoil !== 1 ? 's' : ''}</div>
+          </div>
+          <span style="font-size:18px;">${getItemEmoji(item.item_name, item.category) || '🥗'}</span>
+        </div>`).join('');
+    }
+  }
+
+  // Insight text
+  const insightText = document.getElementById('demoInsightText');
+  if (insightText) {
+    insightText.textContent = `GuardNest found ${itemCount} items in your fridge. ${urgentItems.length > 0 ? `${urgentItems.length} need to be used this week.` : 'Everything is tracking well.'} Save your results to get a weekly report every Monday.`;
+  }
+
+  // Swap the CTA button to "Save my results" instead of scan again
+  const ctaBtn = document.querySelector('#demoStep3 button[onclick*="demo_scan_now"]');
+  if (ctaBtn) {
+    ctaBtn.textContent = '💾 Save my results — free';
+    ctaBtn.onclick = function() {
+      gtag('event', 'cta_click', { location: 'real_report_save' });
+      hideSampleReport();
+      showGuestSavePrompt();
+    };
+  }
+
+  // Show the modal
+  document.getElementById('sampleReportModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  // Show only step 3
+  document.getElementById('demoStep1').style.display = 'none';
+  document.getElementById('demoStep2').style.display = 'none';
+  document.getElementById('demoStep3').style.display = 'block';
+
+  gtag('event', 'results_viewed', { scan_type: 'fridge', items_found: itemCount, urgent_count: urgentItems.length });
+}
+
 function launchRealScanner() {
   hideSampleReport();
-  // Dismiss any onboarding that might be showing
+  // Dismiss onboarding if showing
   const onboarding = document.getElementById('onboardingScreen');
   if (onboarding) onboarding.classList.add('hidden');
   localStorage.setItem('guardnest_onboarded', 'true');
-  // Reset scan inputs
-  const scanFile = document.getElementById('scanFileInput');
-  const scanPhoto = document.getElementById('scanPhotoInput');
+
+  // Flag: after this scan completes, show the real report (not bare manifest)
+  window._showRealReportAfterScan = true;
+
+  // Reset inputs
+  const scanPhoto  = document.getElementById('scanPhotoInput');
   const fridgePhoto = document.getElementById('fridgePhotoInput');
-  if (scanFile) scanFile.value = '';
-  if (scanPhoto) scanPhoto.value = '';
+  if (scanPhoto)   scanPhoto.value  = '';
   if (fridgePhoto) fridgePhoto.value = '';
-  // Reset scan type to receipt default
-  window._scanPageType = 'receipt';
+
+  // Set scan type to fridge and open camera directly
+  window._scanPageType    = 'fridge';
   window._currentScanType = 'fridge';
-  // Go to scanner
+  setScanType('fridge');
   showPage('scanner');
-  // Reset scanner UI
-  setScanType('receipt');
+
+  // Small delay so the page transition completes before camera opens
+  setTimeout(() => {
+    const input = document.getElementById('scanPhotoInput');
+    if (input) { input.value = ''; input.click(); }
+  }, 300);
+
+  gtag('event', 'cta_click', { location: 'demo_to_real_scan' });
 }
 
 // Multi-select demo items
