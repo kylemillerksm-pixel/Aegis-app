@@ -2996,13 +2996,12 @@ const UNLOCK_HINTS = [
   }
 
   supa.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user) {
-      currentUser = session.user;
-      hideGuestSaveModal();
-      const guestBanner = document.getElementById('guestBanner');
-      if (guestBanner) guestBanner.style.display = 'none';
-      gtag('event', 'signin_completed', { method: 'auth_state_change' });
-      await bootApp();
+    if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
+      await completePostAuth(session, {
+        source: 'auth_state_change',
+        analyticsEvent: event === 'SIGNED_IN' ? 'signin_completed' : null,
+        analyticsMethod: 'auth_state_change'
+      });
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
       bootGuestMode();
@@ -3404,6 +3403,46 @@ function setAuthMsg(msg, type) {
   el.textContent = msg;
 }
 
+async function completePostAuth(session, options = {}) {
+  if (!session?.user) return;
+
+  currentUser = session.user;
+
+  if (options.analyticsEvent) {
+    gtag('event', options.analyticsEvent, {
+      method: options.analyticsMethod || 'email',
+      source: options.source || 'auth'
+    });
+  }
+
+  hideGuestSaveModal();
+  document.getElementById('authMsg').innerHTML = '';
+  localStorage.removeItem('guardnest_onboarded');
+  localStorage.removeItem('guardnest_seen_sample');
+
+  const sampleReportModal = document.getElementById('sampleReportModal');
+  if (sampleReportModal) sampleReportModal.style.display = 'none';
+
+  const appEl = document.getElementById('screen-app');
+  if (appEl) {
+    appEl.style.visibility = 'visible';
+    appEl.style.pointerEvents = 'auto';
+    appEl.style.opacity = '1';
+  }
+
+  document.body.style.overflow = '';
+
+  window._savePromptFired = false;
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
+  if (window._savePromptObserver) window._savePromptObserver.disconnect();
+
+  syncLoggedInUi();
+  showApp();
+  showPage(options.page || 'scanner');
+  showToast(options.toast || 'You are signed in — your scans will now save automatically. 🌿', 'success');
+  await bootApp();
+}
+
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPassword').value;
@@ -3412,9 +3451,23 @@ async function doLogin() {
   const btn = document.getElementById('btnLogin');
   btn.disabled = true; btn.textContent = 'Signing in...';
 
-  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
+  console.log('LOGIN RESULT', { data, error });
+
   btn.disabled = false; btn.textContent = '⚡ Access Vault';
-  if (error) setAuthMsg(error.message, 'error');
+  if (error) return setAuthMsg(error.message, 'error');
+
+  if (data?.session) {
+    await completePostAuth(data.session, {
+      source: 'login_form',
+      analyticsEvent: 'signin_completed',
+      analyticsMethod: 'email',
+      toast: 'Welcome back — your fridge is ready. 🌿'
+    });
+    return;
+  }
+
+  setAuthMsg('Sign in did not complete. Please try again.', 'error');
 }
 
 async function doRegister() {
@@ -3452,20 +3505,18 @@ async function doRegister() {
   }
 
   if (data?.user) {
-    currentUser = data.user;
-    localStorage.removeItem('guardnest_onboarded');
-    localStorage.removeItem('guardnest_seen_sample');
     gtag('event', 'signup_completed', {
       method: 'email',
       source: 'register_form',
       has_session: !!data.session
     });
-    syncLoggedInUi();
-    hideGuestSaveModal();
-    setAuthMsg('Account created — your scans will now save automatically.', 'success');
+    setAuthMsg('Account created — loading your vault...', 'success');
     if (data.session) {
-      showToast('Account created — you are now signed in. 🌿', 'success');
-      await bootApp();
+      await completePostAuth(data.session, {
+        source: 'register_form',
+        page: 'scanner',
+        toast: 'Account created — your scans will now save automatically. 🌿'
+      });
     }
     return;
   }
@@ -6452,6 +6503,11 @@ const DEMO_ITEMS = [
 ];
 
 function showSampleReport() {
+  if (currentUser) {
+    showApp();
+    showPage('scanner');
+    return;
+  }
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
   // Block clicks falling through to app behind modal
@@ -7074,11 +7130,12 @@ async function guestSignupWithEmail() {
   const { data: signInData, error: signInError } = await supa.auth.signInWithPassword({ email, password });
 
   if (!signInError && signInData?.session) {
-    currentUser = signInData.session.user;
-    syncLoggedInUi();
-    showToast('Welcome back! 🌿', 'success');
-    gtag('event', 'signin_completed', { method: 'email', source: 'guest_prompt' });
-    await bootApp();
+    await completePostAuth(signInData.session, {
+      source: 'guest_prompt',
+      analyticsEvent: 'signin_completed',
+      analyticsMethod: 'email',
+      toast: 'Welcome back — your scan is ready to save. 🌿'
+    });
     return;
   }
 
@@ -7094,19 +7151,18 @@ async function guestSignupWithEmail() {
   }
 
   if (data?.user) {
-    currentUser = data.user;
-    localStorage.removeItem('guardnest_onboarded');
-    localStorage.removeItem('guardnest_seen_sample');
-    syncLoggedInUi();
     gtag('event', 'signup_completed', {
       method: 'email',
       source: 'guest_prompt',
       has_session: !!data.session,
       pending_items: pendingItems.length
     });
-    showToast('Welcome to GuardNest! Your scans will now save automatically. 🌿', 'success');
     if (data.session) {
-      await bootApp();
+      await completePostAuth(data.session, {
+        source: 'guest_prompt',
+        page: 'scanner',
+        toast: 'Welcome to GuardNest! Your scan will now save automatically. 🌿'
+      });
     }
     return;
   }
