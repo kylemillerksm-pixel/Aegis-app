@@ -3007,6 +3007,7 @@ const UNLOCK_HINTS = [
         localStorage.removeItem('guardnest_onboarded');
         localStorage.removeItem('guardnest_seen_sample');
         gtag('event', 'signup_completed', { method: 'google', new_user: true, user_id: session.user.id });
+        fbq('track', 'CompleteRegistration', { method: 'google' });
         await bootApp();
         showPage('dashboard');
         showToast('Welcome to GuardNest! 🌿', 'success');
@@ -4233,6 +4234,7 @@ async function handleImageScan(input) {
   document.getElementById('scanResults').classList.remove('hidden');
   gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
   gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
+  fbq('track', 'Lead', { content_name: 'scan_completed', content_category: 'receipt' });
   // Trigger save prompt after user has absorbed results
   scheduleGuestSavePrompt('scanResults', 'manifestGrid');
 }
@@ -6016,6 +6018,7 @@ async function handleFridgePhoto(input, scanType) {
       renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
       document.getElementById('scanResults').classList.remove('hidden');
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
+      fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
 
       // If user came from "Scan my real fridge" in demo — show the report modal
       if (window._showRealReportAfterScan) {
@@ -7060,6 +7063,7 @@ async function guestSignupWithEmail() {
       localStorage.removeItem('guardnest_seen_sample');
       showToast('Welcome to GuardNest! 🌿', 'success');
       gtag('event', 'signup_completed', { method: 'email', new_user: true, user_id: confirmedUser.id });
+      fbq('track', 'CompleteRegistration', { method: 'email' });
       // onAuthStateChange will handle bootApp and page navigation
     } else {
       showToast('Welcome back! 🌿', 'success');
