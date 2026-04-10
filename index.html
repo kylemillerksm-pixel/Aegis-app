@@ -2998,8 +2998,8 @@ const UNLOCK_HINTS = [
   supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       currentUser = session.user;
-      // Detect new Google OAuth user — created_at and last_sign_in_at match on first login
-      const isNewUser = session.user.created_at === session.user.last_sign_in_at;
+      // Reliable new user detection — account created in last 30 seconds
+      const isNewUser = (Date.now() - new Date(session.user.created_at).getTime()) < 30000;
       if (isNewUser) {
         localStorage.removeItem('guardnest_onboarded');
         localStorage.removeItem('guardnest_seen_sample');
@@ -7018,11 +7018,18 @@ async function guestSignupWithEmail() {
     gtag('event', 'signup_failed', { method: 'email', reason: error.message });
     showGuestSavePrompt();
   } else if (data?.user && data?.session) {
-    // New account created and session active — clear onboarding flag so it shows on first login
-    localStorage.removeItem('guardnest_onboarded');
-    localStorage.removeItem('guardnest_seen_sample');
-    showToast('Welcome to GuardNest! 🌿', 'success');
-    gtag('event', 'signup_completed', { method: 'email', new_user: true });
+    // Verify this is genuinely a new account — created in last 30 seconds
+    const isNewUser = (Date.now() - new Date(data.user.created_at).getTime()) < 30000;
+    if (isNewUser) {
+      localStorage.removeItem('guardnest_onboarded');
+      localStorage.removeItem('guardnest_seen_sample');
+      showToast('Welcome to GuardNest! 🌿', 'success');
+      gtag('event', 'signup_completed', { method: 'email', new_user: true });
+    } else {
+      // Session returned but account is old — treat as sign in
+      showToast('Welcome back! 🌿', 'success');
+      gtag('event', 'signin_completed', { method: 'email' });
+    }
   } else if (data?.user && !data?.session) {
     // Created but no session — email confirmation still blocking somewhere
     showToast('Account created — check your email to confirm', 'info');
