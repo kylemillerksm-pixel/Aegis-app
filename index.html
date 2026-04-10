@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>GuardNest — See What's In Your Fridge Before It's Gone</title>
+<!-- VERSION: APRIL-10-REAL-FIX-2 -->
 <meta name="description" content="GuardNest remembers everything you bought so you know what's in your fridge, what needs to be used, and what quietly slips away. Free — scan your first receipt in 8 seconds.">
 <meta name="keywords" content="food expiry tracker, warranty tracker app, receipt scanner, stop wasting groceries, food waste app, warranty expiration reminder, GuardNest">
 <meta name="robots" content="index, follow">
@@ -2053,7 +2054,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
     <div style="font-size:12px;color:rgba(255,255,255,.7);">
       🌿 <strong style="color:#4CAF82;">Guest mode</strong> — scan your fridge, then save your results free
     </div>
-    <button id="guestBannerCta" onclick="openSignupFromGuest()" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
+    <button onclick="showAuth();document.getElementById('guestBanner').style.display='none';" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
       Save Free →
     </button>
   </div>
@@ -2996,12 +2997,34 @@ const UNLOCK_HINTS = [
   }
 
   supa.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
-      await completePostAuth(session, {
-        source: 'auth_state_change',
-        analyticsEvent: event === 'SIGNED_IN' ? 'signin_completed' : null,
-        analyticsMethod: 'auth_state_change'
-      });
+    console.log('AUTH EVENT', event, session?.user?.email || null, !!session);
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
+      currentUser = session.user;
+
+      // Clear guest/demo state on any real authenticated session
+      localStorage.removeItem('guardnest_onboarded');
+      localStorage.removeItem('guardnest_seen_sample');
+
+      const guestBanner = document.getElementById('guestBanner');
+      if (guestBanner) guestBanner.style.display = 'none';
+
+      const sampleModal = document.getElementById('sampleReportModal');
+      if (sampleModal) sampleModal.style.display = 'none';
+
+      document.body.style.overflow = '';
+
+      const appEl = document.getElementById('screen-app');
+      if (appEl) {
+        appEl.style.visibility = 'visible';
+        appEl.style.pointerEvents = 'auto';
+        appEl.style.opacity = '1';
+      }
+
+      if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
+      if (window._savePromptObserver) window._savePromptObserver.disconnect?.();
+      window._savePromptFired = false;
+
+      await bootApp();
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
       bootGuestMode();
@@ -3265,7 +3288,6 @@ async function bootApp() {
   // Always dismiss spinner regardless of errors
   hideLoading();
   showApp();
-  syncLoggedInUi();
   applyMobileLayout();
   try { initBriefCard(); } catch(e) { console.error('Brief init error:', e); }
   try { refreshDashboard(); } catch(e) { console.error('Dashboard error:', e); }
@@ -3323,33 +3345,6 @@ function showAuth() {
   document.getElementById('screen-app').classList.remove('visible');
   // Auto-show sample report for first time visitors or demo param
   // Demo and sample report handled in bootGuestMode
-  syncLoggedInUi();
-}
-
-function openSignupFromGuest() {
-  showAuth();
-  switchAuthTab('register');
-  const guestBanner = document.getElementById('guestBanner');
-  if (guestBanner) guestBanner.style.display = 'none';
-  gtag('event', 'signup_viewed', { method: 'guest_prompt' });
-}
-
-function syncLoggedInUi() {
-  const guestBanner = document.getElementById('guestBanner');
-  if (guestBanner) guestBanner.style.display = currentUser ? 'none' : 'flex';
-
-  const guestBannerCta = document.getElementById('guestBannerCta');
-  if (guestBannerCta) {
-    guestBannerCta.textContent = currentUser ? 'Saved ✓' : 'Save Free →';
-    guestBannerCta.disabled = !!currentUser;
-    guestBannerCta.style.opacity = currentUser ? '.65' : '1';
-    guestBannerCta.style.cursor = currentUser ? 'default' : 'pointer';
-  }
-
-  const saveModalCta = document.getElementById('saveModalCta');
-  if (saveModalCta && currentUser) {
-    saveModalCta.innerHTML = `Your account is active — <strong style="color:#fff;">your scans will save automatically.</strong>`;
-  }
 }
 
 function isMobile() {
@@ -3383,7 +3378,6 @@ window.addEventListener('resize', applyMobileLayout);
 function showApp() {
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
-  syncLoggedInUi();
   applyMobileLayout();
 }
 
@@ -3393,54 +3387,12 @@ function switchAuthTab(tab) {
   document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
   document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
   document.getElementById('authMsg').innerHTML = '';
-  if (tab === 'register') gtag('event', 'signup_viewed', { method: 'email' });
-  if (tab === 'login') gtag('event', 'login_viewed', { method: 'email' });
 }
 
 function setAuthMsg(msg, type) {
   const el = document.getElementById('authMsg');
   el.className = `alert-msg ${type}`;
   el.textContent = msg;
-}
-
-async function completePostAuth(session, options = {}) {
-  if (!session?.user) return;
-
-  currentUser = session.user;
-
-  if (options.analyticsEvent) {
-    gtag('event', options.analyticsEvent, {
-      method: options.analyticsMethod || 'email',
-      source: options.source || 'auth'
-    });
-  }
-
-  hideGuestSaveModal();
-  document.getElementById('authMsg').innerHTML = '';
-  localStorage.removeItem('guardnest_onboarded');
-  localStorage.removeItem('guardnest_seen_sample');
-
-  const sampleReportModal = document.getElementById('sampleReportModal');
-  if (sampleReportModal) sampleReportModal.style.display = 'none';
-
-  const appEl = document.getElementById('screen-app');
-  if (appEl) {
-    appEl.style.visibility = 'visible';
-    appEl.style.pointerEvents = 'auto';
-    appEl.style.opacity = '1';
-  }
-
-  document.body.style.overflow = '';
-
-  window._savePromptFired = false;
-  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
-  if (window._savePromptObserver) window._savePromptObserver.disconnect();
-
-  syncLoggedInUi();
-  showApp();
-  showPage(options.page || 'scanner');
-  showToast(options.toast || 'You are signed in — your scans will now save automatically. 🌿', 'success');
-  await bootApp();
 }
 
 async function doLogin() {
@@ -3451,77 +3403,70 @@ async function doLogin() {
   const btn = document.getElementById('btnLogin');
   btn.disabled = true; btn.textContent = 'Signing in...';
 
-  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
-  console.log('LOGIN RESULT', { data, error });
-
+  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
   btn.disabled = false; btn.textContent = '⚡ Access Vault';
-  if (error) return setAuthMsg(error.message, 'error');
-
-  if (data?.session) {
-    await completePostAuth(data.session, {
-      source: 'login_form',
-      analyticsEvent: 'signin_completed',
-      analyticsMethod: 'email',
-      toast: 'Welcome back — your fridge is ready. 🌿'
-    });
-    return;
-  }
-
-  setAuthMsg('Sign in did not complete. Please try again.', 'error');
+  if (error) setAuthMsg(error.message, 'error');
 }
 
 async function doRegister() {
   const email   = document.getElementById('regEmail').value.trim();
   const pass    = document.getElementById('regPassword').value;
   const confirm = document.getElementById('regConfirm').value;
-
-  gtag('event', 'signup_submitted', { method: 'email', source: 'register_form' });
-
-  if (!email || !pass) {
-    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'missing_fields' });
-    return setAuthMsg('Please fill in all fields.', 'error');
-  }
-  if (pass !== confirm) {
-    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'password_mismatch' });
-    return setAuthMsg('Passwords do not match.', 'error');
-  }
-  if (pass.length < 6) {
-    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'password_too_short' });
-    return setAuthMsg('Password must be at least 6 characters.', 'error');
-  }
+  if (!email || !pass) return setAuthMsg('Please fill in all fields.', 'error');
+  if (pass !== confirm) return setAuthMsg('Passwords do not match.', 'error');
+  if (pass.length < 6)  return setAuthMsg('Password must be at least 6 characters.', 'error');
 
   const btn = document.getElementById('btnRegister');
-  btn.disabled = true; btn.textContent = 'Creating account...';
-  gtag('event', 'signup_request_sent', { method: 'email', source: 'register_form' });
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
 
   const { data, error } = await supa.auth.signUp({ email, password: pass });
   console.log('REGISTER RESULT', { data, error });
 
-  btn.disabled = false; btn.textContent = '🛡️ Create Account';
+  btn.disabled = false;
+  btn.textContent = '🛡️ Create Account';
 
   if (error) {
-    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: error.message });
-    return setAuthMsg(error.message, 'error');
-  }
-
-  if (data?.user) {
-    gtag('event', 'signup_completed', {
-      method: 'email',
-      source: 'register_form',
-      has_session: !!data.session
-    });
-    setAuthMsg('Account created — loading your vault...', 'success');
-    if (data.session) {
-      await completePostAuth(data.session, {
-        source: 'register_form',
-        page: 'scanner',
-        toast: 'Account created — your scans will now save automatically. 🌿'
-      });
-    }
+    setAuthMsg(error.message, 'error');
+    try { gtag('event', 'signup_failed', { method: 'email', reason: error.message }); } catch(e) {}
     return;
   }
 
-  gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'no_user_returned' });
+  if (data?.user && data?.session) {
+    currentUser = data.user;
+
+    localStorage.removeItem('guardnest_onboarded');
+    localStorage.removeItem('guardnest_seen_sample');
+
+    const guestBanner = document.getElementById('guestBanner');
+    if (guestBanner) guestBanner.style.display = 'none';
+
+    const sampleModal = document.getElementById('sampleReportModal');
+    if (sampleModal) sampleModal.style.display = 'none';
+
+    document.body.style.overflow = '';
+
+    const appEl = document.getElementById('screen-app');
+    if (appEl) {
+      appEl.style.visibility = 'visible';
+      appEl.style.pointerEvents = 'auto';
+      appEl.style.opacity = '1';
+    }
+
+    try { gtag('event', 'signup_completed', { method: 'email', new_user: true }); } catch(e) {}
+    setAuthMsg('Account created! Loading your vault...', 'success');
+    await bootApp();
+    return;
+  }
+
+  if (data?.user && !data?.session) {
+    console.warn('Signup created user but no session', data.user);
+    try { gtag('event', 'signup_failed', { method: 'email', reason: 'no_session_returned' }); } catch(e) {}
+    setAuthMsg('Account created, but no session was created. Please sign in.', 'error');
+    return;
+  }
+
+  try { gtag('event', 'signup_failed', { method: 'email', reason: 'no_user_returned' }); } catch(e) {}
   setAuthMsg('Signup did not complete. Please try again.', 'error');
 }
 
@@ -6503,11 +6448,7 @@ const DEMO_ITEMS = [
 ];
 
 function showSampleReport() {
-  if (currentUser) {
-    showApp();
-    showPage('scanner');
-    return;
-  }
+  if (currentUser) return;
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
   // Block clicks falling through to app behind modal
@@ -6556,7 +6497,7 @@ function hideSampleReport() {
     appEl.style.pointerEvents = 'auto';
     appEl.style.opacity = '1';
   }
-  if (guestBanner) guestBanner.style.display = currentUser ? 'none' : 'flex';
+  if (guestBanner) guestBanner.style.display = 'flex';
 }
 
 function showRealReport(items) {
@@ -6938,7 +6879,7 @@ function bootGuestMode() {
   } else {
     // Show guest banner
     const banner = document.getElementById('guestBanner');
-    if (banner) banner.style.display = currentUser ? 'none' : 'flex';
+    if (banner) banner.style.display = 'flex';
     // Show onboarding for first time guests
     if (!localStorage.getItem('guardnest_seen_sample')) {
       setTimeout(() => showSampleReport(), 600);
@@ -7014,7 +6955,7 @@ function toggleGuestEmailForm() {
 
 function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
-  if (!modal || currentUser) return;
+  if (!modal) return;
 
   // Reset email form to collapsed state
   const emailForm   = document.getElementById('guestEmailForm');
@@ -7099,7 +7040,7 @@ function hideGuestSaveModal() {
 }
 
 async function guestSignupWithGoogle() {
-  gtag('event', 'signup_started', { method: 'google', source: 'guest_prompt' });
+  gtag('event', 'signup_started', { method: 'google' });
   hideGuestSaveModal();
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
@@ -7112,15 +7053,13 @@ async function guestSignupWithEmail() {
   const password = document.getElementById('guestPassword').value;
   if (!email || !password) {
     showToast('Please enter your email and a password', 'error');
-    gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: 'missing_fields' });
     return;
   }
   if (password.length < 6) {
     showToast('Password must be at least 6 characters', 'error');
-    gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: 'password_too_short' });
     return;
   }
-  gtag('event', 'signup_started', { method: 'email', source: 'guest_prompt' });
+  gtag('event', 'signup_started', { method: 'email' });
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
@@ -7130,46 +7069,42 @@ async function guestSignupWithEmail() {
   const { data: signInData, error: signInError } = await supa.auth.signInWithPassword({ email, password });
 
   if (!signInError && signInData?.session) {
-    await completePostAuth(signInData.session, {
-      source: 'guest_prompt',
-      analyticsEvent: 'signin_completed',
-      analyticsMethod: 'email',
-      toast: 'Welcome back — your scan is ready to save. 🌿'
-    });
+    // Existing user — logged in successfully
+    showToast('Welcome back! 🌿', 'success');
+    gtag('event', 'signin_completed', { method: 'email' });
     return;
   }
 
-  gtag('event', 'signup_request_sent', { method: 'email', source: 'guest_prompt' });
+  // Sign in failed — attempt to create new account
   const { data, error } = await supa.auth.signUp({ email, password });
-  console.log('GUEST SIGNUP RESULT', { data, error });
 
   if (error) {
     showToast('Error: ' + error.message, 'error');
-    gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: error.message });
+    gtag('event', 'signup_failed', { method: 'email', reason: error.message });
     showGuestSavePrompt();
-    return;
-  }
-
-  if (data?.user) {
-    gtag('event', 'signup_completed', {
-      method: 'email',
-      source: 'guest_prompt',
-      has_session: !!data.session,
-      pending_items: pendingItems.length
-    });
-    if (data.session) {
-      await completePostAuth(data.session, {
-        source: 'guest_prompt',
-        page: 'scanner',
-        toast: 'Welcome to GuardNest! Your scan will now save automatically. 🌿'
-      });
+  } else if (data?.user && data?.session) {
+    // Verify this is genuinely a new account — created in last 30 seconds
+    const isNewUser = (Date.now() - new Date(data.user.created_at).getTime()) < 30000;
+    if (isNewUser) {
+      localStorage.removeItem('guardnest_onboarded');
+      localStorage.removeItem('guardnest_seen_sample');
+      showToast('Welcome to GuardNest! 🌿', 'success');
+      gtag('event', 'signup_completed', { method: 'email', new_user: true });
+    } else {
+      // Session returned but account is old — treat as sign in
+      showToast('Welcome back! 🌿', 'success');
+      gtag('event', 'signin_completed', { method: 'email' });
     }
-    return;
+  } else if (data?.user && !data?.session) {
+    // Created but no session — email confirmation still blocking somewhere
+    showToast('Account created — check your email to confirm', 'info');
+    gtag('event', 'signup_failed', { method: 'email', reason: 'confirmation_required' });
+  } else {
+    // Silent failure — no user, no error
+    showToast('Something went wrong — try Google instead', 'error');
+    gtag('event', 'signup_failed', { method: 'email', reason: 'silent_failure' });
+    showGuestSavePrompt();
   }
-
-  showToast('Signup did not complete. Please try again.', 'error');
-  gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: 'no_user_returned' });
-  showGuestSavePrompt();
 }
 </script>
 
