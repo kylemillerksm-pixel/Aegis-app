@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>GuardNest — See What's In Your Fridge Before It's Gone</title>
-<!-- VERSION: APRIL-10-REAL-FIX-2 -->
 <meta name="description" content="GuardNest remembers everything you bought so you know what's in your fridge, what needs to be used, and what quietly slips away. Free — scan your first receipt in 8 seconds.">
 <meta name="keywords" content="food expiry tracker, warranty tracker app, receipt scanner, stop wasting groceries, food waste app, warranty expiration reminder, GuardNest">
 <meta name="robots" content="index, follow">
@@ -2997,34 +2996,22 @@ const UNLOCK_HINTS = [
   }
 
   supa.auth.onAuthStateChange(async (event, session) => {
-    console.log('AUTH EVENT', event, session?.user?.email || null, !!session);
-    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
+    if (event === 'SIGNED_IN' && session?.user) {
       currentUser = session.user;
-
-      // Clear guest/demo state on any real authenticated session
-      localStorage.removeItem('guardnest_onboarded');
-      localStorage.removeItem('guardnest_seen_sample');
-
-      const guestBanner = document.getElementById('guestBanner');
-      if (guestBanner) guestBanner.style.display = 'none';
-
-      const sampleModal = document.getElementById('sampleReportModal');
-      if (sampleModal) sampleModal.style.display = 'none';
-
-      document.body.style.overflow = '';
-
-      const appEl = document.getElementById('screen-app');
-      if (appEl) {
-        appEl.style.visibility = 'visible';
-        appEl.style.pointerEvents = 'auto';
-        appEl.style.opacity = '1';
+      // Reliable new user detection — account created in last 30 seconds
+      const isNewUser = (Date.now() - new Date(session.user.created_at).getTime()) < 30000;
+      if (isNewUser) {
+        localStorage.removeItem('guardnest_onboarded');
+        localStorage.removeItem('guardnest_seen_sample');
+        gtag('event', 'signup_completed', { method: 'google', new_user: true, user_id: session.user.id });
+        await bootApp();
+        // Navigate to dashboard so user sees a clear "you're in" transition
+        showPage('dashboard');
+        showToast('Welcome to GuardNest! 🌿', 'success');
+      } else {
+        gtag('event', 'signin_completed', { method: 'google', user_id: session.user.id });
+        await bootApp();
       }
-
-      if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
-      if (window._savePromptObserver) window._savePromptObserver.disconnect?.();
-      window._savePromptFired = false;
-
-      await bootApp();
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
       bootGuestMode();
@@ -3378,6 +3365,9 @@ window.addEventListener('resize', applyMobileLayout);
 function showApp() {
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
+  // Always hide guest banner when showing logged-in app
+  const guestBanner = document.getElementById('guestBanner');
+  if (guestBanner) guestBanner.style.display = 'none';
   applyMobileLayout();
 }
 
@@ -3417,57 +3407,12 @@ async function doRegister() {
   if (pass.length < 6)  return setAuthMsg('Password must be at least 6 characters.', 'error');
 
   const btn = document.getElementById('btnRegister');
-  btn.disabled = true;
-  btn.textContent = 'Creating account...';
+  btn.disabled = true; btn.textContent = 'Creating account...';
 
-  const { data, error } = await supa.auth.signUp({ email, password: pass });
-  console.log('REGISTER RESULT', { data, error });
-
-  btn.disabled = false;
-  btn.textContent = '🛡️ Create Account';
-
-  if (error) {
-    setAuthMsg(error.message, 'error');
-    try { gtag('event', 'signup_failed', { method: 'email', reason: error.message }); } catch(e) {}
-    return;
-  }
-
-  if (data?.user && data?.session) {
-    currentUser = data.user;
-
-    localStorage.removeItem('guardnest_onboarded');
-    localStorage.removeItem('guardnest_seen_sample');
-
-    const guestBanner = document.getElementById('guestBanner');
-    if (guestBanner) guestBanner.style.display = 'none';
-
-    const sampleModal = document.getElementById('sampleReportModal');
-    if (sampleModal) sampleModal.style.display = 'none';
-
-    document.body.style.overflow = '';
-
-    const appEl = document.getElementById('screen-app');
-    if (appEl) {
-      appEl.style.visibility = 'visible';
-      appEl.style.pointerEvents = 'auto';
-      appEl.style.opacity = '1';
-    }
-
-    try { gtag('event', 'signup_completed', { method: 'email', new_user: true }); } catch(e) {}
-    setAuthMsg('Account created! Loading your vault...', 'success');
-    await bootApp();
-    return;
-  }
-
-  if (data?.user && !data?.session) {
-    console.warn('Signup created user but no session', data.user);
-    try { gtag('event', 'signup_failed', { method: 'email', reason: 'no_session_returned' }); } catch(e) {}
-    setAuthMsg('Account created, but no session was created. Please sign in.', 'error');
-    return;
-  }
-
-  try { gtag('event', 'signup_failed', { method: 'email', reason: 'no_user_returned' }); } catch(e) {}
-  setAuthMsg('Signup did not complete. Please try again.', 'error');
+  const { error } = await supa.auth.signUp({ email, password: pass });
+  btn.disabled = false; btn.textContent = '🛡️ Create Account';
+  if (error) setAuthMsg(error.message, 'error');
+  else setAuthMsg('Account created! Signing you in...', 'success');
 }
 
 async function doGoogleLogin() {
@@ -6448,7 +6393,6 @@ const DEMO_ITEMS = [
 ];
 
 function showSampleReport() {
-  if (currentUser) return;
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
   // Block clicks falling through to app behind modal
@@ -7083,24 +7027,34 @@ async function guestSignupWithEmail() {
     gtag('event', 'signup_failed', { method: 'email', reason: error.message });
     showGuestSavePrompt();
   } else if (data?.user && data?.session) {
-    // Verify this is genuinely a new account — created in last 30 seconds
-    const isNewUser = (Date.now() - new Date(data.user.created_at).getTime()) < 30000;
+    // Verify user actually exists by querying Supabase directly
+    const { data: { user: confirmedUser }, error: getUserError } = await supa.auth.getUser();
+    showToast(`DEBUG getUser: ${getUserError ? getUserError.message : 'confirmed=' + !!confirmedUser}`, 'info');
+
+    if (getUserError || !confirmedUser) {
+      showToast('Something went wrong — try Google instead', 'error');
+      gtag('event', 'signup_failed', { method: 'email', reason: 'getuser_failed' });
+      showGuestSavePrompt();
+      return;
+    }
+
+    const isNewUser = (Date.now() - new Date(confirmedUser.created_at).getTime()) < 30000;
     if (isNewUser) {
       localStorage.removeItem('guardnest_onboarded');
       localStorage.removeItem('guardnest_seen_sample');
       showToast('Welcome to GuardNest! 🌿', 'success');
-      gtag('event', 'signup_completed', { method: 'email', new_user: true });
+      gtag('event', 'signup_completed', { method: 'email', new_user: true, user_id: confirmedUser.id });
+      // Navigate to dashboard so user sees a clear transition out of guest mode
+      setTimeout(() => showPage('dashboard'), 800);
     } else {
-      // Session returned but account is old — treat as sign in
       showToast('Welcome back! 🌿', 'success');
       gtag('event', 'signin_completed', { method: 'email' });
+      setTimeout(() => showPage('dashboard'), 800);
     }
   } else if (data?.user && !data?.session) {
-    // Created but no session — email confirmation still blocking somewhere
     showToast('Account created — check your email to confirm', 'info');
     gtag('event', 'signup_failed', { method: 'email', reason: 'confirmation_required' });
   } else {
-    // Silent failure — no user, no error
     showToast('Something went wrong — try Google instead', 'error');
     gtag('event', 'signup_failed', { method: 'email', reason: 'silent_failure' });
     showGuestSavePrompt();
