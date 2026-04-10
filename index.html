@@ -2997,22 +2997,28 @@ const UNLOCK_HINTS = [
 
   supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
+      // Prevent double-firing — if we're already booting ignore subsequent events
+      if (window._bootingApp) return;
+      window._bootingApp = true;
+
       currentUser = session.user;
-      // Reliable new user detection — account created in last 30 seconds
       const isNewUser = (Date.now() - new Date(session.user.created_at).getTime()) < 30000;
       if (isNewUser) {
         localStorage.removeItem('guardnest_onboarded');
         localStorage.removeItem('guardnest_seen_sample');
         gtag('event', 'signup_completed', { method: 'google', new_user: true, user_id: session.user.id });
         await bootApp();
-        // Navigate to dashboard so user sees a clear "you're in" transition
         showPage('dashboard');
         showToast('Welcome to GuardNest! 🌿', 'success');
       } else {
         gtag('event', 'signin_completed', { method: 'google', user_id: session.user.id });
         await bootApp();
+        showPage('dashboard');
       }
+
+      window._bootingApp = false;
     } else if (event === 'SIGNED_OUT') {
+      window._bootingApp = false;
       currentUser = null;
       bootGuestMode();
     }
@@ -7044,12 +7050,11 @@ async function guestSignupWithEmail() {
       localStorage.removeItem('guardnest_seen_sample');
       showToast('Welcome to GuardNest! 🌿', 'success');
       gtag('event', 'signup_completed', { method: 'email', new_user: true, user_id: confirmedUser.id });
-      // Navigate to dashboard so user sees a clear transition out of guest mode
-      setTimeout(() => showPage('dashboard'), 800);
+      // onAuthStateChange will handle bootApp and page navigation
     } else {
       showToast('Welcome back! 🌿', 'success');
       gtag('event', 'signin_completed', { method: 'email' });
-      setTimeout(() => showPage('dashboard'), 800);
+      // onAuthStateChange will handle bootApp and page navigation
     }
   } else if (data?.user && !data?.session) {
     showToast('Account created — check your email to confirm', 'info');
