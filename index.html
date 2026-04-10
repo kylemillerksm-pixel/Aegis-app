@@ -6988,10 +6988,13 @@ function showGuestSavePrompt() {
 function hideGuestSaveModal() {
   const modal = document.getElementById('guestSaveModal');
   if (modal) modal.style.display = 'none';
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   gtag('event', 'save_modal_dismissed');
 }
 
 async function guestSignupWithGoogle() {
+  window._savePromptFired = true; // prevent re-trigger
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   gtag('event', 'signup_started', { method: 'google' });
   hideGuestSaveModal();
   if (pendingItems.length > 0) {
@@ -7001,6 +7004,8 @@ async function guestSignupWithGoogle() {
 }
 
 async function guestSignupWithEmail() {
+  window._savePromptFired = true; // prevent re-trigger
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   const email = document.getElementById('guestEmail').value.trim();
   const password = document.getElementById('guestPassword').value;
   if (!email || !password) {
