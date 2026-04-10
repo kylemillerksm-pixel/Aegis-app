@@ -3004,6 +3004,8 @@ const UNLOCK_HINTS = [
         localStorage.removeItem('guardnest_onboarded');
         localStorage.removeItem('guardnest_seen_sample');
         gtag('event', 'signup_completed', { method: 'google', new_user: true });
+      } else {
+        gtag('event', 'signin_completed', { method: 'google' });
       }
       await bootApp();
     } else if (event === 'SIGNED_OUT') {
