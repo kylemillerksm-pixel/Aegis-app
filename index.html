@@ -6991,40 +6991,36 @@ async function guestSignupWithEmail() {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
   hideGuestSaveModal();
+
+  // Try sign in first — if they already have an account this logs them in
+  const { data: signInData, error: signInError } = await supa.auth.signInWithPassword({ email, password });
+
+  if (!signInError && signInData?.session) {
+    // Existing user — logged in successfully
+    showToast('Welcome back! 🌿', 'success');
+    gtag('event', 'signin_completed', { method: 'email' });
+    return;
+  }
+
+  // Sign in failed — attempt to create new account
   const { data, error } = await supa.auth.signUp({ email, password });
+
   if (error) {
-    // If account exists try signing in directly
-    if (error.message.toLowerCase().includes('already') || error.status === 400) {
-      const { error: signInError } = await supa.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        showToast('Account exists — check your password', 'error');
-        showGuestSavePrompt();
-      } else {
-        showToast('Welcome back! 🌿', 'success');
-        gtag('event', 'signup_completed', { method: 'email_existing' });
-      }
-    } else {
-      showToast('Signup error: ' + error.message, 'error');
-      gtag('event', 'signup_failed', { method: 'email', reason: error.message });
-    }
-  } else if (data?.user && !data.session) {
-    // User created but no session — confirmation still required somehow
-    showToast('Check your email to confirm your account', 'info');
+    showToast('Error: ' + error.message, 'error');
+    gtag('event', 'signup_failed', { method: 'email', reason: error.message });
+    showGuestSavePrompt();
+  } else if (data?.user && data?.session) {
+    // New account created and session active
+    showToast('Welcome to GuardNest! 🌿', 'success');
+    gtag('event', 'signup_completed', { method: 'email', new_user: true });
+  } else if (data?.user && !data?.session) {
+    // Created but no session — email confirmation still blocking somewhere
+    showToast('Account created — check your email to confirm', 'info');
     gtag('event', 'signup_failed', { method: 'email', reason: 'confirmation_required' });
-  } else if (data?.user) {
-    // New user created and session available
-    const isNewUser = data.user.created_at === data.user.last_sign_in_at;
-    gtag('event', 'signup_completed', { method: 'email', new_user: isNewUser });
-    const { error: signInError } = await supa.auth.signInWithPassword({ email, password });
-    if (signInError) {
-      showToast('Account created — please sign in', 'info');
-    } else {
-      showToast('Welcome to GuardNest! 🌿', 'success');
-    }
   } else {
-    // signUp returned no error but no user — silent duplicate
-    showToast('An account with that email already exists — try signing in', 'info');
-    gtag('event', 'signup_failed', { method: 'email', reason: 'silent_duplicate' });
+    // Silent failure — no user, no error
+    showToast('Something went wrong — try Google instead', 'error');
+    gtag('event', 'signup_failed', { method: 'email', reason: 'silent_failure' });
     showGuestSavePrompt();
   }
 }
