@@ -3396,7 +3396,7 @@ async function doRegister() {
   const { error } = await supa.auth.signUp({ email, password: pass });
   btn.disabled = false; btn.textContent = '🛡️ Create Account';
   if (error) setAuthMsg(error.message, 'error');
-  else setAuthMsg('Account created! Check your email to confirm, then sign in.', 'success');
+  else setAuthMsg('Account created! Signing you in...', 'success');
 }
 
 async function doGoogleLogin() {
@@ -6832,13 +6832,20 @@ async function guestSignupWithEmail() {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
   hideGuestSaveModal();
-  const { error } = await supa.auth.signUp({ email, password });
+  const { data, error } = await supa.auth.signUp({ email, password });
   if (error) {
     showToast('Signup error: ' + error.message, 'error');
     gtag('event', 'signup_failed', { method: 'email', reason: error.message });
   } else {
-    showToast('Account created! Check your email to confirm.', 'success');
     gtag('event', 'signup_completed', { method: 'email' });
+    // Sign in immediately — confirmation is disabled so session is available now
+    const { error: signInError } = await supa.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      showToast('Account created! Please sign in.', 'success');
+    } else {
+      showToast('Welcome to GuardNest! 🌿', 'success');
+      // onAuthStateChange will fire and handle pending items + load the app
+    }
   }
 }
 </script>
