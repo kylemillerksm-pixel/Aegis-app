@@ -2053,7 +2053,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
     <div style="font-size:12px;color:rgba(255,255,255,.7);">
       🌿 <strong style="color:#4CAF82;">Guest mode</strong> — scan your fridge, then save your results free
     </div>
-    <button onclick="showAuth();document.getElementById('guestBanner').style.display='none';" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
+    <button id="guestBannerCta" onclick="openSignupFromGuest()" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
       Save Free →
     </button>
   </div>
@@ -2998,15 +2998,10 @@ const UNLOCK_HINTS = [
   supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       currentUser = session.user;
-      // Reliable new user detection — account created in last 30 seconds
-      const isNewUser = (Date.now() - new Date(session.user.created_at).getTime()) < 30000;
-      if (isNewUser) {
-        localStorage.removeItem('guardnest_onboarded');
-        localStorage.removeItem('guardnest_seen_sample');
-        gtag('event', 'signup_completed', { method: 'google', new_user: true });
-      } else {
-        gtag('event', 'signin_completed', { method: 'google' });
-      }
+      hideGuestSaveModal();
+      const guestBanner = document.getElementById('guestBanner');
+      if (guestBanner) guestBanner.style.display = 'none';
+      gtag('event', 'signin_completed', { method: 'auth_state_change' });
       await bootApp();
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
@@ -3271,6 +3266,7 @@ async function bootApp() {
   // Always dismiss spinner regardless of errors
   hideLoading();
   showApp();
+  syncLoggedInUi();
   applyMobileLayout();
   try { initBriefCard(); } catch(e) { console.error('Brief init error:', e); }
   try { refreshDashboard(); } catch(e) { console.error('Dashboard error:', e); }
@@ -3328,6 +3324,33 @@ function showAuth() {
   document.getElementById('screen-app').classList.remove('visible');
   // Auto-show sample report for first time visitors or demo param
   // Demo and sample report handled in bootGuestMode
+  syncLoggedInUi();
+}
+
+function openSignupFromGuest() {
+  showAuth();
+  switchAuthTab('register');
+  const guestBanner = document.getElementById('guestBanner');
+  if (guestBanner) guestBanner.style.display = 'none';
+  gtag('event', 'signup_viewed', { method: 'guest_prompt' });
+}
+
+function syncLoggedInUi() {
+  const guestBanner = document.getElementById('guestBanner');
+  if (guestBanner) guestBanner.style.display = currentUser ? 'none' : 'flex';
+
+  const guestBannerCta = document.getElementById('guestBannerCta');
+  if (guestBannerCta) {
+    guestBannerCta.textContent = currentUser ? 'Saved ✓' : 'Save Free →';
+    guestBannerCta.disabled = !!currentUser;
+    guestBannerCta.style.opacity = currentUser ? '.65' : '1';
+    guestBannerCta.style.cursor = currentUser ? 'default' : 'pointer';
+  }
+
+  const saveModalCta = document.getElementById('saveModalCta');
+  if (saveModalCta && currentUser) {
+    saveModalCta.innerHTML = `Your account is active — <strong style="color:#fff;">your scans will save automatically.</strong>`;
+  }
 }
 
 function isMobile() {
@@ -3361,6 +3384,7 @@ window.addEventListener('resize', applyMobileLayout);
 function showApp() {
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
+  syncLoggedInUi();
   applyMobileLayout();
 }
 
@@ -3370,6 +3394,8 @@ function switchAuthTab(tab) {
   document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
   document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
   document.getElementById('authMsg').innerHTML = '';
+  if (tab === 'register') gtag('event', 'signup_viewed', { method: 'email' });
+  if (tab === 'login') gtag('event', 'login_viewed', { method: 'email' });
 }
 
 function setAuthMsg(msg, type) {
@@ -3395,17 +3421,57 @@ async function doRegister() {
   const email   = document.getElementById('regEmail').value.trim();
   const pass    = document.getElementById('regPassword').value;
   const confirm = document.getElementById('regConfirm').value;
-  if (!email || !pass) return setAuthMsg('Please fill in all fields.', 'error');
-  if (pass !== confirm) return setAuthMsg('Passwords do not match.', 'error');
-  if (pass.length < 6)  return setAuthMsg('Password must be at least 6 characters.', 'error');
+
+  gtag('event', 'signup_submitted', { method: 'email', source: 'register_form' });
+
+  if (!email || !pass) {
+    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'missing_fields' });
+    return setAuthMsg('Please fill in all fields.', 'error');
+  }
+  if (pass !== confirm) {
+    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'password_mismatch' });
+    return setAuthMsg('Passwords do not match.', 'error');
+  }
+  if (pass.length < 6) {
+    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'password_too_short' });
+    return setAuthMsg('Password must be at least 6 characters.', 'error');
+  }
 
   const btn = document.getElementById('btnRegister');
   btn.disabled = true; btn.textContent = 'Creating account...';
+  gtag('event', 'signup_request_sent', { method: 'email', source: 'register_form' });
 
-  const { error } = await supa.auth.signUp({ email, password: pass });
+  const { data, error } = await supa.auth.signUp({ email, password: pass });
+  console.log('REGISTER RESULT', { data, error });
+
   btn.disabled = false; btn.textContent = '🛡️ Create Account';
-  if (error) setAuthMsg(error.message, 'error');
-  else setAuthMsg('Account created! Signing you in...', 'success');
+
+  if (error) {
+    gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: error.message });
+    return setAuthMsg(error.message, 'error');
+  }
+
+  if (data?.user) {
+    currentUser = data.user;
+    localStorage.removeItem('guardnest_onboarded');
+    localStorage.removeItem('guardnest_seen_sample');
+    gtag('event', 'signup_completed', {
+      method: 'email',
+      source: 'register_form',
+      has_session: !!data.session
+    });
+    syncLoggedInUi();
+    hideGuestSaveModal();
+    setAuthMsg('Account created — your scans will now save automatically.', 'success');
+    if (data.session) {
+      showToast('Account created — you are now signed in. 🌿', 'success');
+      await bootApp();
+    }
+    return;
+  }
+
+  gtag('event', 'signup_failed', { method: 'email', source: 'register_form', reason: 'no_user_returned' });
+  setAuthMsg('Signup did not complete. Please try again.', 'error');
 }
 
 async function doGoogleLogin() {
@@ -6434,7 +6500,7 @@ function hideSampleReport() {
     appEl.style.pointerEvents = 'auto';
     appEl.style.opacity = '1';
   }
-  if (guestBanner) guestBanner.style.display = 'flex';
+  if (guestBanner) guestBanner.style.display = currentUser ? 'none' : 'flex';
 }
 
 function showRealReport(items) {
@@ -6816,7 +6882,7 @@ function bootGuestMode() {
   } else {
     // Show guest banner
     const banner = document.getElementById('guestBanner');
-    if (banner) banner.style.display = 'flex';
+    if (banner) banner.style.display = currentUser ? 'none' : 'flex';
     // Show onboarding for first time guests
     if (!localStorage.getItem('guardnest_seen_sample')) {
       setTimeout(() => showSampleReport(), 600);
@@ -6892,7 +6958,7 @@ function toggleGuestEmailForm() {
 
 function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
-  if (!modal) return;
+  if (!modal || currentUser) return;
 
   // Reset email form to collapsed state
   const emailForm   = document.getElementById('guestEmailForm');
@@ -6977,7 +7043,7 @@ function hideGuestSaveModal() {
 }
 
 async function guestSignupWithGoogle() {
-  gtag('event', 'signup_started', { method: 'google' });
+  gtag('event', 'signup_started', { method: 'google', source: 'guest_prompt' });
   hideGuestSaveModal();
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
@@ -6990,13 +7056,15 @@ async function guestSignupWithEmail() {
   const password = document.getElementById('guestPassword').value;
   if (!email || !password) {
     showToast('Please enter your email and a password', 'error');
+    gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: 'missing_fields' });
     return;
   }
   if (password.length < 6) {
     showToast('Password must be at least 6 characters', 'error');
+    gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: 'password_too_short' });
     return;
   }
-  gtag('event', 'signup_started', { method: 'email' });
+  gtag('event', 'signup_started', { method: 'email', source: 'guest_prompt' });
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
@@ -7006,42 +7074,46 @@ async function guestSignupWithEmail() {
   const { data: signInData, error: signInError } = await supa.auth.signInWithPassword({ email, password });
 
   if (!signInError && signInData?.session) {
-    // Existing user — logged in successfully
+    currentUser = signInData.session.user;
+    syncLoggedInUi();
     showToast('Welcome back! 🌿', 'success');
-    gtag('event', 'signin_completed', { method: 'email' });
+    gtag('event', 'signin_completed', { method: 'email', source: 'guest_prompt' });
+    await bootApp();
     return;
   }
 
-  // Sign in failed — attempt to create new account
+  gtag('event', 'signup_request_sent', { method: 'email', source: 'guest_prompt' });
   const { data, error } = await supa.auth.signUp({ email, password });
+  console.log('GUEST SIGNUP RESULT', { data, error });
 
   if (error) {
     showToast('Error: ' + error.message, 'error');
-    gtag('event', 'signup_failed', { method: 'email', reason: error.message });
+    gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: error.message });
     showGuestSavePrompt();
-  } else if (data?.user && data?.session) {
-    // Verify this is genuinely a new account — created in last 30 seconds
-    const isNewUser = (Date.now() - new Date(data.user.created_at).getTime()) < 30000;
-    if (isNewUser) {
-      localStorage.removeItem('guardnest_onboarded');
-      localStorage.removeItem('guardnest_seen_sample');
-      showToast('Welcome to GuardNest! 🌿', 'success');
-      gtag('event', 'signup_completed', { method: 'email', new_user: true });
-    } else {
-      // Session returned but account is old — treat as sign in
-      showToast('Welcome back! 🌿', 'success');
-      gtag('event', 'signin_completed', { method: 'email' });
-    }
-  } else if (data?.user && !data?.session) {
-    // Created but no session — email confirmation still blocking somewhere
-    showToast('Account created — check your email to confirm', 'info');
-    gtag('event', 'signup_failed', { method: 'email', reason: 'confirmation_required' });
-  } else {
-    // Silent failure — no user, no error
-    showToast('Something went wrong — try Google instead', 'error');
-    gtag('event', 'signup_failed', { method: 'email', reason: 'silent_failure' });
-    showGuestSavePrompt();
+    return;
   }
+
+  if (data?.user) {
+    currentUser = data.user;
+    localStorage.removeItem('guardnest_onboarded');
+    localStorage.removeItem('guardnest_seen_sample');
+    syncLoggedInUi();
+    gtag('event', 'signup_completed', {
+      method: 'email',
+      source: 'guest_prompt',
+      has_session: !!data.session,
+      pending_items: pendingItems.length
+    });
+    showToast('Welcome to GuardNest! Your scans will now save automatically. 🌿', 'success');
+    if (data.session) {
+      await bootApp();
+    }
+    return;
+  }
+
+  showToast('Signup did not complete. Please try again.', 'error');
+  gtag('event', 'signup_failed', { method: 'email', source: 'guest_prompt', reason: 'no_user_returned' });
+  showGuestSavePrompt();
 }
 </script>
 
