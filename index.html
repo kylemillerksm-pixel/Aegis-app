@@ -6218,8 +6218,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <!-- SAMPLE REPORT MODAL -->
 <!-- DEMO MODE MODAL — Duolingo-style 4-step flow -->
-<div id="sampleReportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;" onclick="event.stopPropagation()">
-  <div style="max-width:420px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:20px;" onclick="event.stopPropagation()">
+<div id="sampleReportModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;" onclick="event.stopPropagation()">
+  <div style="max-width:420px;margin:20px auto;padding:0 20px 20px;" onclick="event.stopPropagation()">
     <div style="background:#1a2330;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">
 
       <!-- STEP 1: Tap to select -->
@@ -6757,8 +6757,8 @@ async function submitDemoReminder() {
 
 
 <!-- GUEST SAVE PROMPT MODAL -->
-<div id="guestSaveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
-  <div style="max-width:400px;width:100%;background:#1a2330;border-radius:20px;border:1px solid rgba(76,175,130,.3);">
+<div id="guestSaveModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99999;-webkit-overflow-scrolling:touch;overflow-y:auto;">
+  <div style="max-width:400px;width:100%;background:#1a2330;border-radius:20px;border:1px solid rgba(76,175,130,.3);margin:20px auto;">
 
     <!-- Insight header — populated dynamically -->
 
@@ -6981,7 +6981,7 @@ function showGuestSavePrompt() {
     }
   }
 
-  modal.style.display = 'flex';
+  modal.style.display = 'block';
   gtag('event', 'guest_save_prompted', { items_pending: count, urgent_count: urgent.length });
 }
 
@@ -7075,8 +7075,8 @@ async function guestSignupWithEmail() {
 </script>
 
 <!-- ── SCAN COACHING MODAL ──────────────────────────────────────── -->
-<div id="scanCoachModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99998;align-items:center;justify-content:center;padding:24px;">
-  <div style="max-width:340px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.25);text-align:center;">
+<div id="scanCoachModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99998;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px;">
+  <div style="max-width:340px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.25);text-align:center;margin:20px auto;">
     <div id="coachEmoji" style="font-size:48px;margin-bottom:12px;">🧊</div>
     <div id="coachTitle" style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;">Get a better scan</div>
     <div id="coachSub" style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">Follow these tips for the best results</div>
@@ -7141,7 +7141,7 @@ function showCoachModal(type) {
     title.textContent = 'Get a better fridge scan';
     sub.textContent   = 'Follow these tips for the best results';
   }
-  modal.style.display = 'flex';
+  modal.style.display = 'block';
   gtag('event', 'coach_modal_shown', { scan_type: type });
 }
 
