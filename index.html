@@ -2998,6 +2998,13 @@ const UNLOCK_HINTS = [
   supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       currentUser = session.user;
+      // Detect new Google OAuth user — created_at and last_sign_in_at match on first login
+      const isNewUser = session.user.created_at === session.user.last_sign_in_at;
+      if (isNewUser) {
+        localStorage.removeItem('guardnest_onboarded');
+        localStorage.removeItem('guardnest_seen_sample');
+        gtag('event', 'signup_completed', { method: 'google', new_user: true });
+      }
       await bootApp();
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
@@ -6873,6 +6880,7 @@ function scheduleGuestSavePrompt(containerId, gridId) {
   }
 }
 
+function toggleGuestEmailForm() {
   const form   = document.getElementById('guestEmailForm');
   const toggle = document.getElementById('guestEmailToggle');
   const isHidden = form.style.display === 'none';
@@ -7010,7 +7018,9 @@ async function guestSignupWithEmail() {
     gtag('event', 'signup_failed', { method: 'email', reason: error.message });
     showGuestSavePrompt();
   } else if (data?.user && data?.session) {
-    // New account created and session active
+    // New account created and session active — clear onboarding flag so it shows on first login
+    localStorage.removeItem('guardnest_onboarded');
+    localStorage.removeItem('guardnest_seen_sample');
     showToast('Welcome to GuardNest! 🌿', 'success');
     gtag('event', 'signup_completed', { method: 'email', new_user: true });
   } else if (data?.user && !data?.session) {
