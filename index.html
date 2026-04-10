@@ -5643,9 +5643,8 @@ function triggerScan() {
     input.click();
   } else {
     window._currentScanType = type;
-    const input = document.getElementById('scanPhotoInput');
-    input.value = '';
-    input.click();
+    // Show coaching tips before opening camera
+    showCoachModal(type);
   }
 }
 
@@ -6518,11 +6517,8 @@ function launchRealScanner() {
   setScanType('fridge');
   showPage('scanner');
 
-  // Small delay so the page transition completes before camera opens
-  setTimeout(() => {
-    const input = document.getElementById('scanPhotoInput');
-    if (input) { input.value = ''; input.click(); }
-  }, 300);
+  // Show coaching tips then open camera
+  setTimeout(() => showCoachModal('fridge'), 300);
 
   gtag('event', 'cta_click', { location: 'demo_to_real_scan' });
 }
@@ -6846,5 +6842,85 @@ async function guestSignupWithEmail() {
   }
 }
 </script>
+
+<!-- ── SCAN COACHING MODAL ──────────────────────────────────────── -->
+<div id="scanCoachModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99998;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:340px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.25);text-align:center;">
+    <div id="coachEmoji" style="font-size:48px;margin-bottom:12px;">🧊</div>
+    <div id="coachTitle" style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;">Get a better scan</div>
+    <div id="coachSub" style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">Follow these tips for the best results</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;text-align:left;">
+      <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+        <span style="font-size:20px;">🚪</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff;">Open the door fully</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">Everything should be visible</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+        <span style="font-size:20px;">↔️</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff;">Step back 2–3 feet</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">Capture the full shelf in frame</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+        <span style="font-size:20px;">💡</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff;">Good lighting helps</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">Turn on the kitchen light if needed</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+        <span style="font-size:20px;">🤳</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff;">Hold steady</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">Wait for the camera to focus</div>
+        </div>
+      </div>
+    </div>
+    <button onclick="openCameraFromCoach()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:10px;">
+      📷 Open Camera
+    </button>
+    <button onclick="dismissCoachModal()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;padding:8px;">
+      Skip tips
+    </button>
+  </div>
+</div>
+
+<script>
+function showCoachModal(type) {
+  const modal = document.getElementById('scanCoachModal');
+  const emoji = document.getElementById('coachEmoji');
+  const title = document.getElementById('coachTitle');
+  const sub   = document.getElementById('coachSub');
+  if (type === 'pantry') {
+    emoji.textContent = '🗄️';
+    title.textContent = 'Get a better pantry scan';
+    sub.textContent   = 'Follow these tips to identify more items';
+  } else {
+    emoji.textContent = '🧊';
+    title.textContent = 'Get a better fridge scan';
+    sub.textContent   = 'Follow these tips for the best results';
+  }
+  modal.style.display = 'flex';
+  gtag('event', 'coach_modal_shown', { scan_type: type });
+}
+
+function dismissCoachModal() {
+  document.getElementById('scanCoachModal').style.display = 'none';
+  // Still open camera — they just skipped the tips
+  openCameraFromCoach();
+}
+
+function openCameraFromCoach() {
+  document.getElementById('scanCoachModal').style.display = 'none';
+  const input = document.getElementById('scanPhotoInput');
+  if (input) { input.value = ''; input.click(); }
+  gtag('event', 'coach_modal_dismissed');
+}
+</script>
+<!-- ── END SCAN COACHING MODAL ──────────────────────────────────── -->
+
 </body>
 </html>
