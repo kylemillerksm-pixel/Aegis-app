@@ -4187,6 +4187,8 @@ function refreshVault() {
 async function handleImageScan(input) {
   if (!input.files[0]) return;
   gtag('event', 'real_scan_started', {scan_type: 'receipt'});
+  window._savePromptFired = false;
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   const file = input.files[0];
 
   document.getElementById('scanResults').classList.add('hidden');
@@ -4209,6 +4211,8 @@ async function handleImageScan(input) {
   document.getElementById('scanResults').classList.remove('hidden');
   gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
   gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
+  // Trigger save prompt after user has absorbed results
+  scheduleGuestSavePrompt('scanResults', 'manifestGrid');
 }
 
 // ─── SCAN — PDF ───────────────────────────────────────────────
@@ -5855,6 +5859,8 @@ async function handleFridgePhoto(input, scanType) {
   if (!input.files || !input.files[0]) return;
   const type = scanType || window._currentScanType || 'fridge';
   gtag('event', 'real_scan_started', {scan_type: type});
+  window._savePromptFired = false;
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
 
   const file = input.files[0];
   const typeLabel = type === 'pantry' ? 'pantry' : 'fridge';
@@ -5995,6 +6001,8 @@ async function handleFridgePhoto(input, scanType) {
         showRealReport(pendingItems);
       } else {
         gtag('event', 'results_viewed', { scan_type: type, items_found: items.length });
+        // Trigger save prompt after user has absorbed results
+        scheduleGuestSavePrompt('scanResults', 'manifestGrid');
       }
 
     } catch (err) {
@@ -6727,39 +6735,54 @@ async function submitDemoReminder() {
 
 
 <!-- GUEST SAVE PROMPT MODAL -->
-<div id="guestSaveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;">
-  <div style="max-width:400px;width:100%;background:#1a2330;border-radius:16px;padding:28px;border:1px solid rgba(76,175,130,.25);text-align:center;">
-    <div style="font-size:36px;margin-bottom:12px;">🌿</div>
-    <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;">Save your scan</div>
-    <p style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">
-      Create a free account to save these items and get your weekly clarity report every Monday.
-    </p>
+<div id="guestSaveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="max-width:400px;width:100%;background:#1a2330;border-radius:20px;overflow:hidden;border:1px solid rgba(76,175,130,.3);">
 
-    <!-- Google -->
-    <button onclick="gtag('event','cta_click',{location:'guest_save_google'});guestSignupWithGoogle()" style="width:100%;background:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Continue with Google
-    </button>
-
-    <!-- Divider -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-      <div style="flex:1;height:1px;background:rgba(255,255,255,.1);"></div>
-      <span style="font-size:11px;color:rgba(255,255,255,.3);">or</span>
-      <div style="flex:1;height:1px;background:rgba(255,255,255,.1);"></div>
+    <!-- Insight header — populated dynamically -->
+    <div id="saveModalInsight" style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:20px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span style="font-size:16px;">🌿</span>
+        <span style="font-size:11px;font-weight:700;color:#4CAF82;letter-spacing:.08em;">GUARDNEST FOUND</span>
+      </div>
+      <!-- Bold stat -->
+      <div id="saveModalBoldStat" style="font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:6px;">
+        Scanning your fridge...
+      </div>
+      <!-- Supporting stats row -->
+      <div id="saveModalStats" style="display:flex;gap:8px;margin-top:10px;"></div>
     </div>
 
-    <!-- Email -->
-    <div id="guestEmailForm" style="margin-bottom:10px;">
-      <input id="guestEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;">
-      <input id="guestPassword" type="password" placeholder="Create a password (6+ chars)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;">
-      <button onclick="guestSignupWithEmail()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;">
-        Save free with email →
+    <!-- Expiring items preview -->
+    <div id="saveModalItems" style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);max-height:160px;overflow-y:auto;"></div>
+
+    <!-- CTA section -->
+    <div style="padding:20px;">
+      <div id="saveModalCta" style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.6;text-align:center;"></div>
+
+      <!-- Google — primary CTA -->
+      <button onclick="gtag('event','cta_click',{location:'guest_save_google'});guestSignupWithGoogle()" style="width:100%;background:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Save free with Google
+      </button>
+
+      <!-- Email — collapsed by default -->
+      <div id="guestEmailToggle" style="text-align:center;margin-bottom:8px;">
+        <button onclick="toggleGuestEmailForm()" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;padding:4px;text-decoration:underline;">
+          use email instead
+        </button>
+      </div>
+      <div id="guestEmailForm" style="display:none;margin-bottom:8px;">
+        <input id="guestEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;">
+        <input id="guestPassword" type="password" placeholder="Create a password (6+ chars)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;">
+        <button onclick="guestSignupWithEmail()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;">
+          Save free with email →
+        </button>
+      </div>
+
+      <button onclick="hideGuestSaveModal()" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;text-align:center;">
+        I'll do this later
       </button>
     </div>
-
-    <button onclick="hideGuestSaveModal()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;padding:8px;">
-      Not now
-    </button>
   </div>
 </div>
 
@@ -6794,17 +6817,153 @@ function bootGuestMode() {
   }
 }
 
+function scheduleGuestSavePrompt(containerId, gridId) {
+  // Only fire for guest users — logged in users already have save
+  if (currentUser) return;
+
+  const container = document.getElementById(containerId);
+  const grid      = document.getElementById(gridId);
+  if (!container || !grid) return;
+
+  // Clear any existing scheduled prompt
+  if (window._savePromptTimer)     clearTimeout(window._savePromptTimer);
+  if (window._savePromptObserver)  window._savePromptObserver.disconnect();
+
+  const firePrompt = () => {
+    if (currentUser) return; // user signed in while reading
+    if (window._savePromptFired) return;
+    window._savePromptFired = true;
+    showGuestSavePrompt();
+  };
+
+  window._savePromptFired = false;
+
+  // Check if content is short enough that no scrolling is needed
+  const gridHeight      = grid.offsetHeight;
+  const containerHeight = window.innerHeight;
+
+  if (gridHeight <= containerHeight * 0.8) {
+    // Short results — fire after 4 seconds of read time
+    window._savePromptTimer = setTimeout(firePrompt, 4000);
+  } else {
+    // Long results — fire when user scrolls 60% through the grid
+    // Use the main content scroll area
+    const scrollEl = document.querySelector('.main-content') || document.documentElement;
+
+    const checkScroll = () => {
+      const gridTop    = grid.getBoundingClientRect().top;
+      const gridBottom = grid.getBoundingClientRect().bottom;
+      const viewH      = window.innerHeight;
+      const gridVisible = gridBottom - gridTop;
+      const scrolledPast = viewH - gridTop;
+      const pct = scrolledPast / gridVisible;
+
+      if (pct >= 0.6) {
+        firePrompt();
+        scrollEl.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('scroll', checkScroll);
+      }
+    };
+
+    scrollEl.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('scroll', checkScroll, { passive: true });
+
+    // Fallback — if they haven't scrolled after 8 seconds fire anyway
+    window._savePromptTimer = setTimeout(firePrompt, 8000);
+  }
+}
+
+  const form   = document.getElementById('guestEmailForm');
+  const toggle = document.getElementById('guestEmailToggle');
+  const isHidden = form.style.display === 'none';
+  form.style.display   = isHidden ? 'block' : 'none';
+  toggle.style.display = isHidden ? 'none'  : 'block';
+}
+
 function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
-  if (modal) {
-    modal.style.display = 'flex';
-    gtag('event', 'guest_save_prompted', { items_pending: pendingItems.length });
+  if (!modal) return;
+
+  // Reset email form to collapsed state
+  const emailForm   = document.getElementById('guestEmailForm');
+  const emailToggle = document.getElementById('guestEmailToggle');
+  if (emailForm)   emailForm.style.display   = 'none';
+  if (emailToggle) emailToggle.style.display = 'block';
+
+  // ── Build insight from pendingItems ──────────────────────────
+  const items    = pendingItems || [];
+  const count    = items.length;
+  const urgent   = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 3);
+  const expiring = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 7);
+  const totalVal = (count * 3.50).toFixed(0); // estimated avg value per item
+  const wasteVal = (urgent.length * 3.50).toFixed(0);
+
+  // Bold stat
+  const boldStat = document.getElementById('saveModalBoldStat');
+  if (boldStat) {
+    if (urgent.length > 0) {
+      boldStat.innerHTML = `~$${wasteVal} of food at risk<br>in the next 3 days`;
+      boldStat.style.color = urgent.length >= 3 ? '#E05555' : '#D4A843';
+    } else if (expiring.length > 0) {
+      boldStat.innerHTML = `${expiring.length} item${expiring.length !== 1 ? 's' : ''} expiring<br>this week`;
+      boldStat.style.color = '#D4A843';
+    } else {
+      boldStat.innerHTML = `${count} item${count !== 1 ? 's' : ''} tracked<br>in your fridge`;
+      boldStat.style.color = '#4CAF82';
+    }
   }
+
+  // Supporting stats chips
+  const statsEl = document.getElementById('saveModalStats');
+  if (statsEl) {
+    const chips = [];
+    if (count > 0)          chips.push(`<span style="background:rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:rgba(255,255,255,.6);">${count} items found</span>`);
+    if (urgent.length > 0)  chips.push(`<span style="background:rgba(224,85,85,.15);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:#E05555;">${urgent.length} urgent</span>`);
+    if (expiring.length > urgent.length) chips.push(`<span style="background:rgba(212,168,67,.15);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:#D4A843;">${expiring.length - urgent.length} this week</span>`);
+    statsEl.innerHTML = chips.join('');
+  }
+
+  // Items preview — show urgent first then remaining
+  const itemsEl = document.getElementById('saveModalItems');
+  if (itemsEl) {
+    const sorted = [...items].sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99));
+    const preview = sorted.slice(0, 5);
+    if (preview.length === 0) {
+      itemsEl.style.display = 'none';
+    } else {
+      itemsEl.style.display = 'block';
+      itemsEl.innerHTML = preview.map(item => {
+        const days = item.days_until_spoil || 0;
+        const color = days <= 3 ? '#E05555' : days <= 7 ? '#D4A843' : '#4CAF82';
+        const label = days <= 0 ? '' : days === 1 ? 'today' : `${days}d`;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+          <span style="font-size:13px;color:rgba(255,255,255,.8);">${item.item_name}</span>
+          ${label ? `<span style="font-size:11px;font-weight:700;color:${color};">${label}</span>` : ''}
+        </div>`;
+      }).join('') + (items.length > 5 ? `<div style="font-size:11px;color:rgba(255,255,255,.3);padding-top:6px;">+${items.length - 5} more items</div>` : '');
+    }
+  }
+
+  // CTA copy
+  const ctaEl = document.getElementById('saveModalCta');
+  if (ctaEl) {
+    if (urgent.length > 0) {
+      ctaEl.innerHTML = `This is the stuff that quietly adds up.<br>Save free to get reminded <strong style="color:#fff;">before it's gone.</strong>`;
+    } else if (expiring.length > 0) {
+      ctaEl.innerHTML = `Most people don't realize until it's too late.<br><strong style="color:#fff;">Save free</strong> and we'll remind you every Monday.`;
+    } else {
+      ctaEl.innerHTML = `You probably waste more than you think — <br><strong style="color:#fff;">save free</strong> and we'll show you the pattern.`;
+    }
+  }
+
+  modal.style.display = 'flex';
+  gtag('event', 'guest_save_prompted', { items_pending: count, urgent_count: urgent.length });
 }
 
 function hideGuestSaveModal() {
   const modal = document.getElementById('guestSaveModal');
   if (modal) modal.style.display = 'none';
+  gtag('event', 'save_modal_dismissed');
 }
 
 async function guestSignupWithGoogle() {
