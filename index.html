@@ -2525,7 +2525,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 
       <!-- ACCOUNT PAGE -->
       <div class="page" id="page-account">
-        <div style="max-width:480px;margin:0 auto;padding:8px 16px 40px;box-sizing:border-box;width:100%;">
+        <div style="max-width:480px;margin:0 auto;padding:8px 16px 100px;box-sizing:border-box;width:100%;">
 
           <!-- Pro Status Card -->
           <div id="accountProCard" style="border-radius:14px;padding:20px;margin-bottom:16px;background:linear-gradient(135deg,rgba(245,200,66,.12),rgba(245,200,66,.04));border:1px solid rgba(245,200,66,.25);box-sizing:border-box;overflow:hidden;">
@@ -3460,8 +3460,26 @@ document.addEventListener('click', function(e) {
 });
 
 async function doSignOut() {
-  await supa.auth.signOut();
-  showAuth();
+  try {
+    // Clear local state immediately regardless of network call
+    currentUser = null;
+    allItems = [];
+    pendingItems = [];
+    localStorage.removeItem('guardnest_onboarded');
+    localStorage.removeItem('guardnest_seen_sample');
+    localStorage.removeItem('guardnest_pending_guest');
+
+    // Attempt Supabase signOut — may be blocked by Brave Shields
+    await Promise.race([
+      supa.auth.signOut(),
+      new Promise(resolve => setTimeout(resolve, 2000)) // timeout after 2s
+    ]);
+  } catch(e) {
+    console.log('SignOut network error:', e.message);
+  } finally {
+    // Always redirect to auth screen
+    bootGuestMode();
+  }
 }
 
 // ─── DATA ─────────────────────────────────────────────────────
