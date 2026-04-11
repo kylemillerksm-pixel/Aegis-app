@@ -236,7 +236,7 @@
   #screen-app { display: none; min-height: 100vh; height: 100dvh; }
   #screen-app.visible { display: flex; flex-direction: row; width: 100%; overflow: hidden; }
   @media (max-width: 768px) {
-    #screen-app.visible { flex-direction: column; }
+    #screen-app.visible { flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   }
 
   /* SIDEBAR */
@@ -1554,7 +1554,7 @@
     .bottom-nav    { display: block !important; }
 
     /* Main layout */
-    .main { min-height: 100vh; padding-bottom: 70px; width: 100%; max-width: 100vw; }
+    .main { min-height: 100vh; padding-bottom: 0; width: 100%; max-width: 100vw; overflow-y: visible; }
     .app  { flex-direction: column; width: 100%; }
 
     /* Topbar */
@@ -1567,13 +1567,12 @@
     .topbar-right span:not(.status-dot):not(.btn) { display: none; }
     .topbar { display: none; }
 
-    /* Content — must scroll independently of bottom nav */
+    /* Content — scrollable on all mobile browsers */
     .content {
-      padding: 14px 14px 80px;
-      overflow-y: auto;
+      padding: 14px 14px 120px;
+      overflow-y: scroll;
       -webkit-overflow-scrolling: touch;
-      height: calc(100dvh - 48px - 60px);
-      max-height: calc(100dvh - 48px - 60px);
+      overscroll-behavior: contain;
     }
 
     /* Grid fixes */
