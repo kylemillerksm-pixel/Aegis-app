@@ -1567,8 +1567,14 @@
     .topbar-right span:not(.status-dot):not(.btn) { display: none; }
     .topbar { display: none; }
 
-    /* Content */
-    .content { padding: 14px 14px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    /* Content — must scroll independently of bottom nav */
+    .content {
+      padding: 14px 14px 80px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      height: calc(100dvh - 48px - 60px);
+      max-height: calc(100dvh - 48px - 60px);
+    }
 
     /* Grid fixes */
     .grid2 { grid-template-columns: 1fr; }
