@@ -5823,7 +5823,6 @@ function bootNewUser() {
   if (demoState) {
     // They came from the demo — skip dashboard, land on scanner with continuity
     showPage('scanner');
-    setScanType('fridge');
     gtag('event', 'new_user_from_demo', { demo_xp: demoState.xp, demo_item: demoState.item });
 
     // Show continuity welcome overlay
@@ -5833,8 +5832,7 @@ function bootNewUser() {
   } else {
     // No demo context — land on scanner with simple welcome
     showPage('scanner');
-    setScanType('fridge');
-    setTimeout(() => showToast('Welcome to GuardNest! Scan your fridge to start. 🌿', 'success'), 400);
+    setTimeout(() => showToast('Welcome to GuardNest! Scan your fridge, pantry, or a receipt to start. 🌿', 'success'), 400);
     gtag('event', 'new_user_no_demo');
   }
 }
@@ -5866,16 +5864,37 @@ function _showDemoContinuityBanner(itemName, xp) {
         </div>
         <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Scan your fridge → earn more XP → unlock habit insights</div>
       </div>
-      <!-- Mission hint -->
-      <div style="background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left;">
-        <div style="font-size:10px;font-weight:700;color:#D4A843;letter-spacing:.08em;margin-bottom:4px;">🎯 NEXT MISSION</div>
-        <div style="font-size:13px;color:#fff;">Scan your real fridge to build your actual inventory</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">+100 XP on first real scan</div>
+      <!-- Scan options -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.08em;margin-bottom:2px;">🎯 BUILD YOUR INVENTORY</div>
+        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('fridge');showPage('scanner');gtag('event','continuity_chose_fridge');"
+          style="display:flex;align-items:center;gap:12px;background:rgba(76,175,130,.1);border:1px solid rgba(76,175,130,.3);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
+          <span style="font-size:24px;">🧊</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Scan my fridge</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;">Track perishables and expiry dates</div>
+          </div>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
+        </button>
+        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('pantry');showPage('scanner');gtag('event','continuity_chose_pantry');"
+          style="display:flex;align-items:center;gap:12px;background:rgba(136,102,255,.08);border:1px solid rgba(136,102,255,.25);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
+          <span style="font-size:24px;">🗄️</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Scan my pantry</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;">Canned goods, dry goods, snacks</div>
+          </div>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
+        </button>
+        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('receipt');showPage('scanner');gtag('event','continuity_chose_receipt');"
+          style="display:flex;align-items:center;gap:12px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
+          <span style="font-size:24px;">🧾</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Scan a receipt</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;">Most accurate — tracks everything from your shop</div>
+          </div>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
+        </button>
       </div>
-      <button onclick="document.getElementById('demoContinuityBanner').remove();gtag('event','continuity_banner_dismissed');" 
-        style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">
-        Build my real inventory →
-      </button>
     </div>`;
   document.body.appendChild(banner);
   gtag('event', 'demo_continuity_banner_shown');
