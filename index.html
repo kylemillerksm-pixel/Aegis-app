@@ -2332,16 +2332,34 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 
         <!-- SCAN RESULTS -->
         <div id="scanResults" class="hidden" style="margin-top:18px">
-          <div class="panel">
+          <!-- Celebration moment -->
+          <div id="scanCelebration" style="display:none;text-align:center;padding:20px;animation:fadeIn .4s ease;">
+            <div id="scanCelebEmoji" style="font-size:48px;margin-bottom:8px;">✅</div>
+            <div id="scanCelebTitle" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;"></div>
+            <div id="scanCelebSub" style="font-size:13px;color:var(--text2);"></div>
+          </div>
+
+          <div class="panel" style="margin-top:12px;">
             <div class="panel-header">
-              <div class="panel-title" id="resultsTitle">📦 Inventory Manifest</div>
-              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px">
-                ✅ Add to My Fridge
+              <div class="panel-title" id="resultsTitle">📦 Your Fridge</div>
+              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px;display:none;">
+                ✅ Save
               </button>
             </div>
             <div class="panel-body">
-              <div class="manifest-grid" id="manifestGrid"></div>
+              <div id="manifestGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
             </div>
+          </div>
+
+          <!-- Persistent save banner — only shows after interaction -->
+          <div id="guestSaveBanner" style="display:none;position:sticky;bottom:70px;margin:12px 0;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.4);border-radius:14px;padding:14px 16px;display:none;align-items:center;justify-content:space-between;gap:12px;z-index:100;">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">This disappears when you close.</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.4);">Save free to keep tracking.</div>
+            </div>
+            <button onclick="gtag('event','cta_click',{location:'save_banner'});showGuestSavePrompt();" style="background:#4CAF82;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
+              Save free →
+            </button>
           </div>
         </div>
       </div>
@@ -3026,7 +3044,7 @@ const UNLOCK_HINTS = [
         localStorage.removeItem('guardnest_seen_sample');
         // signup_completed fires server-side via welcome-email Edge Function
         gtag('event', 'new_user_session', { method: 'google', user_id: session.user.id });
-        fbq('track', 'CompleteRegistration', { method: 'google' });
+        if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'google' });
         await bootApp();
         showPage('dashboard');
         showToast('Welcome to GuardNest! 🌿', 'success');
@@ -4271,7 +4289,7 @@ async function handleImageScan(input) {
   document.getElementById('scanResults').classList.remove('hidden');
   gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
   gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
-  fbq('track', 'Lead', { content_name: 'scan_completed', content_category: 'receipt' });
+  if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: 'receipt' });
   // Trigger save prompt after user has absorbed results
   scheduleGuestSavePrompt('scanResults', 'manifestGrid');
 }
@@ -4567,55 +4585,168 @@ function purchaseText(dateStr) {
 }
 
 function renderManifest(items, gridId, titleId) {
-  document.getElementById(titleId).textContent =
-    items.length === 1
-      ? '✅ 1 item found — looks right?'
-      : `✅ ${items.length} items found — looks right?`;
+  const isMainGrid = gridId === 'manifestGrid';
 
-  document.getElementById(gridId).innerHTML = items.map((item, i) => {
-    const price   = parseFloat(item.price || 0);
-    const warranty= parseInt(item.warranty_days || 0);
-    const spoil   = parseInt(item.days_until_spoil || 0);
-    const [emoji] = getItemEmoji(item.item_name, item.category);
-    const wText   = warrantyText(warranty);
-    const sText   = spoilText(spoil);
-    const pText   = purchaseText(item.purchase_date);
-    const xp      = 10 + Math.max(0, Math.floor(price - 50));
+  if (titleId) {
+    document.getElementById(titleId).textContent =
+      items.length === 1 ? '📦 Your Fridge' : `📦 Your Fridge`;
+  }
 
-    let protectionBadge = '';
-    if (warranty > 0)    protectionBadge = `<span class="mc-prot mc-prot-warranty">🛡️ Warranty tracked</span>`;
-    else if (spoil > 0)  protectionBadge = `<span class="mc-prot mc-prot-spoil">⏰ Expiry tracked</span>`;
-    else                 protectionBadge = `<span class="mc-prot mc-prot-basic">📦 Item tracked</span>`;
+  // Show celebration moment for main scanner grid
+  if (isMainGrid) {
+    const celebEl    = document.getElementById('scanCelebration');
+    const celebTitle = document.getElementById('scanCelebTitle');
+    const celebSub   = document.getElementById('scanCelebSub');
+    const totalVal   = (items.length * 3.5).toFixed(0);
+    const urgent     = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 3);
 
-    return `<div class="manifest-card" style="animation-delay:${i*0.06}s" id="mc-${i}">
-      <button class="mc-remove" onclick="removeManifestItem(${i})" ontouchend="this.onclick()" title="Remove this item">✕</button>
-      <div class="mc-top-row">
-        <span style="font-size:26px">${emoji}</span>
-        ${protectionBadge}
-      </div>
-      <div class="mc-name">${item.item_name || 'Unknown'}</div>
-      <div class="mc-sub">📍 ${item.merchant || '—'} &nbsp;·&nbsp; $${price.toFixed(2)}</div>
-      <div class="mc-info-list">
-        ${wText ? `<div class="mc-info-row">${wText}</div>` : ''}
-        ${sText ? `<div class="mc-info-row">${sText}</div>` : ''}
-        ${pText ? `<div class="mc-info-row">${pText}</div>` : ''}
-        ${!wText && !sText ? '<div class="mc-info-row" style="color:var(--text3)">No expiry for this item</div>' : ''}
-        ${spoil > 0 ? `<div class="mc-info-row" style="margin-top:6px">
-          <span style="color:var(--text3);font-size:11px">📅 Estimated ${spoil}d · </span>
-          <span style="color:var(--gold);font-size:11px;cursor:pointer" onclick="toggleDateOverride(${i})">Got a date on the package? Tap to update</span>
-          <div id="date-override-${i}" style="display:none;margin-top:6px">
-            <input type="date" id="date-input-${i}" style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;width:100%" onchange="updateItemExpiry(${i}, this.value)">
+    if (celebEl && celebTitle && celebSub) {
+      celebTitle.textContent = `${items.length} ITEM${items.length !== 1 ? 'S' : ''} FOUND`;
+      celebSub.textContent   = urgent.length > 0
+        ? `${urgent.length} item${urgent.length !== 1 ? 's' : ''} need attention this week · ~$${totalVal} tracked`
+        : `~$${totalVal} of groceries tracked · looking good`;
+      celebEl.style.display = 'block';
+
+      // Flash animation
+      celebEl.style.background = 'rgba(76,175,130,.08)';
+      celebEl.style.borderRadius = '12px';
+      setTimeout(() => { celebEl.style.background = 'transparent'; }, 800);
+    }
+  }
+
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+
+  // For main grid use new card design, for PDF grid keep original
+  if (!isMainGrid) {
+    grid.className = 'manifest-grid';
+    grid.innerHTML = items.map((item, i) => {
+      const price   = parseFloat(item.price || 0);
+      const warranty= parseInt(item.warranty_days || 0);
+      const spoil   = parseInt(item.days_until_spoil || 0);
+      const [emoji] = getItemEmoji(item.item_name, item.category);
+      const wText   = warrantyText(warranty);
+      const sText   = spoilText(spoil);
+      const pText   = purchaseText(item.purchase_date);
+      const xp      = 10 + Math.max(0, Math.floor(price - 50));
+      let protectionBadge = '';
+      if (warranty > 0)    protectionBadge = `<span class="mc-prot mc-prot-warranty">🛡️ Warranty tracked</span>`;
+      else if (spoil > 0)  protectionBadge = `<span class="mc-prot mc-prot-spoil">⏰ Expiry tracked</span>`;
+      else                 protectionBadge = `<span class="mc-prot mc-prot-basic">📦 Item tracked</span>`;
+      return `<div class="manifest-card" style="animation-delay:${i*0.06}s" id="mc-${i}">
+        <button class="mc-remove" onclick="removeManifestItem(${i})" ontouchend="this.onclick()" title="Remove this item">✕</button>
+        <div class="mc-top-row"><span style="font-size:26px">${emoji}</span>${protectionBadge}</div>
+        <div class="mc-name">${item.item_name || 'Unknown'}</div>
+        <div class="mc-sub">📍 ${item.merchant || '—'} &nbsp;·&nbsp; $${price.toFixed(2)}</div>
+        <div class="mc-info-list">
+          ${wText ? `<div class="mc-info-row">${wText}</div>` : ''}
+          ${sText ? `<div class="mc-info-row">${sText}</div>` : ''}
+          ${pText ? `<div class="mc-info-row">${pText}</div>` : ''}
+        </div>
+        <div class="mc-footer">
+          <button class="mc-thumbsdown" onclick="flagBadScan(this,this.dataset.name,event)" data-name="${(item.item_name||'Unknown').replace(/['"]/g,'')}" ontouchend="this.onclick(event)">👎 Wrong?</button>
+          <span class="mc-badge" style="background:rgba(76,175,130,.1);color:var(--gold)">+${xp} pts</span>
+        </div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // ── NEW MAIN GRID — animated cards with freshness bars ────────
+  grid.className = '';
+  grid.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+
+  // Stagger item reveal
+  items.forEach((item, i) => {
+    const spoil    = parseInt(item.days_until_spoil || 0);
+    const price    = parseFloat(item.price || 0);
+    const warranty = parseInt(item.warranty_days || 0);
+    const [emoji]  = getItemEmoji(item.item_name, item.category);
+
+    // Freshness color
+    const urgColor  = spoil <= 0 ? 'var(--text3)' : spoil <= 2 ? '#E05555' : spoil <= 5 ? '#D4A843' : '#4CAF82';
+    const urgLabel  = spoil <= 0 ? 'shelf stable' : spoil === 1 ? 'expires tomorrow' : spoil <= 3 ? `expires in ${spoil} days` : spoil <= 7 ? `${spoil} days left` : `${spoil} days fresh`;
+    const barWidth  = spoil <= 0 ? 100 : Math.min(100, Math.round((spoil / 14) * 100));
+    const suggested = getSuggestedUse(item.item_name, spoil);
+
+    const card = document.createElement('div');
+    card.id = `mc-${i}`;
+    card.style.cssText = `background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px;opacity:0;transform:translateY(8px);transition:all .3s ease;cursor:pointer;`;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:28px;flex-shrink:0;">${emoji}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.item_name || 'Unknown'}</div>
+          <div style="height:4px;background:var(--dark2);border-radius:2px;overflow:hidden;margin-bottom:4px;">
+            <div style="height:100%;width:${barWidth}%;background:${urgColor};border-radius:2px;transition:width .6s ease;"></div>
           </div>
-        </div>` : ''}
+          <div style="font-size:11px;font-weight:600;color:${urgColor};">${urgLabel}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);flex-shrink:0;">tap</div>
       </div>
-      <div class="mc-footer">
-        <button class="mc-thumbsdown" onclick="flagBadScan(this,this.dataset.name,event)" data-name="${(item.item_name||'Unknown').replace(/['"]/g,'')}" ontouchend="this.onclick(event)" title="This scan looks wrong">
-          👎 Wrong?
-        </button>
-        <span class="mc-badge" style="background:rgba(76,175,130,.1);color:var(--gold)">+${xp} pts</span>
-      </div>
-    </div>`;
-  }).join('');
+      <div id="mc-detail-${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">${suggested}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="guestMarkUsed(${i}, event)" style="background:rgba(76,175,130,.12);border:1px solid rgba(76,175,130,.3);color:#4CAF82;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">
+            ✓ Mark as used
+          </button>
+          <button onclick="removeManifestItem(${i})" style="background:transparent;border:1px solid var(--border2);color:var(--text3);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;">
+            Remove
+          </button>
+        </div>
+      </div>`;
+
+    // Tap to expand
+    card.addEventListener('click', () => {
+      const detail = document.getElementById(`mc-detail-${i}`);
+      const isOpen = detail.style.display !== 'none';
+      // Close all others
+      items.forEach((_, j) => {
+        const d = document.getElementById(`mc-detail-${j}`);
+        if (d && j !== i) d.style.display = 'none';
+      });
+      detail.style.display = isOpen ? 'none' : 'block';
+
+      // Show save banner after first interaction
+      if (!currentUser && !window._bannerShown) {
+        window._bannerShown = true;
+        const banner = document.getElementById('guestSaveBanner');
+        if (banner) {
+          banner.style.display = 'flex';
+          gtag('event', 'save_banner_shown');
+        }
+      }
+    });
+
+    grid.appendChild(card);
+
+    // Staggered reveal animation
+    setTimeout(() => {
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, i * 80 + 200);
+  });
+
+  // Show save button for logged-in users
+  const btnSave = document.getElementById('btnSave');
+  if (btnSave) btnSave.style.display = currentUser ? 'inline-flex' : 'none';
+
+  // Reset banner flag for new scan
+  window._bannerShown = false;
+}
+
+function getSuggestedUse(itemName, days) {
+  const name = (itemName || '').toLowerCase();
+  if (days <= 1) return '⚡ Use today — add to tonight\'s dinner or freeze it now.';
+  if (days <= 3) {
+    if (name.includes('chicken') || name.includes('beef') || name.includes('meat') || name.includes('fish')) return '🍳 Cook or freeze within 2 days to avoid waste.';
+    if (name.includes('spinach') || name.includes('lettuce') || name.includes('greens')) return '🥗 Add to a salad or smoothie before it wilts.';
+    if (name.includes('berr') || name.includes('strawberr')) return '🫐 Eat fresh or blend into a smoothie today.';
+    if (name.includes('bread')) return '🍞 Freeze what you won\'t eat in the next day.';
+    return '⏰ Use within the next few days — plan a meal around it.';
+  }
+  if (days <= 7) return '📅 On your radar this week — you\'ve got time.';
+  return '✅ Plenty of time — this one\'s not urgent.';
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────
@@ -6034,9 +6165,13 @@ async function handleFridgePhoto(input, scanType) {
 
       if (items.length === 0) {
         gtag('event', 'scan_failed', { scan_type: type, reason: 'no_items_found' });
-        document.getElementById('scanIcon').textContent  = '📷';
-        document.getElementById('scanTitle').textContent = "Couldn't identify items";
-        document.getElementById('scanSub').textContent   = 'Try getting closer, better lighting, or scan a receipt instead.';
+        document.getElementById('scanIcon').textContent  = '📸';
+        document.getElementById('scanTitle').textContent = "Too much to read at once";
+        document.getElementById('scanSub').innerHTML = `
+          <div style="margin-bottom:12px;">Your fridge might be too packed for one shot. Try scanning <strong>one shelf at a time</strong> — closer photos work much better.</div>
+          <button onclick="triggerScan()" style="background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+            📷 Try a shelf instead
+          </button>`;
         return;
       }
 
@@ -6055,7 +6190,7 @@ async function handleFridgePhoto(input, scanType) {
       renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
       document.getElementById('scanResults').classList.remove('hidden');
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
-      fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
+      if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
 
       // If user came from "Scan my real fridge" in demo — show the report modal
       if (window._showRealReportAfterScan) {
@@ -6837,7 +6972,7 @@ async function submitDemoReminder() {
       <!-- Google — primary CTA -->
       <button onclick="gtag('event','cta_click',{location:'guest_save_google'});guestSignupWithGoogle()" style="width:100%;background:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
         <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Keep my results — it's free
+        Save free with Google
       </button>
 
       <!-- Email — collapsed by default -->
@@ -6850,7 +6985,7 @@ async function submitDemoReminder() {
         <input id="guestEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:16px;color:#fff;margin-bottom:8px;outline:none;">
         <input id="guestPassword" type="password" placeholder="Create a password (6+ chars)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:16px;color:#fff;margin-bottom:8px;outline:none;">
         <button onclick="guestSignupWithEmail()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;">
-          Keep my results free →
+          Save free with email →
         </button>
       </div>
 
@@ -6864,7 +6999,7 @@ async function submitDemoReminder() {
         </div>
       </div>
 
-      <!-- Dismiss — anticipated regret framing -->
+      <!-- Dismiss -->
       <button onclick="showSaveModalRemind()" id="saveModalDismissBtn" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;text-align:center;">
         I don't mind losing this
       </button>
@@ -6907,60 +7042,46 @@ function bootGuestMode() {
   }
 }
 
-function scheduleGuestSavePrompt(containerId, gridId) {
-  // Only fire for guest users — logged in users already have save
-  if (currentUser) return;
-
-  const container = document.getElementById(containerId);
-  const grid      = document.getElementById(gridId);
-  if (!container || !grid) return;
-
-  // Clear any existing scheduled prompt
-  if (window._savePromptTimer)     clearTimeout(window._savePromptTimer);
-  if (window._savePromptObserver)  window._savePromptObserver.disconnect();
-
-  const firePrompt = () => {
-    if (currentUser) return; // user signed in while reading
-    if (window._savePromptFired) return;
-    window._savePromptFired = true;
-    showGuestSavePrompt();
-  };
-
-  window._savePromptFired = false;
-
-  // Check if content is short enough that no scrolling is needed
-  const gridHeight      = grid.offsetHeight;
-  const containerHeight = window.innerHeight;
-
-  if (gridHeight <= containerHeight * 0.8) {
-    // Short results — fire after 4 seconds of read time
-    window._savePromptTimer = setTimeout(firePrompt, 4000);
-  } else {
-    // Long results — fire when user scrolls 60% through the grid
-    // Use the main content scroll area
-    const scrollEl = document.querySelector('.main-content') || document.documentElement;
-
-    const checkScroll = () => {
-      const gridTop    = grid.getBoundingClientRect().top;
-      const gridBottom = grid.getBoundingClientRect().bottom;
-      const viewH      = window.innerHeight;
-      const gridVisible = gridBottom - gridTop;
-      const scrolledPast = viewH - gridTop;
-      const pct = scrolledPast / gridVisible;
-
-      if (pct >= 0.6) {
-        firePrompt();
-        scrollEl.removeEventListener('scroll', checkScroll);
-        window.removeEventListener('scroll', checkScroll);
-      }
-    };
-
-    scrollEl.addEventListener('scroll', checkScroll, { passive: true });
-    window.addEventListener('scroll', checkScroll, { passive: true });
-
-    // Fallback — if they haven't scrolled after 8 seconds fire anyway
-    window._savePromptTimer = setTimeout(firePrompt, 8000);
+function guestMarkUsed(index, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  const card = document.getElementById(`mc-${index}`);
+  if (card) {
+    card.style.opacity = '0.4';
+    card.style.transform = 'scale(0.97)';
+    const detail = document.getElementById(`mc-detail-${index}`);
+    if (detail) detail.innerHTML = '<div style="font-size:12px;color:#4CAF82;padding:4px 0;">✓ Marked as used</div>';
   }
+  gtag('event', 'guest_item_marked_used', { item_index: index });
+
+  // Show save banner after marking used — high intent moment
+  if (!currentUser) {
+    const banner = document.getElementById('guestSaveBanner');
+    if (banner) {
+      banner.style.display = 'flex';
+      window._bannerShown = true;
+      gtag('event', 'save_banner_shown', { trigger: 'mark_used' });
+    }
+  }
+}
+
+function scheduleGuestSavePrompt(containerId, gridId) {
+  // Only for guest users
+  if (currentUser) return;
+  // Reset banner flag for new scan
+  window._bannerShown = false;
+  window._savePromptFired = false;
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
+  // Banner appears after user interaction (tap item or mark used)
+  // Fallback — show banner after 10 seconds if no interaction
+  window._savePromptTimer = setTimeout(() => {
+    if (currentUser || window._savePromptFired) return;
+    const banner = document.getElementById('guestSaveBanner');
+    if (banner && !window._bannerShown) {
+      banner.style.display = 'flex';
+      window._bannerShown = true;
+      gtag('event', 'save_banner_shown', { trigger: 'timeout' });
+    }
+  }, 10000);
 }
 
 function toggleGuestEmailForm() {
@@ -6975,11 +7096,11 @@ function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
   if (!modal) return;
 
-  // Reset email form to collapsed state
-  const emailForm   = document.getElementById('guestEmailForm');
-  const emailToggle = document.getElementById('guestEmailToggle');
-  const remindRow   = document.getElementById('saveModalRemindRow');
-  const dismissBtn  = document.getElementById('saveModalDismissBtn');
+  // Reset all form states
+  const emailForm    = document.getElementById('guestEmailForm');
+  const emailToggle  = document.getElementById('guestEmailToggle');
+  const remindRow    = document.getElementById('saveModalRemindRow');
+  const dismissBtn   = document.getElementById('saveModalDismissBtn');
   if (emailForm)   emailForm.style.display   = 'none';
   if (emailToggle) emailToggle.style.display = 'block';
   if (remindRow)   remindRow.style.display   = 'none';
@@ -7142,10 +7263,44 @@ function hideGuestSaveModal() {
   gtag('event', 'save_modal_dismissed');
 }
 
+async function guestSignupMagicLink() {
+  window._savePromptFired = true;
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
+  const email = document.getElementById('guestMagicEmail')?.value?.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email', 'error');
+    return;
+  }
+  gtag('event', 'signup_started', { method: 'magic_link' });
+  if (pendingItems.length > 0) {
+    localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
+  }
+
+  const { error } = await supa.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: 'https://guardnest.app/',
+      shouldCreateUser: true,
+    }
+  });
+
+  if (error) {
+    showToast('Error: ' + error.message, 'error');
+    gtag('event', 'signup_failed', { method: 'magic_link', reason: error.message });
+  } else {
+    // Show success state
+    document.getElementById('guestMagicForm').style.display = 'none';
+    document.getElementById('guestMagicSuccess').style.display = 'block';
+    gtag('event', 'magic_link_sent', { email_domain: email.split('@')[1] });
+    if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'magic_link_signup' });
+  }
+}
+
 async function guestSignupWithGoogle() {
-  window._savePromptFired = true; // prevent re-trigger
+  window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   gtag('event', 'signup_started', { method: 'google' });
+  gtag('event', 'signup_started_google');
   hideGuestSaveModal();
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
@@ -7207,7 +7362,7 @@ async function guestSignupWithEmail() {
       showToast('Welcome to GuardNest! 🌿', 'success');
       // signup_completed fires server-side via welcome-email Edge Function
       gtag('event', 'new_user_session', { method: 'email', user_id: confirmedUser.id });
-      fbq('track', 'CompleteRegistration', { method: 'email' });
+      if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'email' });
       // onAuthStateChange will handle bootApp and page navigation
     } else {
       showToast('Welcome back! 🌿', 'success');
@@ -7242,15 +7397,15 @@ async function guestSignupWithEmail() {
       <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
         <span style="font-size:20px;">📸</span>
         <div>
-          <div style="font-size:13px;font-weight:600;color:#fff;">Capture the whole fridge</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.4);">Don't zoom in on one shelf — get everything</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;">Scan one shelf at a time</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">Closer shots work better than full fridge photos</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
         <span style="font-size:20px;">↔️</span>
         <div>
-          <div style="font-size:13px;font-weight:600;color:#fff;">Step back 2–3 feet</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.4);">Capture the full shelf in frame</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;">Get close to the shelf</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">12–18 inches away gets the clearest read</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
