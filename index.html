@@ -2352,7 +2352,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
           </div>
 
           <!-- Persistent save banner — only shows after interaction -->
-          <div id="guestSaveBanner" style="display:none;position:sticky;bottom:70px;margin:12px 0;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.4);border-radius:14px;padding:14px 16px;display:none;align-items:center;justify-content:space-between;gap:12px;z-index:100;">
+          <div id="guestSaveBanner" style="display:none;position:sticky;bottom:70px;margin:12px 0;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.4);border-radius:14px;padding:14px 16px;align-items:center;justify-content:space-between;gap:12px;z-index:100;">
             <div>
               <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">This disappears when you close.</div>
               <div style="font-size:11px;color:rgba(255,255,255,.4);">Save free to keep tracking.</div>
@@ -6634,78 +6634,29 @@ function hideSampleReport() {
 }
 
 function showRealReport(items) {
-  // Populate the demoStep3 report modal with real scan results
-  // so the user sees the same format they saw in the demo
-  const totalValue = items.reduce((sum, i) => sum + (i.price || 3.50), 0).toFixed(0);
-  const urgentItems = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 5);
-  const itemCount = items.length;
+  // Close the demo modal
+  hideSampleReport();
 
-  // Update stats
-  const statsEl = document.querySelector('#demoStep3 [style*="grid-template-columns:1fr 1fr 1fr"]');
-  if (statsEl) {
-    const cells = statsEl.querySelectorAll('[style*="font-size:22px"]');
-    if (cells[0]) cells[0].textContent = itemCount;
-    if (cells[1]) cells[1].textContent = '$' + totalValue;
-    if (cells[2]) cells[2].textContent = urgentItems.length;
-  }
+  // Populate the real results grid with the new animated experience
+  renderManifest(items, 'manifestGrid', 'resultsTitle');
+  document.getElementById('scanResults').classList.remove('hidden');
 
-  // Update headline
-  const headline = document.getElementById('demoReportHeadline');
-  if (headline) headline.textContent = `Here's what we found in your fridge`;
+  // Show the scanner page so results are visible
+  showPage('scanner');
 
-  // Personalized item — pick most urgent
-  const mostUrgent = items.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
-  const personalText = document.getElementById('demoPersonalizedText');
-  if (personalText && mostUrgent) {
-    const days = mostUrgent.days_until_spoil || 0;
-    personalText.textContent = days <= 2
-      ? `${mostUrgent.item_name} expires in ${days} day${days !== 1 ? 's' : ''} — use it today.`
-      : `${mostUrgent.item_name} is good for ${days} more days — GuardNest will remind you before it's gone.`;
-  }
+  // Update scan zone to reflect completed scan
+  const urgent  = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 3);
+  const total   = items.length;
+  document.getElementById('scanIcon').textContent  = '✅';
+  document.getElementById('scanTitle').textContent = `Found ${total} item${total !== 1 ? 's' : ''} in your fridge`;
+  document.getElementById('scanSub').textContent   = urgent.length > 0
+    ? `${urgent.length} item${urgent.length !== 1 ? 's' : ''} need attention this week — tap any item to see what to do`
+    : `Tap any item to see freshness details and suggested uses`;
 
-  // Urgent items list
-  const urgentEl = document.getElementById('demoUrgentItems');
-  if (urgentEl) {
-    if (urgentItems.length === 0) {
-      urgentEl.innerHTML = `<div style="font-size:12px;color:rgba(255,255,255,.4);padding:8px 0;">Everything looks fresh — nothing urgent this week.</div>`;
-    } else {
-      urgentEl.innerHTML = urgentItems.slice(0,4).map(item => `
-        <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#fff;">${item.item_name}</div>
-            <div style="font-size:11px;color:rgba(255,140,0,.8);margin-top:2px;">Use within ${item.days_until_spoil} day${item.days_until_spoil !== 1 ? 's' : ''}</div>
-          </div>
-          <span style="font-size:18px;">${getItemEmoji(item.item_name, item.category) || '🥗'}</span>
-        </div>`).join('');
-    }
-  }
+  // Schedule save banner after interaction
+  scheduleGuestSavePrompt('scanResults', 'manifestGrid');
 
-  // Insight text
-  const insightText = document.getElementById('demoInsightText');
-  if (insightText) {
-    insightText.textContent = `GuardNest found ${itemCount} items in your fridge. ${urgentItems.length > 0 ? `${urgentItems.length} need to be used this week.` : 'Everything is tracking well.'} Save your results to get a weekly report every Monday.`;
-  }
-
-  // Swap the CTA button to "Save my results" instead of scan again
-  const ctaBtn = document.querySelector('#demoStep3 button[onclick*="demo_scan_now"]');
-  if (ctaBtn) {
-    ctaBtn.textContent = '💾 Save my results — free';
-    ctaBtn.onclick = function() {
-      gtag('event', 'cta_click', { location: 'real_report_save' });
-      hideSampleReport();
-      showGuestSavePrompt();
-    };
-  }
-
-  // Show the modal
-  document.getElementById('sampleReportModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  // Show only step 3
-  document.getElementById('demoStep1').style.display = 'none';
-  document.getElementById('demoStep2').style.display = 'none';
-  document.getElementById('demoStep3').style.display = 'block';
-
-  gtag('event', 'results_viewed', { scan_type: 'fridge', items_found: itemCount, urgent_count: urgentItems.length });
+  gtag('event', 'results_viewed', { scan_type: 'fridge', items_found: total, urgent_count: urgent.length });
 }
 
 function launchRealScanner() {
