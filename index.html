@@ -3043,12 +3043,10 @@ const UNLOCK_HINTS = [
       if (isNewUser) {
         localStorage.removeItem('guardnest_onboarded');
         localStorage.removeItem('guardnest_seen_sample');
-        // signup_completed fires server-side via welcome-email Edge Function
         gtag('event', 'new_user_session', { method: 'google', user_id: session.user.id });
         if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'google' });
         await bootApp();
-        showPage('dashboard');
-        showToast('Welcome to GuardNest! 🌿', 'success');
+        bootNewUser();
       } else {
         gtag('event', 'signin_completed', { method: 'google', user_id: session.user.id });
         await bootApp();
@@ -5807,6 +5805,82 @@ function checkUpgradeReturn() {
 }
 
 // ─── ONBOARDING ───────────────────────────────────────────────
+function bootNewUser() {
+  // Read demo state if they came from the demo flow
+  let demoState = null;
+  try {
+    const raw = localStorage.getItem('guardnest_demo_complete');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Only use if completed within the last 30 minutes
+      if (Date.now() - parsed.ts < 30 * 60 * 1000) demoState = parsed;
+      localStorage.removeItem('guardnest_demo_complete');
+    }
+  } catch(e) {}
+
+  localStorage.setItem('guardnest_onboarded', 'true');
+
+  if (demoState) {
+    // They came from the demo — skip dashboard, land on scanner with continuity
+    showPage('scanner');
+    setScanType('fridge');
+    gtag('event', 'new_user_from_demo', { demo_xp: demoState.xp, demo_item: demoState.item });
+
+    // Show continuity welcome overlay
+    const itemName = demoState.item || 'your item';
+    const xp       = demoState.xp  || 80;
+    _showDemoContinuityBanner(itemName, xp);
+  } else {
+    // No demo context — land on scanner with simple welcome
+    showPage('scanner');
+    setScanType('fridge');
+    setTimeout(() => showToast('Welcome to GuardNest! Scan your fridge to start. 🌿', 'success'), 400);
+    gtag('event', 'new_user_no_demo');
+  }
+}
+
+function _showDemoContinuityBanner(itemName, xp) {
+  // Remove any existing banner
+  const existing = document.getElementById('demoContinuityBanner');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'demoContinuityBanner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99990;display:flex;align-items:center;justify-content:center;padding:24px;';
+  banner.innerHTML = `
+    <div style="max-width:360px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.3);text-align:center;">
+      <div style="font-size:36px;margin-bottom:12px;">⚡</div>
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">You're already at Level 1</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px;">
+        You earned <strong style="color:#4CAF82;">${xp} XP</strong> in the demo.<br>
+        Now scan your real fridge to keep building your inventory.
+      </div>
+      <!-- XP bar at demo level -->
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">
+          <span>Level 1 — First Scan</span>
+          <span>${xp} / 100 XP</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${Math.min(100,xp)}%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;"></div>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Scan your fridge → earn more XP → unlock habit insights</div>
+      </div>
+      <!-- Mission hint -->
+      <div style="background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left;">
+        <div style="font-size:10px;font-weight:700;color:#D4A843;letter-spacing:.08em;margin-bottom:4px;">🎯 NEXT MISSION</div>
+        <div style="font-size:13px;color:#fff;">Scan your real fridge to build your actual inventory</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">+100 XP on first real scan</div>
+      </div>
+      <button onclick="document.getElementById('demoContinuityBanner').remove();gtag('event','continuity_banner_dismissed');" 
+        style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;">
+        Build my real inventory →
+      </button>
+    </div>`;
+  document.body.appendChild(banner);
+  gtag('event', 'demo_continuity_banner_shown');
+}
+
 function checkOnboarding() {
   const hasSeenOnboarding  = localStorage.getItem('guardnest_onboarded');
   const hasItems           = allItems.length > 0;
@@ -7055,6 +7129,13 @@ function demoCompleteFirstMission() {
   setTimeout(() => {
     document.getElementById('demoCta').style.display = 'block';
     document.getElementById('demoCta').style.animation = 'fadeIn .4s ease both';
+    // Persist demo state so post-signup can pick it up
+    const demoItem = document.getElementById('demoMissionItemName')?.textContent || 'spinach';
+    localStorage.setItem('guardnest_demo_complete', JSON.stringify({
+      xp: window._demoXp || 80,
+      item: demoItem,
+      ts: Date.now()
+    }));
     gtag('event', 'demo_mission_complete');
   }, 1400);
 }
