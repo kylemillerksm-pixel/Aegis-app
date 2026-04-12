@@ -6557,79 +6557,87 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="demoItemsAppearing" style="text-align:left;"></div>
       </div>
 
-      <!-- STEP 3: Results + insight -->
+      <!-- STEP 3: Gamified inventory reveal -->
       <div id="demoStep3" style="display:none;">
-        <!-- Header -->
-        <div style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
+
+        <!-- Header with live XP bar -->
+        <div style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:18px;">🌿</span>
+              <div style="width:20px;height:20px;background:#4CAF82;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);"></div>
               <span style="font-size:12px;font-weight:700;color:#4CAF82;letter-spacing:.08em;">GUARDNEST</span>
             </div>
-            <span style="font-size:11px;color:rgba(255,255,255,.3);">Your Weekly Report</span>
+            <span id="demoLevelLabel" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);">Level 1 — First Scan</span>
           </div>
-          <div style="font-size:17px;font-weight:700;color:#fff;margin-top:10px;" id="demoReportHeadline">Here's what we found in your fridge</div>
+          <!-- XP bar -->
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+              <div id="demoXpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .4s ease;"></div>
+            </div>
+            <span id="demoXpLabel" style="font-size:11px;font-weight:700;color:#4CAF82;min-width:52px;text-align:right;">0 XP</span>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;" id="demoReportHeadline">Building your inventory...</div>
         </div>
 
-        <!-- Stats -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.06);">
-          <div style="background:#1a2330;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;font-weight:800;color:#4CAF82;">11</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Items tracked</div>
+        <!-- Live inventory list — items drop in here -->
+        <div id="demoInventoryList" style="padding:12px 16px;display:flex;flex-direction:column;gap:6px;min-height:120px;"></div>
+
+        <!-- Mission card — hidden until items loaded -->
+        <div id="demoMissionCard" style="display:none;margin:0 16px 14px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:12px;padding:14px;">
+          <div style="font-size:10px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:6px;">🎯 FIRST MISSION</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;" id="demoMissionTitle">Mark your item as used before it expires</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px;">Tap the item below to complete your first action</div>
+          <!-- The highlighted item to act on -->
+          <div id="demoMissionItem" style="background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="demoCompleteFirstMission()">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span id="demoMissionEmoji" style="font-size:22px;">🥬</span>
+              <div>
+                <div id="demoMissionItemName" style="font-size:13px;font-weight:600;color:#fff;">Spinach</div>
+                <div id="demoMissionItemDays" style="font-size:11px;color:#E05555;">Expires in 2 days — use it tonight</div>
+              </div>
+            </div>
+            <button style="background:#4CAF82;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0e1117;cursor:pointer;pointer-events:none;">
+              ✓ Used it
+            </button>
           </div>
-          <div style="background:#1a2330;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;font-weight:800;color:#ff8c00;">$62</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Quietly slipping</div>
-          </div>
-          <div style="background:#1a2330;padding:14px 10px;text-align:center;">
-            <div style="font-size:22px;font-weight:800;color:#ff8c00;">3</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">Use this week</div>
-          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-top:8px;">+50 XP for completing your first mission</div>
         </div>
 
-        <div style="padding:18px 20px;">
+        <!-- Level up burst — hidden until mission done -->
+        <div id="demoLevelUpBurst" style="display:none;margin:0 16px 14px;background:rgba(76,175,130,.12);border:1px solid rgba(76,175,130,.4);border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:6px;animation:levelNumPop .4s cubic-bezier(.36,1.5,.64,1) both;">⚡</div>
+          <div style="font-size:16px;font-weight:800;color:#4CAF82;margin-bottom:4px;">Mission Complete!</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;" id="demoLevelUpText">You saved ~$3.49. Do that every week and it's $42/year back in your pocket.</div>
+        </div>
 
-          <!-- Personalized item highlight -->
-          <div id="demoPersonalizedItem" style="background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.25);border-radius:10px;padding:14px;margin-bottom:14px;">
-            <div style="font-size:11px;font-weight:700;color:#ff6b6b;letter-spacing:.06em;margin-bottom:6px;">⚠️ YOUR ITEM — CAUGHT IN TIME</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;" id="demoPersonalizedText">Your spinach expires in 2 days — GuardNest would have alerted you yesterday.</div>
+        <!-- Insight -->
+        <div id="demoInsightBox" style="display:none;margin:0 16px 14px;background:rgba(76,175,130,.06);border:1px solid rgba(76,175,130,.15);border-radius:10px;padding:14px;">
+          <div style="font-size:10px;font-weight:700;color:#4CAF82;letter-spacing:.08em;margin-bottom:6px;">👁️ VISIBILITY GAP</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;" id="demoInsightText">You likely buy this every week but don't always use it. Not because you're careless — because you couldn't see it. That's the gap GuardNest closes.</div>
+        </div>
+
+        <!-- CTA — hidden until mission done -->
+        <div id="demoCta" style="display:none;padding:0 16px 20px;">
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:14px;text-align:left;">
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.08em;margin-bottom:6px;">FROM R/EATCHEAPANDHEALTHY</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7;font-style:italic;">"Anticipating what to buy, staying on top of what's in the fridge, what needs to get eaten — that alone can feel like a full-time job."</div>
           </div>
-
-          <!-- Use this week -->
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.08em;margin-bottom:10px;">⏰ USE THIS WEEK</div>
-          <div id="demoUrgentItems"></div>
-
-          <!-- Insight -->
-          <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;padding:14px;margin-bottom:18px;" id="demoInsightBox">
-            <div style="font-size:11px;font-weight:700;color:#4CAF82;letter-spacing:.06em;margin-bottom:6px;">👁️ VISIBILITY GAP</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;" id="demoInsightText">You bought spinach 3 weeks in a row but used it once. Not because you were careless — because you couldn't see it. That's the gap GuardNest closes.</div>
-          </div>
-
-          <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:12px;padding:16px;margin-bottom:18px;text-align:left;">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.08em;margin-bottom:8px;">FROM R/EATCHEAPANDHEALTHY</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.7;font-style:italic;margin-bottom:8px;">"Anticipating what to buy, staying on top of what's in the fridge, what needs to get eaten — that alone can feel like a full-time job."</div>
-            <div style="font-size:12px;color:#4CAF82;">GuardNest does that job for you.</div>
-          </div>
-
-          <!-- CTA: scan now or remind later -->
-          <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});launchRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">
-            Scan my real fridge now →
+          <div style="font-size:13px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:12px;line-height:1.6;">Your inventory is live.<br><strong style="color:rgba(255,255,255,.8);">Sign up free to keep it — and never lose progress.</strong></div>
+          <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});launchRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+            Scan my real fridge →
           </button>
-
-          <!-- Remind me later -->
-          <div id="demoRemindForm" style="border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;text-align:center;">
-            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;">Not near your fridge right now? Drop your email and we'll remind you.</div>
-            <input id="demoReminderEmail" type="email" placeholder="your@email.com (optional)"
-              style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:16px;color:#fff;margin-bottom:8px;outline:none;">
-            <button onclick="gtag('event','cta_click',{location:'demo_remind_submit'});submitDemoReminder()" style="width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">
+          <div id="demoRemindForm" style="text-align:center;">
+            <input id="demoReminderEmail" type="email" placeholder="Or drop your email — we'll remind you"
+              style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;font-size:16px;color:#fff;margin-bottom:6px;outline:none;text-align:center;">
+            <button onclick="gtag('event','cta_click',{location:'demo_remind_submit'});submitDemoReminder()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;">
               Remind me later
             </button>
           </div>
           <div id="demoRemindSuccess" style="display:none;text-align:center;padding:10px;">
             <div style="font-size:13px;color:#4CAF82;">✓ We'll remind you! Check your inbox.</div>
           </div>
-
         </div>
+
       </div>
 
     </div>
@@ -6890,44 +6898,165 @@ function showDemoResults(userItem) {
   document.getElementById('demoStep2').style.display = 'none';
   document.getElementById('demoStep3').style.display = 'block';
 
-  const itemName = userItem || 'spinach';
-  const itemCapitalized = itemName.charAt(0).toUpperCase() + itemName.slice(1);
-
-  // Personalized headline
-  const headline = document.getElementById('demoReportHeadline');
-  if (headline) headline.textContent = userItem
-    ? `We found your ${itemName} — here's what we would have caught`
-    : "Here's what we found in your fridge";
-
-  // Personalized item callout
-  const personalText = document.getElementById('demoPersonalizedText');
-  if (personalText) personalText.textContent = `Your ${itemName} expires in 2 days — GuardNest would have alerted you yesterday so you could use it in time.`;
-
-  // Personalized insight — mention all selected items if multiple
-  const insightText = document.getElementById('demoInsightText');
+  const itemName  = userItem || 'spinach';
+  const itemCap   = itemName.charAt(0).toUpperCase() + itemName.slice(1);
   const allSelected = window._demoAllItems || [itemName];
-  if (insightText) {
-    if (allSelected.length > 1) {
-      const list = allSelected.slice(0, 3).join(', ');
-      insightText.textContent = `You likely buy ${list} regularly but don't always use them before they go bad. GuardNest tracks all of it automatically — so you stop losing money without realizing it.`;
-    } else {
-      insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. That's probably $8–12/month quietly disappearing — without you ever noticing.`;
+
+  // Reset state
+  window._demoXp = 0;
+  window._demoMissionDone = false;
+  document.getElementById('demoXpFill').style.width = '0%';
+  document.getElementById('demoXpLabel').textContent = '0 XP';
+  document.getElementById('demoLevelLabel').textContent = 'Level 1 — First Scan';
+  document.getElementById('demoReportHeadline').textContent = 'Building your inventory...';
+  document.getElementById('demoInventoryList').innerHTML = '';
+  document.getElementById('demoMissionCard').style.display = 'none';
+  document.getElementById('demoLevelUpBurst').style.display = 'none';
+  document.getElementById('demoInsightBox').style.display = 'none';
+  document.getElementById('demoCta').style.display = 'none';
+  const remindForm = document.getElementById('demoRemindForm');
+  const remindSuccess = document.getElementById('demoRemindSuccess');
+  if (remindForm) remindForm.style.display = 'block';
+  if (remindSuccess) remindSuccess.style.display = 'none';
+
+  // Build item list — put the user's item first
+  const userItemObj = DEMO_ITEMS.find(i => i.name.toLowerCase().includes(itemName.toLowerCase()))
+    || { name: itemCap, emoji: '🥗', days: 2, price: 3.49 };
+  const otherItems  = DEMO_ITEMS.filter(i => i !== userItemObj).slice(0, 7);
+  const orderedItems = [userItemObj, ...otherItems];
+
+  // Drop items in one by one with XP ticking up
+  const list = document.getElementById('demoInventoryList');
+  let itemsRevealed = 0;
+
+  function revealNextItem() {
+    if (itemsRevealed >= orderedItems.length) {
+      // All items loaded — show headline and mission
+      setTimeout(() => {
+        document.getElementById('demoReportHeadline').textContent =
+          `${orderedItems.length} items in your inventory`;
+        _demoBumpXp(0); // refresh bar label
+        // Mission card
+        const missionTitle = document.getElementById('demoMissionTitle');
+        const missionEmoji = document.getElementById('demoMissionEmoji');
+        const missionName  = document.getElementById('demoMissionItemName');
+        const missionDays  = document.getElementById('demoMissionItemDays');
+        const insightText  = document.getElementById('demoInsightText');
+        if (missionTitle) missionTitle.textContent = `Mark your ${itemCap} as used before it expires`;
+        if (missionEmoji) missionEmoji.textContent = userItemObj.emoji;
+        if (missionName)  missionName.textContent  = itemCap;
+        if (missionDays)  missionDays.textContent  = `Expires in ${userItemObj.days} day${userItemObj.days !== 1 ? 's' : ''} — use it tonight`;
+        if (insightText) {
+          if (allSelected.length > 1) {
+            const list2 = allSelected.slice(0,3).join(', ');
+            insightText.textContent = `You buy ${list2} regularly but don't always use them before they go bad. Not carelessness — you just couldn't see it. That's the gap GuardNest closes.`;
+          } else {
+            insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. Not carelessness — you just couldn't see it. That's the gap GuardNest closes.`;
+          }
+        }
+        document.getElementById('demoMissionCard').style.display = 'block';
+        document.getElementById('demoMissionCard').style.animation = 'fadeIn .4s ease both';
+      }, 300);
+      return;
     }
+    const item  = orderedItems[itemsRevealed];
+    const isUser = itemsRevealed === 0;
+    const urgColor = item.days <= 2 ? '#E05555' : item.days <= 5 ? '#D4A843' : '#4CAF82';
+    const urgLabel = item.days <= 2 ? `${item.days}d — urgent` : item.days <= 5 ? `${item.days}d left` : `${item.days}d fresh`;
+    const barW  = Math.min(100, Math.round((item.days / 14) * 100));
+
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;gap:10px;background:${isUser ? 'rgba(255,80,80,.06)' : 'rgba(255,255,255,.03)'};border:1px solid ${isUser ? 'rgba(255,80,80,.2)' : 'rgba(255,255,255,.06)'};border-radius:10px;padding:10px 12px;opacity:0;transform:translateY(6px);transition:all .25s ease;`;
+    row.innerHTML = `
+      <span style="font-size:20px;flex-shrink:0;">${item.emoji}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px;">${item.name}</div>
+        <div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:0%;background:${urgColor};border-radius:2px;transition:width .5s ease;" data-w="${barW}"></div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:10px;font-weight:700;color:${urgColor};">${urgLabel}</div>
+        <div id="demoXpPop-${itemsRevealed}" style="font-size:10px;color:#4CAF82;opacity:0;transition:opacity .3s;">+10 XP</div>
+      </div>`;
+    list.appendChild(row);
+
+    // Animate in
+    setTimeout(() => {
+      row.style.opacity = '1';
+      row.style.transform = 'translateY(0)';
+      // Fill freshness bar
+      setTimeout(() => {
+        const bar = row.querySelector('[data-w]');
+        if (bar) bar.style.width = bar.dataset.w + '%';
+      }, 150);
+      // XP pop
+      setTimeout(() => {
+        const pop = document.getElementById(`demoXpPop-${itemsRevealed}`);
+        if (pop) { pop.style.opacity = '1'; setTimeout(() => pop.style.opacity = '0', 600); }
+        _demoBumpXp(10);
+      }, 250);
+    }, 60);
+
+    itemsRevealed++;
+    setTimeout(revealNextItem, 200);
   }
 
-  // Urgent items
-  const urgent = document.getElementById('demoUrgentItems');
-  const urgentItems = DEMO_ITEMS.filter(i => i.days <= 5);
-  if (urgent) {
-    urgent.innerHTML = urgentItems.map(item => `
-      <div style="background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:#fff;">${item.name}</div>
-          <div style="font-size:11px;color:rgba(255,140,0,.8);margin-top:2px;">Expires in ${item.days} day${item.days !== 1 ? 's' : ''} · $${item.price.toFixed(2)}</div>
-        </div>
-        <span style="font-size:18px;">${item.emoji}</span>
-      </div>`).join('');
+  revealNextItem();
+  gtag('event', 'demo_results_shown', { user_item: itemName, item_count: orderedItems.length });
+}
+
+function _demoBumpXp(amount) {
+  window._demoXp = (window._demoXp || 0) + amount;
+  const xp  = window._demoXp;
+  const pct = Math.min(100, Math.round((xp / 100) * 100));
+  const fill  = document.getElementById('demoXpFill');
+  const label = document.getElementById('demoXpLabel');
+  if (fill)  fill.style.width  = pct + '%';
+  if (label) label.textContent = xp + ' XP';
+}
+
+function demoCompleteFirstMission() {
+  if (window._demoMissionDone) return;
+  window._demoMissionDone = true;
+
+  // Replace mission item with done state
+  const missionItem = document.getElementById('demoMissionItem');
+  if (missionItem) {
+    missionItem.style.background  = 'rgba(76,175,130,.12)';
+    missionItem.style.borderColor = 'rgba(76,175,130,.4)';
+    missionItem.style.cursor      = 'default';
+    missionItem.innerHTML = `<div style="width:100%;text-align:center;padding:4px 0;">
+      <div style="font-size:20px;margin-bottom:4px;">✅</div>
+      <div style="font-size:13px;font-weight:700;color:#4CAF82;">Marked as used</div>
+    </div>`;
   }
+
+  // Big XP bump — bar jumps toward 100%
+  setTimeout(() => {
+    _demoBumpXp(50);
+    document.getElementById('demoLevelLabel').textContent = 'Level 1 — Almost there';
+  }, 200);
+
+  // Level up burst
+  setTimeout(() => {
+    _demoBumpXp(30);
+    document.getElementById('demoLevelLabel').textContent = '🏆 Level 2 — Unlocked';
+    document.getElementById('demoXpFill').style.background = 'linear-gradient(90deg,#4CAF82,#A8DDBE)';
+    const burst     = document.getElementById('demoLevelUpBurst');
+    const levelText = document.getElementById('demoLevelUpText');
+    const itemName  = document.getElementById('demoMissionItemName')?.textContent || 'that item';
+    if (levelText) levelText.textContent = `You saved ~$3.49 on ${itemName}. Do that every week and it's $42/year back in your pocket.`;
+    if (burst) { burst.style.display = 'block'; burst.style.animation = 'fadeIn .3s ease both'; }
+    document.getElementById('demoInsightBox').style.display  = 'block';
+  }, 700);
+
+  // CTA appears after the dust settles
+  setTimeout(() => {
+    document.getElementById('demoCta').style.display = 'block';
+    document.getElementById('demoCta').style.animation = 'fadeIn .4s ease both';
+    gtag('event', 'demo_mission_complete');
+  }, 1400);
 }
 
 async function submitDemoReminder() {
