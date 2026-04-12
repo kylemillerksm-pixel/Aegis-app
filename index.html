@@ -48,6 +48,7 @@
   /* Prevent iOS Safari auto-zoom on input focus */
   input, textarea, select { font-size: 16px !important; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes chevronPulse { 0%,100% { box-shadow:0 0 0 0 rgba(76,175,130,.5); } 50% { box-shadow:0 0 0 5px rgba(76,175,130,0); } }
   .demo-item-selected { background:rgba(76,175,130,.2) !important; border-color:rgba(76,175,130,.6) !important; transform:scale(1.05) !important; }
 
   :root {
@@ -4682,7 +4683,9 @@ function renderManifest(items, gridId, titleId) {
           </div>
           <div style="font-size:11px;font-weight:600;color:${urgColor};">${urgLabel}</div>
         </div>
-        <div style="font-size:11px;color:var(--text3);flex-shrink:0;">tap</div>
+        <div id="mc-chevron-${i}" style="flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(76,175,130,.15);border:1px solid rgba(76,175,130,.4);transition:transform .25s ease;animation:chevronPulse 1.8s ease-in-out infinite;">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="#4CAF82" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
       </div>
       <div id="mc-detail-${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
         <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">${suggested}</div>
@@ -4698,14 +4701,27 @@ function renderManifest(items, gridId, titleId) {
 
     // Tap to expand
     card.addEventListener('click', () => {
-      const detail = document.getElementById(`mc-detail-${i}`);
-      const isOpen = detail.style.display !== 'none';
-      // Close all others
+      const detail   = document.getElementById(`mc-detail-${i}`);
+      const chevron  = document.getElementById(`mc-chevron-${i}`);
+      const isOpen   = detail.style.display !== 'none';
+
+      // Close all others and reset their chevrons
       items.forEach((_, j) => {
         const d = document.getElementById(`mc-detail-${j}`);
-        if (d && j !== i) d.style.display = 'none';
+        const c = document.getElementById(`mc-chevron-${j}`);
+        if (d && j !== i) { d.style.display = 'none'; }
+        if (c && j !== i) { c.style.transform = 'rotate(0deg)'; }
       });
+
       detail.style.display = isOpen ? 'none' : 'block';
+      if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+
+      // Stop pulse animation on all chevrons once user has interacted
+      document.querySelectorAll('[id^="mc-chevron-"]').forEach(c => {
+        c.style.animation = 'none';
+        c.style.background = 'transparent';
+        c.style.border = '1px solid var(--border2)';
+      });
 
       // Show save banner after first interaction
       if (!currentUser && !window._bannerShown) {
@@ -4724,6 +4740,16 @@ function renderManifest(items, gridId, titleId) {
     setTimeout(() => {
       card.style.opacity = '1';
       card.style.transform = 'translateY(0)';
+
+      // Auto-expand first card after it appears so user sees the interaction
+      if (i === 0) {
+        setTimeout(() => {
+          const detail  = document.getElementById('mc-detail-0');
+          const chevron = document.getElementById('mc-chevron-0');
+          if (detail)  detail.style.display  = 'block';
+          if (chevron) chevron.style.transform = 'rotate(180deg)';
+        }, 400);
+      }
     }, i * 80 + 200);
   });
 
