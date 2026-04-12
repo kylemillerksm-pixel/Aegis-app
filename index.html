@@ -2919,25 +2919,25 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 <!-- FIRST SAVE CELEBRATION -->
 <div class="celebration-modal hidden" id="celebrationModal">
   <div class="celebration-box">
-    <span class="cel-icon">🛡️</span>
-    <div class="cel-title">YOU'RE ALL SET!</div>
-    <p class="cel-sub">GuardNest is now tracking your groceries. Here's what we found:</p>
+    <span class="cel-icon">🌿</span>
+    <div class="cel-title">YOUR FRIDGE IS SAVED</div>
+    <p class="cel-sub" id="celSubText">GuardNest is now tracking your groceries. We'll remind you before anything expires.</p>
     <div class="cel-stats">
       <div class="cel-stat">
         <div class="cel-stat-num" id="celItems">0</div>
-        <div class="cel-stat-label">Items</div>
-      </div>
-      <div class="cel-stat">
-        <div class="cel-stat-num" id="celWarranties">0</div>
-        <div class="cel-stat-label">Warranties</div>
+        <div class="cel-stat-label">Items Tracked</div>
       </div>
       <div class="cel-stat">
         <div class="cel-stat-num" id="celAlerts">0</div>
-        <div class="cel-stat-label">Alerts</div>
+        <div class="cel-stat-label">Need Attention</div>
+      </div>
+      <div class="cel-stat">
+        <div class="cel-stat-num" id="celSaved">$0</div>
+        <div class="cel-stat-label">At Risk This Week</div>
       </div>
     </div>
     <button class="cel-btn" onclick="dismissCelebration()" ontouchend="this.onclick()">
-      🚀 Explore My Vault
+      See My Fridge →
     </button>
   </div>
 </div>
@@ -5782,11 +5782,14 @@ function checkUpgradeReturn() {
 
 // ─── ONBOARDING ───────────────────────────────────────────────
 function checkOnboarding() {
-  const hasSeenOnboarding = localStorage.getItem('guardnest_onboarded');
-  const hasItems = allItems.length > 0;
-  if (!hasSeenOnboarding && !hasItems) {
-    document.getElementById('onboardingScreen').classList.remove('hidden');
-  }
+  const hasSeenOnboarding  = localStorage.getItem('guardnest_onboarded');
+  const hasItems           = allItems.length > 0;
+  const hadPendingGuestScan = localStorage.getItem('guardnest_pending_guest');
+
+  // Skip onboarding if they already scanned as a guest — they know how the product works
+  if (hasSeenOnboarding || hasItems || hadPendingGuestScan) return;
+
+  document.getElementById('onboardingScreen').classList.remove('hidden');
 }
 
 function startOnboarding() {
@@ -6218,28 +6221,32 @@ function showCelebration(items) {
   const hasSeenCelebration = localStorage.getItem('guardnest_celebrated');
   if (hasSeenCelebration) return;
 
-  const warrantyCount = items.filter(i => (i.warranty_days || 0) > 0).length;
-  const alertCount    = items.filter(i => {
-    if ((i.days_until_spoil || 0) > 0 && (i.days_until_spoil || 0) <= 7) return true;
-    if ((i.warranty_days || 0) > 0 && i.purchase_date) {
-      const today = new Date(); today.setHours(0,0,0,0);
-      const exp   = new Date(i.purchase_date);
-      exp.setDate(exp.getDate() + i.warranty_days);
-      return Math.round((exp - today) / 86400000) <= 30;
-    }
-    return false;
-  }).length;
+  const itemCount  = Array.isArray(items) ? items.length : items;
+  const itemsArray = Array.isArray(items) ? items : allItems;
+  const urgent     = itemsArray.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 7).length;
+  const atRisk     = '$' + (urgent * 3.5).toFixed(0);
 
-  document.getElementById('celItems').textContent     = items.length;
-  document.getElementById('celWarranties').textContent = warrantyCount;
-  document.getElementById('celAlerts').textContent     = alertCount;
+  document.getElementById('celItems').textContent  = itemCount;
+  document.getElementById('celAlerts').textContent = urgent;
+  document.getElementById('celSaved').textContent  = atRisk;
+
+  // Personalise sub text based on urgency
+  const subEl = document.getElementById('celSubText');
+  if (subEl) {
+    if (urgent > 0) {
+      subEl.textContent = `${urgent} item${urgent !== 1 ? 's' : ''} need attention this week. We'll remind you before they expire.`;
+    } else {
+      subEl.textContent = `GuardNest is now tracking your groceries. We'll remind you before anything expires.`;
+    }
+  }
+
   document.getElementById('celebrationModal').classList.remove('hidden');
   localStorage.setItem('guardnest_celebrated', 'true');
 }
 
 function dismissCelebration() {
   document.getElementById('celebrationModal').classList.add('hidden');
-  showPage('vault');
+  showPage('dashboard');
 }
 
 // ─── SCAN ANIMATION ───────────────────────────────────────────
