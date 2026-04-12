@@ -2919,14 +2919,27 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 
 <!-- FIRST SAVE CELEBRATION -->
 <div class="celebration-modal hidden" id="celebrationModal">
-  <div class="celebration-box">
-    <span class="cel-icon">🌿</span>
-    <div class="cel-title">YOUR FRIDGE IS SAVED</div>
-    <p class="cel-sub" id="celSubText">GuardNest is now tracking your groceries. We'll remind you before anything expires.</p>
+  <div class="celebration-box" style="max-width:380px;width:100%;text-align:center;">
+    <!-- Level badge -->
+    <div id="celLevelBadge" style="display:inline-block;background:rgba(76,175,130,.15);border:1px solid rgba(76,175,130,.4);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;color:#4CAF82;letter-spacing:.1em;margin-bottom:12px;">⚡ LEVEL UP</div>
+    <div class="cel-title" id="celTitle">INVENTORY SAVED</div>
+    <!-- XP bar -->
+    <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;margin:14px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">
+        <span id="celLevelLabel">Level 1 — First Scan</span>
+        <span id="celXpLabel">0 XP</span>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+        <div id="celXpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .8s ease;"></div>
+      </div>
+    </div>
+    <!-- Animated item drop zone -->
+    <div id="celItemDrop" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:180px;overflow:hidden;"></div>
+    <!-- Stats -->
     <div class="cel-stats">
       <div class="cel-stat">
         <div class="cel-stat-num" id="celItems">0</div>
-        <div class="cel-stat-label">Items Tracked</div>
+        <div class="cel-stat-label">Items Added</div>
       </div>
       <div class="cel-stat">
         <div class="cel-stat-num" id="celAlerts">0</div>
@@ -2934,11 +2947,12 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
       </div>
       <div class="cel-stat">
         <div class="cel-stat-num" id="celSaved">$0</div>
-        <div class="cel-stat-label">At Risk This Week</div>
+        <div class="cel-stat-label">At Risk</div>
       </div>
     </div>
+    <p class="cel-sub" id="celSubText" style="margin:10px 0 16px;"></p>
     <button class="cel-btn" onclick="dismissCelebration()" ontouchend="this.onclick()">
-      See My Fridge →
+      See My Inventory →
     </button>
   </div>
 </div>
@@ -3361,9 +3375,11 @@ async function bootApp() {
       pendingItems = JSON.parse(pendingGuest);
       localStorage.removeItem('guardnest_pending_guest');
       if (pendingItems.length > 0) {
-        showToast('Saving your scan...', 'info');
+        // Flag so showCelebration knows this came from a guest restore (Google redirect)
+        window._savingFromGuestRestore = true;
         await saveItems('btnSave', 'scanResults');
-        showToast('Your fridge scan has been saved!', 'success');
+        window._savingFromGuestRestore = false;
+        gtag('event', 'guest_scan_restored', { item_count: pendingItems.length });
       }
     } catch(e) { console.error('Guest item restore error:', e); }
   }
@@ -4286,6 +4302,10 @@ async function handleImageScan(input) {
   pendingItems = result.map(i => ({ ...i, image_url: file.name }));
   renderManifest(result, 'manifestGrid', 'resultsTitle');
   document.getElementById('scanResults').classList.remove('hidden');
+  if (!localStorage.getItem('guardnest_first_scan_completed')) {
+    localStorage.setItem('guardnest_first_scan_completed', 'true');
+    gtag('event', 'first_scan_completed', { item_count: result.length, scan_type: 'receipt', is_new_user: !localStorage.getItem('guardnest_celebrated') });
+  }
   gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
   gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
   if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: 'receipt' });
@@ -4973,6 +4993,11 @@ async function saveItems(btnId, resultsId) {
     showToast('Save failed: ' + error.message, 'error');
   } else {
     showToast(`✅ ${rows.length} item${rows.length !== 1 ? 's' : ''} added to your fridge`, 'success');
+    // Track first save
+    if (!localStorage.getItem('guardnest_first_save_done')) {
+      localStorage.setItem('guardnest_first_save_done', 'true');
+      gtag('event', 'first_save_completed', { item_count: rows.length, from_guest_restore: !!window._savingFromGuestRestore });
+    }
     pendingItems = [];
     document.getElementById(resultsId)?.classList.add('hidden');
 
@@ -4999,6 +5024,8 @@ async function saveItems(btnId, resultsId) {
     const newValue = allItems.reduce((s,i) => s + (i.price||0), 0);
     checkAndShowBadge(prevCount, allItems.length, prevValue, newValue);
     checkBadges();
+    const _fromRestore = !!window._savingFromGuestRestore;
+    showCelebrationIfNew(allItems, _fromRestore);
     showFirstWin(allItems);
     setTimeout(() => checkNearMiss(allItems), 2000);
   }
@@ -5955,6 +5982,11 @@ function setScanType(type) {
 
 function triggerScan() {
   const type = window._scanPageType || 'receipt';
+  // Track first scan attempt
+  if (!localStorage.getItem('guardnest_first_scan_started')) {
+    localStorage.setItem('guardnest_first_scan_started', 'true');
+    gtag('event', 'first_scan_started', { scan_type: type, is_new_user: !localStorage.getItem('guardnest_celebrated') });
+  }
   if (type === 'receipt') {
     const input = document.getElementById('scanFileInput');
     input.value = '';
@@ -6312,6 +6344,10 @@ async function handleFridgePhoto(input, scanType) {
 
       renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
       document.getElementById('scanResults').classList.remove('hidden');
+      if (!localStorage.getItem('guardnest_first_scan_completed')) {
+        localStorage.setItem('guardnest_first_scan_completed', 'true');
+        gtag('event', 'first_scan_completed', { item_count: items.length, scan_type: type, is_new_user: !localStorage.getItem('guardnest_celebrated') });
+      }
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
       if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
 
@@ -6336,7 +6372,12 @@ async function handleFridgePhoto(input, scanType) {
   }
 }
 
-function showCelebration(items) {
+function showCelebrationIfNew(items, fromGuestRestore) {
+  // Only fires on first save — showCelebration guards internally with guardnest_celebrated
+  showCelebration(Array.isArray(items) ? items : allItems, fromGuestRestore);
+}
+
+function showCelebration(items, fromGuestRestore) {
   const hasSeenCelebration = localStorage.getItem('guardnest_celebrated');
   if (hasSeenCelebration) return;
 
@@ -6345,22 +6386,77 @@ function showCelebration(items) {
   const urgent     = itemsArray.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 7).length;
   const atRisk     = '$' + (urgent * 3.5).toFixed(0);
 
+  // Reset UI
+  const dropZone = document.getElementById('celItemDrop');
+  const xpFill   = document.getElementById('celXpFill');
+  const xpLabel  = document.getElementById('celXpLabel');
+  const lvlLabel = document.getElementById('celLevelLabel');
+  const title    = document.getElementById('celTitle');
+  const badge    = document.getElementById('celLevelBadge');
+  if (dropZone) dropZone.innerHTML = '';
+  if (xpFill)   xpFill.style.width = '0%';
+  if (xpLabel)  xpLabel.textContent = '0 XP';
+
+  // Title varies if coming from guest restore (Google redirect)
+  if (title) title.textContent = fromGuestRestore ? 'SCAN RESTORED' : 'INVENTORY SAVED';
+  if (badge) badge.textContent = fromGuestRestore ? '🌿 WELCOME BACK' : '⚡ LEVEL UP';
+
   document.getElementById('celItems').textContent  = itemCount;
   document.getElementById('celAlerts').textContent = urgent;
   document.getElementById('celSaved').textContent  = atRisk;
 
-  // Personalise sub text based on urgency
   const subEl = document.getElementById('celSubText');
   if (subEl) {
-    if (urgent > 0) {
+    if (fromGuestRestore) {
+      subEl.textContent = `Your scan came through. ${itemCount} items are now tracked — we'll remind you before anything expires.`;
+    } else if (urgent > 0) {
       subEl.textContent = `${urgent} item${urgent !== 1 ? 's' : ''} need attention this week. We'll remind you before they expire.`;
     } else {
-      subEl.textContent = `GuardNest is now tracking your groceries. We'll remind you before anything expires.`;
+      subEl.textContent = `Your inventory is live. We'll remind you before anything expires.`;
     }
   }
 
   document.getElementById('celebrationModal').classList.remove('hidden');
   localStorage.setItem('guardnest_celebrated', 'true');
+  gtag('event', 'first_save_celebration_shown', { item_count: itemCount, urgent_count: urgent, from_guest_restore: !!fromGuestRestore });
+
+  // Animate items dropping in with XP ticking up
+  const preview = Array.isArray(itemsArray) ? itemsArray.slice(0, 5) : [];
+  let xp = 0;
+  preview.forEach((item, i) => {
+    setTimeout(() => {
+      if (!dropZone) return;
+      const spoil    = item.days_until_spoil || 0;
+      const urgColor = spoil > 0 && spoil <= 3 ? '#E05555' : spoil > 0 && spoil <= 7 ? '#D4A843' : '#4CAF82';
+      const urgLabel = spoil <= 0 ? '' : spoil <= 3 ? `${spoil}d — urgent` : `${spoil}d left`;
+      const [emoji]  = (typeof getItemEmoji === 'function') ? getItemEmoji(item.item_name, item.category) : ['🛒'];
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px 10px;opacity:0;transform:translateY(6px);transition:all .25s ease;';
+      row.innerHTML = `<span style="font-size:18px;">${emoji}</span>
+        <span style="flex:1;font-size:12px;color:rgba(255,255,255,.8);">${item.item_name || 'Item'}</span>
+        ${urgLabel ? `<span style="font-size:10px;font-weight:700;color:${urgColor};">${urgLabel}</span>` : ''}
+        <span id="celXpPop-${i}" style="font-size:10px;font-weight:700;color:#4CAF82;opacity:0;transition:opacity .3s;">+10</span>`;
+      dropZone.appendChild(row);
+      setTimeout(() => {
+        row.style.opacity = '1'; row.style.transform = 'translateY(0)';
+        setTimeout(() => {
+          const pop = document.getElementById(`celXpPop-${i}`);
+          if (pop) { pop.style.opacity = '1'; setTimeout(() => pop.style.opacity = '0', 500); }
+          xp += 10;
+          const pct = Math.min(100, Math.round((xp / (itemCount * 10)) * 80));
+          if (xpFill)  xpFill.style.width  = pct + '%';
+          if (xpLabel) xpLabel.textContent  = xp + ' XP';
+        }, 150);
+      }, 50);
+    }, i * 180);
+  });
+
+  // Final XP burst after all items
+  setTimeout(() => {
+    if (xpFill)  xpFill.style.width = '100%';
+    if (xpLabel) xpLabel.textContent = (itemCount * 10) + ' XP';
+    if (lvlLabel) lvlLabel.textContent = '🏆 Level 2 — Inventory Active';
+  }, preview.length * 180 + 500);
 }
 
 function dismissCelebration() {
