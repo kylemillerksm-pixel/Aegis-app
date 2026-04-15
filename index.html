@@ -7394,7 +7394,7 @@ async function submitDemoReminder() {
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Check your email</div>
           <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;">We sent a 6-digit code to<br><strong style="color:rgba(255,255,255,.7);" id="guestOtpEmailDisplay"></strong></div>
         </div>
-        <input id="guestOtpCode" type="number" placeholder="Enter 6-digit code" maxlength="6"
+        <input id="guestOtpCode" type="number" placeholder="Enter 8-digit code" maxlength="8"
           style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:13px 14px;font-size:20px;color:#fff;margin-bottom:8px;outline:none;text-align:center;letter-spacing:.2em;"
           onkeydown="if(event.key==='Enter') guestVerifyOtp()">
         <button id="guestOtpBtn" onclick="guestVerifyOtp()" 
@@ -7769,8 +7769,8 @@ async function guestSignupMagicLink() {
 
 async function guestVerifyOtp() {
   const code = document.getElementById('guestOtpCode')?.value?.trim();
-  if (!code || code.length < 6) {
-    showToast('Please enter the 6-digit code', 'error');
+  if (!code || code.length < 8) {
+    showToast('Please enter the 8-digit code', 'error');
     return;
   }
   const btn = document.getElementById('guestOtpBtn');
