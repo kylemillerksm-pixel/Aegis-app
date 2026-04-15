@@ -7379,15 +7379,9 @@ async function submitDemoReminder() {
       </button>
       <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:12px;">🔒 We only use your email to save your results. Nothing else.</div>
 
-      <!-- Email — collapsed by default -->
-      <div id="guestEmailToggle" style="text-align:center;margin-bottom:8px;">
-        <button onclick="toggleGuestEmailForm()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;padding:4px;text-decoration:underline;">
-          use email instead
-        </button>
-      </div>
-      <div id="guestEmailForm" style="display:none;margin-bottom:8px;">
+      <!-- Email — always visible, no password -->
+      <div id="guestEmailForm" style="margin-bottom:8px;">
         <input id="guestEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:16px;color:#fff;margin-bottom:8px;outline:none;">
-        <input id="guestPassword" type="password" placeholder="Create a password (6+ chars)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:16px;color:#fff;margin-bottom:8px;outline:none;">
         <button onclick="guestSignupWithEmail()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;">
           Save free with email →
         </button>
@@ -7735,93 +7729,45 @@ async function guestSignupWithGoogle() {
 }
 
 async function guestSignupWithEmail() {
-  window._savePromptFired = true; // prevent re-trigger
+  window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
+
   const email = document.getElementById('guestEmail').value.trim();
-  const password = document.getElementById('guestPassword').value;
-  if (!email || !password) {
-    showToast('Please enter your email and a password', 'error');
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email', 'error');
     return;
   }
-  if (password.length < 6) {
-    showToast('Password must be at least 6 characters', 'error');
-    return;
+
+  gtag('event', 'signup_started', { method: 'email_only' });
+
+  // Generate a UUID for this user and store it locally
+  const userId = crypto.randomUUID();
+  localStorage.setItem('guardnest_guest_id', userId);
+  localStorage.setItem('guardnest_guest_email', email);
+
+  // Save to email_leads — same table already in use, no schema change needed
+  try {
+    await supa.from('email_leads').insert({
+      email,
+      source: 'guest_save_email',
+      selected_items: window._commitmentItem || null,
+      email_sent: false,
+      created_at: new Date().toISOString()
+    });
+  } catch(e) {
+    console.log('Email lead insert:', e.message);
   }
-  gtag('event', 'signup_started', { method: 'email' });
+
+  // Save any pending scan items to localStorage under their guest ID
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
+
+  gtag('event', 'signup_completed', { method: 'email_only' });
+  if (typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'email_only' });
+
   hideGuestSaveModal();
-
-  // Try sign in first — if they already have an account this logs them in
-  const { data: signInData, error: signInError } = await supa.auth.signInWithPassword({ email, password });
-
-  if (!signInError && signInData?.session) {
-    // Existing user — logged in successfully
-    showToast('Welcome back! 🌿', 'success');
-    gtag('event', 'signin_completed', { method: 'email' });
-    return;
-  }
-
-  // Sign in failed — attempt to create new account
-  const { data, error } = await supa.auth.signUp({ email, password });
-
-  if (error) {
-    showToast('Error: ' + error.message, 'error');
-    gtag('event', 'signup_failed', { method: 'email', reason: error.message });
-    showGuestSavePrompt();
-  } else if (data?.user && data?.session) {
-    // Verify user actually exists by querying Supabase directly
-    const { data: { user: confirmedUser }, error: getUserError } = await supa.auth.getUser();
-
-    if (getUserError || !confirmedUser) {
-      showToast('Something went wrong — try Google instead', 'error');
-      gtag('event', 'signup_failed', { method: 'email', reason: 'getuser_failed' });
-      showGuestSavePrompt();
-      return;
-    }
-
-    const accountAgeMs = Date.now() - new Date(confirmedUser.created_at).getTime();
-    const isNewByTime  = accountAgeMs < 5 * 60 * 1000;
-    const isNewByFlag  = !localStorage.getItem('guardnest_boot_done_' + confirmedUser.id);
-    const isNewUser    = isNewByTime || isNewByFlag;
-
-    gtag('event', isNewUser ? 'new_user_session' : 'signin_completed', {
-      method: 'email',
-      user_id: confirmedUser.id,
-      account_age_ms: accountAgeMs,
-      is_new_by_time: isNewByTime,
-      is_new_by_flag: isNewByFlag,
-    });
-
-    if (isNewUser) {
-      localStorage.removeItem('guardnest_onboarded');
-      localStorage.removeItem('guardnest_seen_sample');
-      showToast('Welcome to GuardNest! 🌿', 'success');
-      if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'email' });
-      // onAuthStateChange will handle bootApp and navigation via bootNewUser
-    } else {
-      showToast('Welcome back! 🌿', 'success');
-      // onAuthStateChange will handle bootApp and page navigation
-    }
-  } else if (data?.user && !data?.session) {
-    // User created but no session — try signing them in immediately
-    gtag('event', 'signup_no_session', { method: 'email', user_id: data.user.id });
-    const { data: signInRetry, error: retryError } = await supa.auth.signInWithPassword({ email, password });
-    if (!retryError && signInRetry?.session) {
-      showToast('Welcome to GuardNest! 🌿', 'success');
-      gtag('event', 'new_user_session', { method: 'email_retry', user_id: data.user.id });
-    } else {
-      // Last resort — redirect to Google
-      showToast('Almost there — try signing in with Google to complete setup', 'info');
-      gtag('event', 'signup_failed', { method: 'email', reason: 'no_session_retry_failed' });
-      showGuestSavePrompt();
-    }
-  } else {
-    showToast('Something went wrong — try Google instead', 'error');
-    gtag('event', 'signup_failed', { method: 'email', reason: 'silent_failure' });
-    showGuestSavePrompt();
-  }
+  showToast('You\'re in! We\'ll send your weekly report 🌿', 'success');
 }
 </script>
 
