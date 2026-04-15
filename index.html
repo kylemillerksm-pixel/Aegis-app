@@ -2892,6 +2892,12 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
     <button class="ob-skip" onclick="dismissOnboarding()" ontouchend="this.onclick()">
       Skip for now →
     </button>
+    <!-- Escape hatch for logged-in users who land here on refresh -->
+    <div id="obDashboardLink" style="display:none;text-align:center;margin-top:8px;">
+      <button onclick="dismissOnboarding();showPage('dashboard');" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:4px;text-decoration:underline;">
+        Go to my dashboard →
+      </button>
+    </div>
   </div>
 
   <!-- Step 2: Photo processing -->
@@ -3053,16 +3059,33 @@ const UNLOCK_HINTS = [
       window._bootingApp = true;
 
       currentUser = session.user;
-      const isNewUser = (Date.now() - new Date(session.user.created_at).getTime()) < 30000;
+
+      // Extend window to 5 minutes to account for OAuth redirect latency
+      // Also treat as new user if they have no items yet (belt and suspenders)
+      const accountAgeMs = Date.now() - new Date(session.user.created_at).getTime();
+      const isNewByTime  = accountAgeMs < 5 * 60 * 1000;
+      const isNewByFlag  = !localStorage.getItem('guardnest_boot_done_' + session.user.id);
+
+      // Mark this user as booted so subsequent sessions don't re-trigger new user flow
+      localStorage.setItem('guardnest_boot_done_' + session.user.id, 'true');
+
+      const isNewUser = isNewByTime || isNewByFlag;
+
+      gtag('event', isNewUser ? 'new_user_session' : 'signin_completed', {
+        method: 'google',
+        user_id: session.user.id,
+        account_age_ms: accountAgeMs,
+        is_new_by_time: isNewByTime,
+        is_new_by_flag: isNewByFlag,
+      });
+
       if (isNewUser) {
         localStorage.removeItem('guardnest_onboarded');
         localStorage.removeItem('guardnest_seen_sample');
-        gtag('event', 'new_user_session', { method: 'google', user_id: session.user.id });
         if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'google' });
         await bootApp();
         bootNewUser();
       } else {
-        gtag('event', 'signin_completed', { method: 'google', user_id: session.user.id });
         await bootApp();
         showPage('dashboard');
       }
@@ -5928,14 +5951,24 @@ function _showDemoContinuityBanner(itemName, xp) {
 }
 
 function checkOnboarding() {
-  const hasSeenOnboarding  = localStorage.getItem('guardnest_onboarded');
-  const hasItems           = allItems.length > 0;
+  // Never show onboarding to logged-in users — they have accounts, send to dashboard
+  if (currentUser) {
+    localStorage.setItem('guardnest_onboarded', 'true');
+    return;
+  }
+
+  const hasSeenOnboarding   = localStorage.getItem('guardnest_onboarded');
+  const hasItems            = allItems.length > 0;
   const hadPendingGuestScan = localStorage.getItem('guardnest_pending_guest');
 
-  // Skip onboarding if they already scanned as a guest — they know how the product works
+  // Skip if they've been through onboarding or have existing items
   if (hasSeenOnboarding || hasItems || hadPendingGuestScan) return;
 
-  document.getElementById('onboardingScreen').classList.remove('hidden');
+  const screen = document.getElementById('onboardingScreen');
+  screen.classList.remove('hidden');
+  // Show dashboard link if they have an account — gives them an escape route
+  const dashLink = document.getElementById('obDashboardLink');
+  if (dashLink && currentUser) dashLink.style.display = 'block';
 }
 
 function startOnboarding() {
@@ -6357,6 +6390,14 @@ async function handleFridgePhoto(input, scanType) {
         showRealReport(pendingItems);
       } else {
         gtag('event', 'results_viewed', { scan_type: type, items_found: items.length });
+        // Explicitly show results and scroll to them — fixes Android not routing back
+        const scanResults = document.getElementById('scanResults');
+        if (scanResults) {
+          scanResults.classList.remove('hidden');
+          setTimeout(() => {
+            scanResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 200);
+        }
         // Trigger save prompt after user has absorbed results
         scheduleGuestSavePrompt('scanResults', 'manifestGrid');
       }
@@ -6785,7 +6826,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="demoMissionItemDays" style="font-size:11px;color:#E05555;">Expires in 2 days — use it tonight</div>
               </div>
             </div>
-            <button style="background:#4CAF82;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0e1117;cursor:pointer;pointer-events:none;">
+            <button onclick="event.stopPropagation();demoCompleteFirstMission();" style="background:#4CAF82;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0e1117;cursor:pointer;">
               ✓ Used it
             </button>
           </div>
@@ -7740,23 +7781,42 @@ async function guestSignupWithEmail() {
       return;
     }
 
-    const isNewUser = (Date.now() - new Date(confirmedUser.created_at).getTime()) < 30000;
+    const accountAgeMs = Date.now() - new Date(confirmedUser.created_at).getTime();
+    const isNewByTime  = accountAgeMs < 5 * 60 * 1000;
+    const isNewByFlag  = !localStorage.getItem('guardnest_boot_done_' + confirmedUser.id);
+    const isNewUser    = isNewByTime || isNewByFlag;
+
+    gtag('event', isNewUser ? 'new_user_session' : 'signin_completed', {
+      method: 'email',
+      user_id: confirmedUser.id,
+      account_age_ms: accountAgeMs,
+      is_new_by_time: isNewByTime,
+      is_new_by_flag: isNewByFlag,
+    });
+
     if (isNewUser) {
       localStorage.removeItem('guardnest_onboarded');
       localStorage.removeItem('guardnest_seen_sample');
       showToast('Welcome to GuardNest! 🌿', 'success');
-      // signup_completed fires server-side via welcome-email Edge Function
-      gtag('event', 'new_user_session', { method: 'email', user_id: confirmedUser.id });
       if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'email' });
-      // onAuthStateChange will handle bootApp and page navigation
+      // onAuthStateChange will handle bootApp and navigation via bootNewUser
     } else {
       showToast('Welcome back! 🌿', 'success');
-      gtag('event', 'signin_completed', { method: 'email' });
       // onAuthStateChange will handle bootApp and page navigation
     }
   } else if (data?.user && !data?.session) {
-    showToast('Account created — check your email to confirm', 'info');
-    gtag('event', 'signup_failed', { method: 'email', reason: 'confirmation_required' });
+    // User created but no session — try signing them in immediately
+    gtag('event', 'signup_no_session', { method: 'email', user_id: data.user.id });
+    const { data: signInRetry, error: retryError } = await supa.auth.signInWithPassword({ email, password });
+    if (!retryError && signInRetry?.session) {
+      showToast('Welcome to GuardNest! 🌿', 'success');
+      gtag('event', 'new_user_session', { method: 'email_retry', user_id: data.user.id });
+    } else {
+      // Last resort — redirect to Google
+      showToast('Almost there — try signing in with Google to complete setup', 'info');
+      gtag('event', 'signup_failed', { method: 'email', reason: 'no_session_retry_failed' });
+      showGuestSavePrompt();
+    }
   } else {
     showToast('Something went wrong — try Google instead', 'error');
     gtag('event', 'signup_failed', { method: 'email', reason: 'silent_failure' });
