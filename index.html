@@ -2069,8 +2069,13 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 <div id="screen-app">
   <!-- Guest banner -->
   <div id="guestBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border-bottom:1px solid rgba(76,175,130,.3);padding:10px 16px;align-items:center;justify-content:space-between;gap:12px;">
-    <div style="font-size:12px;color:rgba(255,255,255,.7);">
-      🌿 <strong style="color:#4CAF82;">Guest mode</strong> — scan your fridge, then save your results free
+    <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+      <div style="font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap;">
+        🌿 <strong style="color:#4CAF82;">Guest mode</strong>
+      </div>
+      <button onclick="gtag('event','demo_link_clicked',{location:'guest_banner'});showSampleReport();" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;padding:0;text-decoration:underline;white-space:nowrap;">
+        See how it works
+      </button>
     </div>
     <button onclick="showAuth();document.getElementById('guestBanner').style.display='none';" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
       Save Free →
@@ -2309,6 +2314,12 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
                     🧾 Receipt
                   </button>
                 </div>
+              </div>
+              <div style="text-align:center;margin-top:12px;">
+                <button onclick="gtag('event','demo_link_clicked',{location:'first_scan_prompt'});showSampleReport();" 
+                  style="background:none;border:none;color:rgba(255,255,255,.3);font-size:11px;cursor:pointer;text-decoration:underline;padding:4px;">
+                  Not sure? See how GuardNest works first →
+                </button>
               </div>
             </div>
 
@@ -6941,13 +6952,29 @@ function showSampleReport() {
   // Block clicks falling through to app behind modal
   const appEl = document.getElementById('screen-app');
   if (appEl) appEl.style.pointerEvents = 'none';
-  // Reset — show step 0 first
+  // Reset state
   window._demoSelectedItems = new Set();
   window._demoAllItems = [];
-  document.getElementById('demoStep0').style.display = 'block';
-  document.getElementById('demoStep1').style.display = 'none';
   document.getElementById('demoStep2').style.display = 'none';
   document.getElementById('demoStep3').style.display = 'none';
+
+  // Skip Step 0 for paid social traffic — they're already warmed up by the ad
+  const ref = document.referrer || '';
+  const isPaidSocial = ref.includes('facebook') || ref.includes('instagram') ||
+    ref.includes('fb.com') || ref.includes('l.facebook') ||
+    new URLSearchParams(window.location.search).get('utm_source') === 'facebook' ||
+    new URLSearchParams(window.location.search).get('utm_medium') === 'paid_social' ||
+    new URLSearchParams(window.location.search).get('fbclid');
+
+  if (isPaidSocial) {
+    document.getElementById('demoStep0').style.display = 'none';
+    document.getElementById('demoStep1').style.display = 'block';
+    gtag('event', 'demo_step0_skipped', { reason: 'paid_social' });
+    _preselectDemoItem();
+  } else {
+    document.getElementById('demoStep0').style.display = 'block';
+    document.getElementById('demoStep1').style.display = 'none';
+  }
   const inp = document.getElementById('demoUserItem');
   if (inp) inp.value = '';
   const remindForm = document.getElementById('demoRemindForm');
@@ -7517,12 +7544,9 @@ function bootGuestMode() {
     // Show guest banner
     const banner = document.getElementById('guestBanner');
     if (banner) banner.style.display = 'flex';
-    // Show onboarding for first time guests
-    if (!localStorage.getItem('guardnest_seen_sample')) {
-      setTimeout(() => showSampleReport(), 600);
-    } else {
-      try { checkOnboarding(); } catch(e) {}
-    }
+    // No longer auto-trigger demo — users land directly in app
+    // Demo is available via "See how it works" link
+    try { checkOnboarding(); } catch(e) {}
   }
 }
 
