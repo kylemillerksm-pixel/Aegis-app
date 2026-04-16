@@ -2208,15 +2208,28 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
           <div class="streak-warning-dismiss" onclick="dismissStreakWarning()" ontouchend="this.onclick()">✕</div>
         </div>
 
+        <!-- MISSIONS FIRST — Duolingo style: always show the next action first -->
+        <div class="brief-section-label">🎯 Your Missions</div>
+        <div class="panel" style="margin-bottom:14px">
+          <div class="panel-header">
+            <div class="panel-title">This Week</div>
+            <div class="panel-action" id="missionXpPool"></div>
+          </div>
+          <div id="missionsList" class="panel-body" style="padding:0"></div>
+        </div>
+
         <!-- DAILY BRIEF CARD -->
         <div class="brief-section-label">👀 What Needs Attention</div>
         <div id="briefCardWrap">
           <div class="brief-card clear brief-card-enter" id="briefCard">
             <div class="brief-card-body" id="briefCardBody">
-              <div class="empty-state" style="padding:28px;text-align:center">
-                <span class="empty-icon">✅</span>
-                <div class="empty-title">All Clear</div>
-                <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
+              <div style="padding:24px;text-align:center;">
+                <div style="font-size:28px;margin-bottom:8px;">📷</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.08em;color:var(--text2);margin-bottom:6px;">Nothing tracked yet</div>
+                <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Scan your fridge to see what needs attention this week</div>
+                <button onclick="showPage('scanner')" style="background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;">
+                  Start my first scan →
+                </button>
               </div>
             </div>
           </div>
@@ -2236,16 +2249,6 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
             <div class="brief-vault-label">Items Tracked</div>
             <div class="brief-vault-sub" id="bvv">$0 value</div>
           </div>
-        </div>
-
-        <!-- MISSIONS COMPACT -->
-        <div class="brief-section-label">🎯 Today's Actions</div>
-        <div class="panel" style="margin-bottom:0">
-          <div class="panel-header">
-            <div class="panel-title">This Week</div>
-            <div class="panel-action" id="missionXpPool"></div>
-          </div>
-          <div id="missionsList" class="panel-body" style="padding:0"></div>
         </div>
 
         <!-- hidden elements still needed by other functions -->
@@ -2376,16 +2379,35 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
             <div id="scanCelebSub" style="font-size:13px;color:var(--text2);"></div>
           </div>
 
-          <div class="panel" style="margin-top:12px;">
+          <!-- Live XP counter — animates as items appear -->
+          <div id="scanXpBar" style="display:none;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.3);border-radius:12px;padding:14px 16px;margin-top:12px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12px;font-weight:700;color:#4CAF82;letter-spacing:.08em;">⚡ BUILDING YOUR INVENTORY</span>
+              <span id="scanXpCount" style="font-size:14px;font-weight:800;color:#4CAF82;">+0 XP</span>
+            </div>
+            <div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:6px;">
+              <div id="scanXpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .4s ease;"></div>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.3);">Each item tracked = +10 XP. Save to keep your progress.</div>
+          </div>
+
+          <div class="panel" style="margin-top:0;">
             <div class="panel-header">
               <div class="panel-title" id="resultsTitle">📦 Your Fridge</div>
-              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px;display:none;">
-                ✅ Save
-              </button>
             </div>
             <div class="panel-body">
               <div id="manifestGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
             </div>
+          </div>
+
+          <!-- Duolingo-style save CTA — replaces old small save button -->
+          <div id="saveCta" style="display:none;position:sticky;bottom:70px;margin:12px 0;z-index:100;">
+            <button onclick="saveScanResults()" id="btnSave"
+              style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 20px rgba(76,175,130,.4);">
+              <span>💾</span>
+              <span id="saveBtnLabel">Save my inventory — earn XP →</span>
+            </button>
+            <div style="text-align:center;margin-top:6px;font-size:11px;color:rgba(255,255,255,.3);">Your items disappear if you close without saving</div>
           </div>
 
           <!-- Persistent save banner — only shows after interaction -->
@@ -4018,13 +4040,32 @@ function refreshDashboard() {
 
   if (missionsEl) {
     if (missions.length === 0 || total === 0) {
-      missionsEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🎯</span><div class="empty-title">No Missions Yet</div><div class="empty-sub">Scan your first receipt to unlock missions</div></div>`;
+      missionsEl.innerHTML = `<div style="padding:20px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:10px;">🎯</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Your missions unlock after your first scan</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Scan your fridge, pantry, or a receipt to get started</div>
+        <button onclick="showPage('scanner')" style="background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:12px 20px;font-size:13px;font-weight:700;cursor:pointer;">
+          📷 Start my first scan →
+        </button>
+      </div>`;
     } else {
+      let firstActive = true;
       missionsEl.innerHTML = missions.map(m => {
-        const doneClass = m.done ? ' done' : '';
+        const doneClass  = m.done ? ' done' : '';
+        const isNext     = !m.done && firstActive;
+        if (!m.done) firstActive = false;
         const checkContent = m.done ? '✓' : '';
-        const checkClick = m.done || m.auto ? '' : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
-        return `<div class="mission-item${doneClass}">
+        const checkClick   = m.done || m.auto ? '' : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
+        const actionBtn    = isNext && m.action && m.actionLabel
+          ? `<div style="padding:0 14px 12px;">
+               <button onclick="(${m.action.toString()})()" 
+                 style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;animation:chevronPulse 2s ease-in-out infinite;">
+                 ${m.actionLabel}
+               </button>
+             </div>`
+          : '';
+        const highlight = isNext ? 'border-left:3px solid #4CAF82;background:rgba(76,175,130,.04);' : '';
+        return `<div class="mission-item${doneClass}" style="${highlight}">
           <div class="mission-icon">${m.icon}</div>
           <div class="mission-body">
             <div class="mission-title">${m.title}</div>
@@ -4032,7 +4073,7 @@ function refreshDashboard() {
           </div>
           <div class="mission-xp-badge">${m.done ? '✓' : '+' + m.xp + ' XP'}</div>
           ${!m.auto ? `<button class="mission-check" ${checkClick}>${checkContent}</button>` : ''}
-        </div>`;
+        </div>${actionBtn}`;
       }).join('');
     }
   }
@@ -4818,6 +4859,16 @@ function renderManifest(items, gridId, titleId) {
       card.style.opacity = '1';
       card.style.transform = 'translateY(0)';
 
+      // Tick up XP bar on real scan
+      setTimeout(() => {
+        const xpCount = document.getElementById('scanXpCount');
+        const xpFill  = document.getElementById('scanXpFill');
+        const earned  = (i + 1) * 10;
+        const pct     = Math.min(100, Math.round((earned / (items.length * 10)) * 100));
+        if (xpCount) xpCount.textContent = `+${earned} XP`;
+        if (xpFill)  xpFill.style.width  = pct + '%';
+      }, 100);
+
       // Auto-expand first card after it appears so user sees the interaction
       if (i === 0) {
         setTimeout(() => {
@@ -4830,9 +4881,22 @@ function renderManifest(items, gridId, titleId) {
     }, i * 80 + 200);
   });
 
-  // Show save button for logged-in users
-  const btnSave = document.getElementById('btnSave');
-  if (btnSave) btnSave.style.display = currentUser ? 'inline-flex' : 'none';
+  // Show XP bar
+  const xpBar = document.getElementById('scanXpBar');
+  if (xpBar) xpBar.style.display = 'block';
+
+  // Show save CTA for all users after items load
+  setTimeout(() => {
+    const saveCta = document.getElementById('saveCta');
+    const btnSave = document.getElementById('btnSave');
+    const label   = document.getElementById('saveBtnLabel');
+    if (saveCta) saveCta.style.display = 'block';
+    if (btnSave) btnSave.style.display = 'flex';
+    if (label) {
+      const xpEarned = items.length * 10;
+      label.textContent = `Save my inventory — earn +${xpEarned} XP →`;
+    }
+  }, items.length * 80 + 600);
 
   // Reset banner flag for new scan
   window._bannerShown = false;
@@ -5078,15 +5142,41 @@ async function saveItems(btnId, resultsId) {
     refreshVault();
     updateSidebar();
 
-    // Gamification
-    checkLevelUp(prevCredits, totalCredits);
+    // Gamification — sequenced Duolingo-style, not all at once
     const newValue = allItems.reduce((s,i) => s + (i.price||0), 0);
-    checkAndShowBadge(prevCount, allItems.length, prevValue, newValue);
-    checkBadges();
     const _fromRestore = !!window._savingFromGuestRestore;
-    showCelebrationIfNew(allItems, _fromRestore);
-    showFirstWin(allItems);
-    setTimeout(() => checkNearMiss(allItems), 2000);
+
+    // Step 1: Hide scan UI and show XP celebration immediately
+    const scanXpBar = document.getElementById('scanXpBar');
+    const saveCta   = document.getElementById('saveCta');
+    if (scanXpBar) scanXpBar.style.display = 'none';
+    if (saveCta)   saveCta.style.display   = 'none';
+
+    // Step 2: Show celebration (first save only) or level up
+    const didLevelUp = getLevelInfo(totalCredits).level > getLevelInfo(prevCredits).level;
+
+    if (!localStorage.getItem('guardnest_celebrated')) {
+      // First save ever — show the big celebration
+      showCelebrationIfNew(allItems, _fromRestore);
+    } else if (didLevelUp) {
+      // Level up — show that first
+      setTimeout(() => {
+        const info = getLevelInfo(totalCredits);
+        showLevelUp(info.level, info.title);
+      }, 400);
+    } else {
+      // Returning save — show XP toast and go straight to mission
+      showToast(`+${rows.length * 10} XP earned 🌿`, 'success');
+      setTimeout(() => _showPostSaveMission(), 600);
+    }
+
+    // Step 3: Badge check (quiet — no modal collision)
+    setTimeout(() => {
+      checkAndShowBadge(prevCount, allItems.length, prevValue, newValue);
+    }, 3000);
+
+    // Step 4: Near miss check last
+    setTimeout(() => checkNearMiss(allItems), 4000);
   }
 }
 
@@ -5474,45 +5564,55 @@ function shareNearMiss() {
 }
 
 // ─── FIRST WIN MODAL ───────────────────────────────────────────
+function _showPostSaveMission() {
+  // Surface the most urgent mission after save — Duolingo style
+  const { missions } = buildMissions();
+  const next = missions.find(m => !m.done);
+  if (!next) {
+    // All missions done — go to dashboard
+    showPage('dashboard');
+    return;
+  }
+
+  // Remove existing if any
+  const existing = document.getElementById('postSaveMissionCard');
+  if (existing) existing.remove();
+
+  const card = document.createElement('div');
+  card.id = 'postSaveMissionCard';
+  card.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99990;display:flex;align-items:center;justify-content:center;padding:24px;';
+  card.innerHTML = `
+    <div style="max-width:360px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.3);text-align:center;">
+      <div style="font-size:32px;margin-bottom:6px;">🎯</div>
+      <div style="font-size:11px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:8px;">YOUR FIRST MISSION</div>
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">${next.title}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px;">${next.desc}</div>
+      <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;padding:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;color:rgba(255,255,255,.6);">Complete this mission</span>
+        <span style="font-size:14px;font-weight:800;color:#4CAF82;">+${next.xp} XP</span>
+      </div>
+      <button onclick="document.getElementById('postSaveMissionCard').remove();showPage('dashboard');${next.action ? 'setTimeout(()=>{try{(' + next.action.toString() + ')()}catch(e){}},300);' : ''}" 
+        style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px;">
+        Got it — take me there →
+      </button>
+      <button onclick="document.getElementById('postSaveMissionCard').remove();showPage('dashboard');"
+        style="background:none;border:none;color:rgba(255,255,255,.25);font-size:11px;cursor:pointer;padding:4px;">
+        Skip for now
+      </button>
+    </div>`;
+  document.body.appendChild(card);
+  gtag('event', 'post_save_mission_shown', { mission_id: next.id, mission_xp: next.xp });
+}
+
 function showFirstWin(items) {
-  const hasSeenWin = localStorage.getItem('guardnest_first_win');
-  if (hasSeenWin) return;
-
-  const totalValue    = items.reduce((s,i) => s + (parseFloat(i.price || 0)||0), 0);
-  const warrantyItems = items.filter(i => (i.warranty_days||0) > 0);
-  const spoilItems    = items.filter(i => (i.days_until_spoil||0) > 0);
-
-  document.getElementById('fwProtectedValue').textContent = '$' + totalValue.toFixed(0);
-
-  const wins = [];
-
-  if (warrantyItems.length > 0) {
-    const warrantyValue = warrantyItems.reduce((s,i) => s + (parseFloat(i.price)||0), 0);
-    wins.push(`🛡️ <strong>${warrantyItems.length} warranty${warrantyItems.length>1?'s':''}</strong> now tracked — $${warrantyValue.toFixed(0)} protected`);
-  }
-
-  if (spoilItems.length > 0) {
-    const mostUrgent = spoilItems.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
-    wins.push(`⏰ <strong>${mostUrgent.item_name}</strong> expires in ${mostUrgent.days_until_spoil} day${mostUrgent.days_until_spoil!==1?'s':''} — we'll remind you`);
-  }
-
-  if (wins.length === 0) {
-    wins.push(`📦 <strong>${items.length} item${items.length>1?'s':''}</strong> added to your vault`);
-  }
-
-  wins.push(`📬 Every Monday you'll get a report showing what you used vs what slipped`);
-
-  document.getElementById('fwWinsList').innerHTML = wins.map(w =>
-    `<div class="fw-win-item">${w}</div>`
-  ).join('');
-
-  document.getElementById('firstWinModal').classList.remove('hidden');
+  // Retired — celebration modal handles first save moment
+  // Kept as stub to avoid errors from any remaining calls
   localStorage.setItem('guardnest_first_win', 'true');
 }
 
 function closeFirstWin() {
   document.getElementById('firstWinModal').classList.add('hidden');
-  showPage('vault');
+  showPage('dashboard');
 }
 
 // ─── CONFETTI ─────────────────────────────────────────────────
@@ -5571,13 +5671,13 @@ function showXpFloat(xp, x, y) {
 
 // ─── LEVEL UP MODAL ────────────────────────────────────────────
 const LEVEL_UNLOCKS = {
-  2: 'Weekly clarity report unlocked — every Monday you see what got used and what slipped.',
-  3: 'Shopping pattern learning — GuardNest notices what you buy regularly and checks in.',
-  4: 'Early warnings — get a heads up before things expire, not just on the day.',
-  5: 'Habit insights — see which items you consistently use and which ones slip.',
-  6: 'Last chance bonus — earn double XP when you use something in its final 24 hours.',
-  7: 'Monthly picture — see your monthly used vs wasted breakdown over time.',
-  8: 'Receipt archive — your receipt images saved and searchable forever.',
+  2: 'Weekly report unlocked — every Monday you'll see what you used vs what quietly slipped.',
+  3: 'Pattern tracking active — GuardNest is learning what you buy regularly.',
+  4: 'Early warnings on — you'll get a heads up 3 days before anything expires.',
+  5: 'Habit insights unlocked — you can now see which items you consistently waste.',
+  6: 'You're in the top tier. Keep your streak going to maintain it.',
+  7: 'Waste Warrior level — your inventory habits are genuinely different now.',
+  8: 'Max level reached. Your grocery awareness is on a different level entirely.',
 };
 
 function checkLevelUp(prevCredits, newCredits) {
@@ -5599,6 +5699,8 @@ function showLevelUp(level, title) {
 
 function closeLevelUp() {
   document.getElementById('levelUpModal').classList.add('hidden');
+  // Chain to mission card — Duolingo style: always show next action
+  setTimeout(() => _showPostSaveMission(), 300);
 }
 
 // ─── BADGE EARNED MODAL ────────────────────────────────────────
@@ -5916,11 +6018,98 @@ function bootNewUser() {
     const xp       = demoState.xp  || 80;
     _showDemoContinuityBanner(itemName, xp);
   } else {
-    // No demo context — land on scanner with simple welcome
+    // Direct scan path — show onboarding overlay explaining the game layer
     showPage('scanner');
-    setTimeout(() => showToast('Welcome to GuardNest! Scan your fridge, pantry, or a receipt to start. 🌿', 'success'), 400);
     gtag('event', 'new_user_no_demo');
+    _showDirectScanOnboarding();
   }
+}
+
+function _showDirectScanOnboarding() {
+  const existing = document.getElementById('directOnboardingBanner');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'directOnboardingBanner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99990;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;';
+  banner.innerHTML = `
+    <div style="max-width:360px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.3);text-align:center;">
+      <div style="font-size:36px;margin-bottom:12px;">🌿</div>
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">Welcome to GuardNest</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px;">
+        Your grocery inventory is now live.<br>Here's how it works.
+      </div>
+
+      <!-- 3 quick steps -->
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;text-align:left;">
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+          <span style="font-size:22px;flex-shrink:0;">📷</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Scan anything</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">Receipt, fridge, or pantry — GuardNest identifies every item</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+          <span style="font-size:22px;flex-shrink:0;">⚡</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Earn XP as you track</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">Every item tracked, every item used before it expires = XP</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+          <span style="font-size:22px;flex-shrink:0;">📬</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Weekly report every Monday</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">We'll show you what you used vs what quietly disappeared</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- XP bar starting at 0 -->
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">
+          <span>Level 1 — First Scan</span>
+          <span>0 / 100 XP</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;"></div>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Scan your first item to start earning XP</div>
+      </div>
+
+      <!-- Scan options -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button onclick="document.getElementById('directOnboardingBanner').remove();setScanType('fridge');showPage('scanner');gtag('event','direct_onboard_chose_fridge');"
+          style="display:flex;align-items:center;gap:12px;background:rgba(76,175,130,.1);border:1px solid rgba(76,175,130,.3);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
+          <span style="font-size:24px;">🧊</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Scan my fridge</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">Track perishables and expiry dates</div>
+          </div>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
+        </button>
+        <button onclick="document.getElementById('directOnboardingBanner').remove();setScanType('pantry');showPage('scanner');gtag('event','direct_onboard_chose_pantry');"
+          style="display:flex;align-items:center;gap:12px;background:rgba(136,102,255,.08);border:1px solid rgba(136,102,255,.25);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
+          <span style="font-size:24px;">🗄️</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Scan my pantry</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">Canned goods, dry goods, snacks</div>
+          </div>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
+        </button>
+        <button onclick="document.getElementById('directOnboardingBanner').remove();setScanType('receipt');showPage('scanner');gtag('event','direct_onboard_chose_receipt');"
+          style="display:flex;align-items:center;gap:12px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
+          <span style="font-size:24px;">🧾</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;">Scan a receipt</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);">Most accurate — tracks everything from your shop</div>
+          </div>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(banner);
+  gtag('event', 'direct_onboarding_shown');
 }
 
 function _showDemoContinuityBanner(itemName, xp) {
@@ -6543,7 +6732,8 @@ function showCelebration(items, fromGuestRestore) {
 
 function dismissCelebration() {
   document.getElementById('celebrationModal').classList.add('hidden');
-  showPage('dashboard');
+  // Surface mission after celebration instead of going straight to dashboard
+  setTimeout(() => _showPostSaveMission(), 300);
 }
 
 // ─── SCAN ANIMATION ───────────────────────────────────────────
