@@ -7789,8 +7789,25 @@ async function guestVerifyOtp() {
   } else {
     gtag('event', 'otp_verified');
     if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'email_otp' });
+
+    // Close all modals and overlays
     hideGuestSaveModal();
-    showToast('Welcome to GuardNest! 🌿', 'success');
+    document.body.style.overflow = '';
+    const sampleModal = document.getElementById('sampleReportModal');
+    if (sampleModal) sampleModal.style.display = 'none';
+
+    // Get the verified session and boot app directly
+    const { data: { session } } = await supa.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      window._bootingApp = false; // reset guard so bootApp can run
+      showToast('Welcome to GuardNest! 🌿', 'success');
+      await bootApp();
+      bootNewUser();
+    } else {
+      // onAuthStateChange will handle it
+      showToast('Welcome to GuardNest! 🌿', 'success');
+    }
   }
 }
 
