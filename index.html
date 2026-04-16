@@ -6778,6 +6778,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- STEP 2: Scanning animation -->
       <div id="demoStep2" style="display:none;padding:32px 24px;text-align:center;">
+        <div style="background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);border-radius:8px;padding:8px 12px;margin-bottom:20px;font-size:11px;color:#D4A843;font-weight:600;letter-spacing:.06em;">
+          🎬 SIMULATION — using a sample fridge to show you how GuardNest works
+        </div>
         <div style="font-size:40px;margin-bottom:16px;" id="demoScanEmoji">🧾</div>
         <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;" id="demoScanTitle">Reading your grocery receipt...</div>
         <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:24px;" id="demoScanSub">Identifying every item</div>
@@ -6807,6 +6810,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <span id="demoXpLabel" style="font-size:11px;font-weight:700;color:#4CAF82;min-width:52px;text-align:right;">0 XP</span>
           </div>
           <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;" id="demoReportHeadline">Building your inventory...</div>
+        </div>
+
+        <!-- Simulation notice -->
+        <div style="background:rgba(245,200,66,.06);border-bottom:1px solid rgba(245,200,66,.15);padding:8px 16px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;">🎬</span>
+          <span style="font-size:11px;color:#D4A843;font-weight:600;">Sample fridge — your real scan will show your actual groceries</span>
         </div>
 
         <!-- Live inventory list — items drop in here -->
@@ -7184,8 +7193,13 @@ function showDemoResults(userItem) {
             insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. Not carelessness — you just couldn't see it. That's the gap GuardNest closes.`;
           }
         }
-        document.getElementById('demoMissionCard').style.display = 'block';
-        document.getElementById('demoMissionCard').style.animation = 'fadeIn .4s ease both';
+        const missionCard = document.getElementById('demoMissionCard');
+        missionCard.style.display = 'block';
+        missionCard.style.animation = 'fadeIn .4s ease both';
+        // Scroll to mission card so user sees it
+        setTimeout(() => {
+          missionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
       }, 300);
       return;
     }
