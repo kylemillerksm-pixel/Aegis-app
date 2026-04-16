@@ -2287,6 +2287,31 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
             <input type="file" accept="image/*,application/pdf" id="scanFileInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
             <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
 
+            <!-- First-time guest prompt — shown until first scan -->
+            <div id="firstTimeScanPrompt" style="display:none;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.3);border-radius:14px;padding:20px;margin-bottom:10px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:10px;">🧊</div>
+              <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">Your inventory is empty</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:16px;">
+                Scan your fridge, pantry, or a receipt.<br>GuardNest identifies everything automatically.
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <button onclick="setScanType('fridge');triggerScan();gtag('event','first_scan_prompt_fridge');"
+                  style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                  🧊 Scan my fridge now
+                </button>
+                <div style="display:flex;gap:8px;">
+                  <button onclick="setScanType('pantry');triggerScan();gtag('event','first_scan_prompt_pantry');"
+                    style="flex:1;background:rgba(136,102,255,.12);color:#9d8fff;border:1px solid rgba(136,102,255,.3);border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">
+                    🗄️ Pantry
+                  </button>
+                  <button onclick="setScanType('receipt');triggerScan();gtag('event','first_scan_prompt_receipt');"
+                    style="flex:1;background:rgba(245,200,66,.08);color:#D4A843;border:1px solid rgba(245,200,66,.2);border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">
+                    🧾 Receipt
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer">
               <span class="scan-icon" id="scanIcon">📷</span>
               <div class="scan-title" id="scanTitle">What are we scanning?</div>
@@ -6015,6 +6040,11 @@ function setScanType(type) {
 
 function triggerScan() {
   const type = window._scanPageType || 'receipt';
+  // Hide first-time prompt and restore scan zone
+  const prompt = document.getElementById('firstTimeScanPrompt');
+  const scanZone = document.getElementById('scanZone');
+  if (prompt) prompt.style.display = 'none';
+  if (scanZone) scanZone.style.display = 'block';
   // Track first scan attempt
   if (!localStorage.getItem('guardnest_first_scan_started')) {
     localStorage.setItem('guardnest_first_scan_started', 'true');
@@ -7463,6 +7493,13 @@ function bootGuestMode() {
   document.getElementById('screen-app').classList.add('visible');
   applyMobileLayout();
   showPage('scanner');
+  // Show first-time prompt if no items and not in demo mode
+  if (!isDemoMode && !localStorage.getItem('guardnest_first_scan_started')) {
+    const prompt = document.getElementById('firstTimeScanPrompt');
+    const scanZone = document.getElementById('scanZone');
+    if (prompt) prompt.style.display = 'block';
+    if (scanZone) scanZone.style.display = 'none';
+  }
 
   if (isDemoMode) {
     // Make app transparent and non-interactive instead of visibility:hidden
