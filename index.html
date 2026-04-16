@@ -7719,13 +7719,20 @@ function hideGuestSaveModal() {
 }
 
 async function guestSignupMagicLink() {
+  // Prevent double-submission
+  if (window._otpSending) return;
+  window._otpSending = true;
   window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   const email = document.getElementById('guestMagicEmail')?.value?.trim();
   if (!email || !email.includes('@')) {
     showToast('Please enter a valid email', 'error');
+    window._otpSending = false;
     return;
   }
+  // Show loading state on button
+  const saveBtn = document.querySelector('#guestMagicForm button');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Sending code...'; }
 
   gtag('event', 'signup_started', { method: 'email_otp' });
   if (pendingItems.length > 0) {
@@ -7754,6 +7761,8 @@ async function guestSignupMagicLink() {
   if (error) {
     showToast('Error: ' + error.message, 'error');
     gtag('event', 'signup_failed', { method: 'email_otp', reason: error.message });
+    window._otpSending = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save my inventory free →'; }
   } else {
     // Show OTP entry form
     document.getElementById('guestMagicForm').style.display = 'none';
@@ -7762,6 +7771,7 @@ async function guestSignupMagicLink() {
     window._otpEmail = email;
     const emailDisplay = document.getElementById('guestOtpEmailDisplay');
     if (emailDisplay) emailDisplay.textContent = email;
+    window._otpSending = false;
     gtag('event', 'otp_sent', { email_domain: email.split('@')[1] });
     if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'otp_sent' });
   }
