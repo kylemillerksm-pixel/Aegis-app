@@ -2326,7 +2326,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
               </div>
             </div>
 
-            <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer">
+            <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer;display:none;">
               <span class="scan-icon" id="scanIcon">📷</span>
               <div class="scan-title" id="scanTitle">What are we scanning?</div>
               <div class="scan-sub" id="scanSub">Choose receipt, fridge, or pantry above — then tap to scan</div>
@@ -3403,6 +3403,11 @@ function refreshMissionsCompact() {
 }
 
 async function bootApp() {
+  // Always show scan zone for logged-in users
+  const scanZone = document.getElementById('scanZone');
+  const prompt   = document.getElementById('firstTimeScanPrompt');
+  if (scanZone) scanZone.style.display = 'block';
+  if (prompt)   prompt.style.display   = 'none';
   setLoadingMsg('LOADING VAULT...');
   try {
     await loadItems();
@@ -7053,24 +7058,30 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="demoInventoryList" style="padding:12px 16px;display:flex;flex-direction:column;gap:6px;min-height:120px;"></div>
 
         <!-- Mission card — hidden until items loaded -->
-        <div id="demoMissionCard" style="display:none;margin:0 16px 14px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:12px;padding:14px;">
-          <div style="font-size:10px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:6px;">🎯 FIRST MISSION</div>
-          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;" id="demoMissionTitle">Mark your item as used before it expires</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px;">Tap the item below to complete your first action</div>
-          <!-- The highlighted item to act on -->
-          <div id="demoMissionItem" style="background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="demoCompleteFirstMission()">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span id="demoMissionEmoji" style="font-size:22px;">🥬</span>
-              <div>
-                <div id="demoMissionItemName" style="font-size:13px;font-weight:600;color:#fff;">Spinach</div>
-                <div id="demoMissionItemDays" style="font-size:11px;color:#E05555;">Expires in 2 days — use it tonight</div>
+        <div id="demoMissionCard" style="display:none;margin:16px;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.35);border-radius:16px;padding:20px;">
+          <div style="text-align:center;margin-bottom:16px;">
+            <div style="font-size:32px;margin-bottom:8px;">🎯</div>
+            <div style="font-size:11px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:6px;">FIRST MISSION UNLOCKED</div>
+            <div style="font-size:17px;font-weight:800;color:#fff;margin-bottom:6px;" id="demoMissionTitle">Mark your item as used before it expires</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.6;">This is what GuardNest does every week — catches what is about to slip before it does.</div>
+          </div>
+          <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:12px;color:rgba(255,255,255,.6);">Complete this mission</span>
+            <span style="font-size:15px;font-weight:800;color:#4CAF82;">+50 XP</span>
+          </div>
+          <div id="demoMissionItem" onclick="demoCompleteFirstMission()" style="background:rgba(255,80,80,.08);border:2px solid rgba(255,80,80,.35);border-radius:12px;padding:16px;cursor:pointer;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <span id="demoMissionEmoji" style="font-size:32px;">🥬</span>
+              <div style="flex:1;">
+                <div id="demoMissionItemName" style="font-size:16px;font-weight:700;color:#fff;margin-bottom:3px;">Spinach</div>
+                <div id="demoMissionItemDays" style="font-size:12px;color:#E05555;font-weight:600;">Expires in 2 days — use it tonight</div>
               </div>
             </div>
-            <button onclick="event.stopPropagation();demoCompleteFirstMission();" style="background:#4CAF82;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0e1117;cursor:pointer;">
-              ✓ Used it
+            <button onclick="event.stopPropagation();demoCompleteFirstMission();" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;color:#0e1117;cursor:pointer;animation:chevronPulse 1.8s ease-in-out infinite;">
+              Mark as used — earn 50 XP
             </button>
           </div>
-          <div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-top:8px;">+50 XP for completing your first mission</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;">Tap above to complete your first mission</div>
         </div>
 
         <!-- Level up burst — hidden until mission done -->
@@ -7440,13 +7451,32 @@ function showDemoResults(userItem) {
             insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. Not carelessness — you just couldn't see it. That's the gap GuardNest closes.`;
           }
         }
-        const missionCard = document.getElementById('demoMissionCard');
-        missionCard.style.display = 'block';
-        missionCard.style.animation = 'fadeIn .4s ease both';
-        // Scroll to mission card so user sees it
+        // Transition: shrink item list and make mission card dominant
+        const inventoryList = document.getElementById('demoInventoryList');
+        const missionCard   = document.getElementById('demoMissionCard');
+        const simNotice     = document.querySelector('#demoStep3 [style*="SAMPLE FRIDGE"]') ||
+                              document.querySelector('#demoStep3 div[style*="rgba(245,200,66"]');
+
+        // Collapse item list with animation
+        if (inventoryList) {
+          inventoryList.style.transition = 'max-height .4s ease, opacity .3s ease';
+          inventoryList.style.maxHeight  = inventoryList.scrollHeight + 'px';
+          setTimeout(() => {
+            inventoryList.style.maxHeight = '0';
+            inventoryList.style.opacity   = '0';
+            inventoryList.style.overflow  = 'hidden';
+            inventoryList.style.padding   = '0';
+          }, 100);
+        }
+
+        // Show mission card as full takeover after list collapses
         setTimeout(() => {
-          missionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+          missionCard.style.display   = 'block';
+          missionCard.style.animation = 'fadeIn .4s ease both';
+          // Scroll modal to top so mission is first thing they see
+          const modal = document.getElementById('sampleReportModal');
+          if (modal) modal.scrollTop = 0;
+        }, 500);
       }, 300);
       return;
     }
@@ -7710,12 +7740,19 @@ function bootGuestMode() {
   document.getElementById('screen-app').classList.add('visible');
   applyMobileLayout();
   showPage('scanner');
-  // Show first-time prompt if no items and not in demo mode
-  if (!isDemoMode && !localStorage.getItem('guardnest_first_scan_started')) {
-    const prompt = document.getElementById('firstTimeScanPrompt');
+  // Show first-time prompt or scan zone depending on history
+  if (!isDemoMode) {
+    const prompt   = document.getElementById('firstTimeScanPrompt');
     const scanZone = document.getElementById('scanZone');
-    if (prompt) prompt.style.display = 'block';
-    if (scanZone) scanZone.style.display = 'none';
+    if (!localStorage.getItem('guardnest_first_scan_started')) {
+      // Cold user — show the directed prompt
+      if (prompt)   prompt.style.display   = 'block';
+      if (scanZone) scanZone.style.display = 'none';
+    } else {
+      // Returning user — show normal scan zone
+      if (prompt)   prompt.style.display   = 'none';
+      if (scanZone) scanZone.style.display = 'block';
+    }
   }
 
   if (isDemoMode) {
