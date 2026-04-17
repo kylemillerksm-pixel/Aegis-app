@@ -1974,6 +1974,80 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 <body>
 
 <!-- ═══════════════════════════════════════════
+     COLD USER SPLASH SCREEN
+═══════════════════════════════════════════ -->
+<div id="splashScreen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0E1117;z-index:999999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:400px;margin:0 auto;padding:40px 24px 32px;min-height:100vh;display:flex;flex-direction:column;justify-content:center;">
+
+    <!-- Logo -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
+      <div style="width:32px;height:32px;background:#4CAF82;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);flex-shrink:0;"></div>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.15em;color:#4CAF82;">GuardNest</span>
+    </div>
+
+    <!-- Hook -->
+    <div style="font-size:28px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:12px;">
+      You're not wasting groceries.<br>
+      <span style="color:#4CAF82;">So why do they keep disappearing?</span>
+    </div>
+    <div style="font-size:14px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:32px;">
+      GuardNest scans your receipt and shows you exactly what you have, what's expiring, and what quietly slips away every week.
+    </div>
+
+    <!-- Live product preview -->
+    <div style="background:#1a2330;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;margin-bottom:28px;">
+      <div style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="font-size:10px;font-weight:700;color:#4CAF82;letter-spacing:.1em;margin-bottom:8px;">⚠️ YOUR ITEM — CAUGHT IN TIME</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:28px;">🍗</span>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;">Chicken Breast</div>
+            <div style="height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-bottom:4px;">
+              <div style="height:100%;width:15%;background:#E05555;border-radius:2px;"></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:#E05555;">Expires tomorrow — use tonight</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🥬</span>
+          <div style="flex:1;"><div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;"><div style="height:100%;width:20%;background:#D4A843;border-radius:2px;"></div></div></div>
+          <span style="font-size:10px;font-weight:700;color:#D4A843;">3d left</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🧀</span>
+          <div style="flex:1;"><div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;"><div style="height:100%;width:75%;background:#4CAF82;border-radius:2px;"></div></div></div>
+          <span style="font-size:10px;font-weight:700;color:#4CAF82;">11d left</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🥛</span>
+          <div style="flex:1;"><div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;"><div style="height:100%;width:50%;background:#4CAF82;border-radius:2px;"></div></div></div>
+          <span style="font-size:10px;font-weight:700;color:#4CAF82;">7d left</span>
+        </div>
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:rgba(255,255,255,.3);">11 items tracked · Free</span>
+        <span style="font-size:11px;font-weight:700;color:#4CAF82;">⚡ 80 XP earned</span>
+      </div>
+    </div>
+
+    <!-- Social proof -->
+    <div style="font-size:12px;color:rgba(255,255,255,.35);text-align:center;margin-bottom:20px;font-style:italic;">
+      "Staying on top of what's in the fridge can feel like a full-time job."<br>
+      <span style="color:rgba(255,255,255,.2);">— r/EatCheapAndHealthy</span>
+    </div>
+
+    <!-- CTA -->
+    <button onclick="dismissSplash()" 
+      style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px;">
+      See what's in my fridge →
+    </button>
+    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.25);">Free · No download · Scan in 30 seconds</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
      LOADING OVERLAY
 ═══════════════════════════════════════════ -->
 <div class="loading-overlay" id="loadingOverlay" style="display:none;visibility:hidden;pointer-events:none;z-index:-1;">
@@ -7732,27 +7806,50 @@ async function submitDemoReminder() {
 </div>
 
 <script>
+function dismissSplash() {
+  const splash = document.getElementById('splashScreen');
+  if (splash) {
+    splash.style.transition = 'opacity .3s ease';
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; }, 300);
+  }
+  localStorage.setItem('guardnest_seen_splash', 'true');
+  // After splash — go straight into demo
+  showSampleReport();
+  gtag('event', 'splash_dismissed');
+}
+
 function bootGuestMode() {
-  const isDemoMode = new URLSearchParams(window.location.search).get('demo') === 'true';
+  const isDemoMode  = new URLSearchParams(window.location.search).get('demo') === 'true';
+  const seenSplash  = localStorage.getItem('guardnest_seen_splash');
+  const seenSample  = localStorage.getItem('guardnest_seen_sample');
+  const hasScanned  = localStorage.getItem('guardnest_first_scan_started');
 
   // Show the app directly in guest mode — no auth required
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
   applyMobileLayout();
   showPage('scanner');
+
   // Show first-time prompt or scan zone depending on history
   if (!isDemoMode) {
     const prompt   = document.getElementById('firstTimeScanPrompt');
     const scanZone = document.getElementById('scanZone');
-    if (!localStorage.getItem('guardnest_first_scan_started')) {
-      // Cold user — show the directed prompt
+    if (!hasScanned) {
       if (prompt)   prompt.style.display   = 'block';
       if (scanZone) scanZone.style.display = 'none';
     } else {
-      // Returning user — show normal scan zone
       if (prompt)   prompt.style.display   = 'none';
       if (scanZone) scanZone.style.display = 'block';
     }
+  }
+
+  // Cold user who has never seen splash or demo — show splash first
+  if (!isDemoMode && !seenSplash && !seenSample && !hasScanned) {
+    const splash = document.getElementById('splashScreen');
+    if (splash) splash.style.display = 'block';
+    gtag('event', 'splash_shown');
+    return; // splash dismissal handles the rest
   }
 
   if (isDemoMode) {
@@ -7771,9 +7868,12 @@ function bootGuestMode() {
     // Show guest banner
     const banner = document.getElementById('guestBanner');
     if (banner) banner.style.display = 'flex';
-    // No longer auto-trigger demo — users land directly in app
-    // Demo is available via "See how it works" link
-    try { checkOnboarding(); } catch(e) {}
+    // Auto-trigger demo for users who have seen splash but not demo
+    if (seenSplash && !seenSample) {
+      setTimeout(() => showSampleReport(), 400);
+    } else {
+      try { checkOnboarding(); } catch(e) {}
+    }
   }
 }
 
