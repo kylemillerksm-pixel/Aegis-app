@@ -7492,15 +7492,7 @@ function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
   if (!modal) return;
 
-  // Reset all form states
-  const emailForm    = document.getElementById('guestEmailForm');
-  const emailToggle  = document.getElementById('guestEmailToggle');
-  const remindRow    = document.getElementById('saveModalRemindRow');
-  const dismissBtn   = document.getElementById('saveModalDismissBtn');
-  if (emailForm)   emailForm.style.display   = 'none';
-  if (emailToggle) emailToggle.style.display = 'block';
-  if (remindRow)   remindRow.style.display   = 'none';
-  if (dismissBtn)  dismissBtn.style.display  = 'block';
+  // Reset modal state
 
   // ── Build insight from pendingItems ──────────────────────────
   const items    = pendingItems || [];
@@ -7624,32 +7616,13 @@ function selectCommitmentItem(btn, itemName) {
 }
 
 function showSaveModalRemind() {
-  // Anticipated regret — show remind option instead of hard dismiss
-  const dismissBtn = document.getElementById('saveModalDismissBtn');
-  const remindRow  = document.getElementById('saveModalRemindRow');
-  if (dismissBtn) dismissBtn.style.display = 'none';
-  if (remindRow)  remindRow.style.display  = 'block';
-  gtag('event', 'save_modal_remind_shown');
+  // Deprecated — elements removed. Just dismiss.
+  hideGuestSaveModal();
 }
 
 async function saveModalRemindMe() {
-  const email = document.getElementById('saveModalRemindEmail')?.value?.trim();
-  if (!email || !email.includes('@')) {
-    hideGuestSaveModal();
-    return;
-  }
-  try {
-    await supa.from('email_leads').insert({
-      email,
-      source: 'save_modal_remind',
-      selected_items: window._commitmentItem || null,
-      email_sent: false,
-      created_at: new Date().toISOString()
-    });
-  } catch(e) { console.log('Remind lead:', e.message); }
-  gtag('event', 'remind_email_captured', { has_commitment_item: !!window._commitmentItem });
+  // Deprecated — elements removed. Just dismiss.
   hideGuestSaveModal();
-  showToast('We\'ll remind you before things expire 🌿', 'success');
 }
 
 function hideGuestSaveModal() {
@@ -7917,12 +7890,42 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-function guestSaveAnonymous() {
+async function guestSaveAnonymous() {
   window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
+
   let guestId = localStorage.getItem('guardnest_guest_id');
   if (!guestId) { guestId = crypto.randomUUID(); localStorage.setItem('guardnest_guest_id', guestId); }
-  if (pendingItems && pendingItems.length > 0) localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
+
+  // Always keep a local copy as fallback
+  if (pendingItems && pendingItems.length > 0) {
+    localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
+  }
+
+  // Persist to Supabase so data survives browser clears and enables push notifications
+  if (pendingItems && pendingItems.length > 0) {
+    const today = new Date().toISOString().split('T')[0];
+    const rows = pendingItems.map(item => ({
+      guest_id:         guestId,
+      item_name:        item.item_name        || 'Unknown',
+      merchant:         item.merchant         || null,
+      price:            parseFloat(item.price || 0),
+      purchase_date:    item.purchase_date    || today,
+      category:         item.category         || 'General',
+      days_until_spoil: parseInt(item.days_until_spoil || 0),
+      expiry_date:      item.expiry_date      || null,
+      image_url:        item.image_url        || null,
+      status:           'active',
+    }));
+    try {
+      await supa.from('guest_items').insert(rows);
+      gtag('event', 'guest_items_saved', { count: rows.length, guest_id: guestId });
+    } catch(e) {
+      console.log('guest_items insert failed:', e.message);
+      // localStorage copy already saved above — user data is safe
+    }
+  }
+
   gtag('event', 'signup_completed', { method: 'anonymous' });
   if (typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'anonymous' });
   hideGuestSaveModal();
