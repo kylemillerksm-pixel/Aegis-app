@@ -7492,7 +7492,7 @@ function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
   if (!modal) return;
 
-  // Reset modal state
+  // Modal reset — form elements removed, nothing to reset
 
   // ── Build insight from pendingItems ──────────────────────────
   const items    = pendingItems || [];
@@ -7616,12 +7616,10 @@ function selectCommitmentItem(btn, itemName) {
 }
 
 function showSaveModalRemind() {
-  // Deprecated — elements removed. Just dismiss.
   hideGuestSaveModal();
 }
 
 async function saveModalRemindMe() {
-  // Deprecated — elements removed. Just dismiss.
   hideGuestSaveModal();
 }
 
@@ -7863,10 +7861,18 @@ function openCameraFromCoach() {
     <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">You've scanned 3 times</div>
     <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.6;">Want GuardNest to remind you before things expire?</div>
     <div id="deferredPushSection">
-      <button onclick="requestPushPermission()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
-        🔔 Yes — notify me before things expire
-      </button>
-      <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:14px;">Works on Android now. On iPhone, add to home screen first.</div>
+      <div id="deferredPushAndroid">
+        <button onclick="requestPushPermission()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
+          🔔 Yes — notify me before things expire
+        </button>
+        <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:14px;">Turn off anytime from your browser settings.</div>
+      </div>
+      <div id="deferredPushIOS" style="display:none;margin-bottom:14px;">
+        <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:12px;padding:14px;text-align:left;">
+          <div style="font-size:13px;font-weight:700;color:#4CAF82;margin-bottom:8px;">Get expiry reminders on iPhone</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.7;">1. Tap the Share button in Safari<br>2. Tap "Add to Home Screen"<br>3. Open GuardNest from your home screen<br>4. You'll get a notification prompt</div>
+        </div>
+      </div>
     </div>
     <div id="deferredEmailSection">
       <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:8px;">or get a weekly report by email instead</div>
@@ -7897,12 +7903,12 @@ async function guestSaveAnonymous() {
   let guestId = localStorage.getItem('guardnest_guest_id');
   if (!guestId) { guestId = crypto.randomUUID(); localStorage.setItem('guardnest_guest_id', guestId); }
 
-  // Always keep a local copy as fallback
+  // Always keep local copy as fallback
   if (pendingItems && pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
 
-  // Persist to Supabase so data survives browser clears and enables push notifications
+  // Persist to Supabase for push notification expiry checks and cross-session retention
   if (pendingItems && pendingItems.length > 0) {
     const today = new Date().toISOString().split('T')[0];
     const rows = pendingItems.map(item => ({
@@ -7919,10 +7925,9 @@ async function guestSaveAnonymous() {
     }));
     try {
       await supa.from('guest_items').insert(rows);
-      gtag('event', 'guest_items_saved', { count: rows.length, guest_id: guestId });
+      gtag('event', 'guest_items_saved', { count: rows.length });
     } catch(e) {
-      console.log('guest_items insert failed:', e.message);
-      // localStorage copy already saved above — user data is safe
+      console.log('guest_items insert failed, localStorage fallback active:', e.message);
     }
   }
 
@@ -7940,8 +7945,27 @@ function incrementScanCount() {
     localStorage.setItem('guardnest_engaged', 'true');
     setTimeout(() => {
       const modal = document.getElementById('deferredEngageModal');
-      if (modal) { modal.style.display = 'flex'; }
-      gtag('event', 'deferred_engage_shown', { scan_count: count });
+      if (!modal) return;
+
+      // Detect iOS Safari — push requires home screen install on iOS
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+      const isStandalone = window.navigator.standalone === true;
+      const androidEl = document.getElementById('deferredPushAndroid');
+      const iosEl     = document.getElementById('deferredPushIOS');
+
+      if (isIOS && !isStandalone) {
+        // iOS not installed to home screen — show instructions instead of push button
+        if (androidEl) androidEl.style.display = 'none';
+        if (iosEl)     iosEl.style.display     = 'block';
+        gtag('event', 'deferred_engage_shown', { scan_count: count, platform: 'ios_browser' });
+      } else {
+        // Android or iOS home screen — show push button
+        if (androidEl) androidEl.style.display = 'block';
+        if (iosEl)     iosEl.style.display     = 'none';
+        gtag('event', 'deferred_engage_shown', { scan_count: count, platform: isIOS ? 'ios_standalone' : 'android' });
+      }
+
+      modal.style.display = 'flex';
     }, 2000);
   }
 }
