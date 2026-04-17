@@ -7481,26 +7481,15 @@ function scheduleGuestSavePrompt(containerId, gridId) {
 }
 
 function toggleGuestEmailForm() {
-  const form   = document.getElementById('guestEmailForm');
-  const toggle = document.getElementById('guestEmailToggle');
-  const isHidden = form.style.display === 'none';
-  form.style.display   = isHidden ? 'block' : 'none';
-  toggle.style.display = isHidden ? 'none'  : 'block';
+  // Deprecated — email form removed from save modal
+}
 }
 
 function showGuestSavePrompt() {
   const modal = document.getElementById('guestSaveModal');
   if (!modal) return;
 
-  // Reset all form states
-  const emailForm    = document.getElementById('guestEmailForm');
-  const emailToggle  = document.getElementById('guestEmailToggle');
-  const remindRow    = document.getElementById('saveModalRemindRow');
-  const dismissBtn   = document.getElementById('saveModalDismissBtn');
-  if (emailForm)   emailForm.style.display   = 'none';
-  if (emailToggle) emailToggle.style.display = 'block';
-  if (remindRow)   remindRow.style.display   = 'none';
-  if (dismissBtn)  dismissBtn.style.display  = 'block';
+  // Modal reset
 
   // ── Build insight from pendingItems ──────────────────────────
   const items    = pendingItems || [];
@@ -7624,32 +7613,11 @@ function selectCommitmentItem(btn, itemName) {
 }
 
 function showSaveModalRemind() {
-  // Anticipated regret — show remind option instead of hard dismiss
-  const dismissBtn = document.getElementById('saveModalDismissBtn');
-  const remindRow  = document.getElementById('saveModalRemindRow');
-  if (dismissBtn) dismissBtn.style.display = 'none';
-  if (remindRow)  remindRow.style.display  = 'block';
-  gtag('event', 'save_modal_remind_shown');
+  hideGuestSaveModal();
 }
 
 async function saveModalRemindMe() {
-  const email = document.getElementById('saveModalRemindEmail')?.value?.trim();
-  if (!email || !email.includes('@')) {
-    hideGuestSaveModal();
-    return;
-  }
-  try {
-    await supa.from('email_leads').insert({
-      email,
-      source: 'save_modal_remind',
-      selected_items: window._commitmentItem || null,
-      email_sent: false,
-      created_at: new Date().toISOString()
-    });
-  } catch(e) { console.log('Remind lead:', e.message); }
-  gtag('event', 'remind_email_captured', { has_commitment_item: !!window._commitmentItem });
   hideGuestSaveModal();
-  showToast('We\'ll remind you before things expire 🌿', 'success');
 }
 
 function hideGuestSaveModal() {
