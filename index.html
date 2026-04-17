@@ -2292,9 +2292,6 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
               <div class="scan-title" id="scanTitle">What are we scanning?</div>
               <div class="scan-sub" id="scanSub">Choose receipt, fridge, or pantry above — then tap to scan</div>
             </div>
-            <div id="scanPhotoTip" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(76,175,130,.06);border:1px solid rgba(76,175,130,.15);border-radius:8px;font-size:11px;color:rgba(255,255,255,.45);text-align:center;line-height:1.5;">
-              📸 Best results: one shelf at a time · get close · good lighting
-            </div>
             <div style="margin-top:10px;display:flex;gap:8px">
               <button class="btn btn-gold" style="flex:1;justify-content:center;position:relative;z-index:4" onclick="triggerScan()">
                 📷 <span id="scanBtnLabel">Select to Scan</span>
@@ -4536,7 +4533,11 @@ async function callGemini(b64data, mimeType, sourceType) {
   try {
     const res = await fetch(SUPABASE_FUNCTION_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'apikey': SUPABASE_ANON,
+      },
       body: JSON.stringify({
         imageData:  b64data,
         mimeType:   mimeType,
@@ -5993,8 +5994,8 @@ function setScanType(type) {
   };
   const subs = {
     receipt: 'Photo any grocery receipt — GuardNest identifies every item automatically',
-    fridge: "One shelf at a time gets the best results — good lighting, phone close, steady hand",
-    pantry: "One section at a time gets the best results — good lighting, phone close, steady hand",
+    fridge: "Open your fridge and point your camera inside — we'll identify everything",
+    pantry: "Open your pantry and point your camera — we'll track cans, dry goods and more",
   };
   const btnLabels = {
     receipt: 'Select Receipt',
@@ -6006,10 +6007,6 @@ function setScanType(type) {
   document.getElementById('scanTitle').textContent = titles[type];
   document.getElementById('scanSub').textContent = subs[type];
   document.getElementById('scanBtnLabel').textContent = btnLabels[type];
-
-  // Show photo tip for fridge/pantry only
-  const tipEl = document.getElementById('scanPhotoTip');
-  if (tipEl) tipEl.style.display = (type === 'fridge' || type === 'pantry') ? 'block' : 'none';
 
   // Update button styles
   ['receipt','fridge','pantry'].forEach(t => {
@@ -6279,7 +6276,11 @@ async function handleFridgePhoto(input, scanType) {
       const b64      = await compressImage(file, 1200);
       const response = await fetch(SUPABASE_FUNCTION_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON,
+        },
         body: JSON.stringify({ imageData: b64, mimeType: 'image/jpeg', sourceType: type }),
       });
 
@@ -6348,7 +6349,11 @@ async function handleFridgePhoto(input, scanType) {
       const b64      = await compressImage(file, 1200);
       const response = await fetch(SUPABASE_FUNCTION_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON,
+        },
         body: JSON.stringify({ imageData: b64, mimeType: 'image/jpeg', sourceType: type }),
       });
 
