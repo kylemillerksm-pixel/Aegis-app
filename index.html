@@ -1974,80 +1974,6 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 <body>
 
 <!-- ═══════════════════════════════════════════
-     COLD USER SPLASH SCREEN
-═══════════════════════════════════════════ -->
-<div id="splashScreen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0E1117;z-index:999999;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-  <div style="max-width:400px;margin:0 auto;padding:40px 24px 32px;min-height:100vh;display:flex;flex-direction:column;justify-content:center;">
-
-    <!-- Logo -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
-      <div style="width:32px;height:32px;background:#4CAF82;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);flex-shrink:0;"></div>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.15em;color:#4CAF82;">GuardNest</span>
-    </div>
-
-    <!-- Hook -->
-    <div style="font-size:28px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:12px;">
-      You're not wasting groceries.<br>
-      <span style="color:#4CAF82;">So why do they keep disappearing?</span>
-    </div>
-    <div style="font-size:14px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:32px;">
-      GuardNest scans your receipt and shows you exactly what you have, what's expiring, and what quietly slips away every week.
-    </div>
-
-    <!-- Live product preview -->
-    <div style="background:#1a2330;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;margin-bottom:28px;">
-      <div style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);">
-        <div style="font-size:10px;font-weight:700;color:#4CAF82;letter-spacing:.1em;margin-bottom:8px;">⚠️ YOUR ITEM — CAUGHT IN TIME</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span style="font-size:28px;">🍗</span>
-          <div style="flex:1;">
-            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;">Chicken Breast</div>
-            <div style="height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-bottom:4px;">
-              <div style="height:100%;width:15%;background:#E05555;border-radius:2px;"></div>
-            </div>
-            <div style="font-size:11px;font-weight:700;color:#E05555;">Expires tomorrow — use tonight</div>
-          </div>
-        </div>
-      </div>
-      <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:18px;">🥬</span>
-          <div style="flex:1;"><div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;"><div style="height:100%;width:20%;background:#D4A843;border-radius:2px;"></div></div></div>
-          <span style="font-size:10px;font-weight:700;color:#D4A843;">3d left</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:18px;">🧀</span>
-          <div style="flex:1;"><div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;"><div style="height:100%;width:75%;background:#4CAF82;border-radius:2px;"></div></div></div>
-          <span style="font-size:10px;font-weight:700;color:#4CAF82;">11d left</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:18px;">🥛</span>
-          <div style="flex:1;"><div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;"><div style="height:100%;width:50%;background:#4CAF82;border-radius:2px;"></div></div></div>
-          <span style="font-size:10px;font-weight:700;color:#4CAF82;">7d left</span>
-        </div>
-      </div>
-      <div style="padding:10px 16px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:rgba(255,255,255,.3);">11 items tracked · Free</span>
-        <span style="font-size:11px;font-weight:700;color:#4CAF82;">⚡ 80 XP earned</span>
-      </div>
-    </div>
-
-    <!-- Social proof -->
-    <div style="font-size:12px;color:rgba(255,255,255,.35);text-align:center;margin-bottom:20px;font-style:italic;">
-      "Staying on top of what's in the fridge can feel like a full-time job."<br>
-      <span style="color:rgba(255,255,255,.2);">— r/EatCheapAndHealthy</span>
-    </div>
-
-    <!-- CTA -->
-    <button onclick="dismissSplash()" 
-      style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px;">
-      See what's in my fridge →
-    </button>
-    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.25);">Free · No download · Scan in 30 seconds</div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
      LOADING OVERLAY
 ═══════════════════════════════════════════ -->
 <div class="loading-overlay" id="loadingOverlay" style="display:none;visibility:hidden;pointer-events:none;z-index:-1;">
@@ -2143,13 +2069,8 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 <div id="screen-app">
   <!-- Guest banner -->
   <div id="guestBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border-bottom:1px solid rgba(76,175,130,.3);padding:10px 16px;align-items:center;justify-content:space-between;gap:12px;">
-    <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
-      <div style="font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap;">
-        🌿 <strong style="color:#4CAF82;">Guest mode</strong>
-      </div>
-      <button onclick="gtag('event','demo_link_clicked',{location:'guest_banner'});showSampleReport();" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;padding:0;text-decoration:underline;white-space:nowrap;">
-        See how it works
-      </button>
+    <div style="font-size:12px;color:rgba(255,255,255,.7);">
+      🌿 <strong style="color:#4CAF82;">Guest mode</strong> — scan your fridge, then save your results free
     </div>
     <button onclick="showAuth();document.getElementById('guestBanner').style.display='none';" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
       Save Free →
@@ -2282,28 +2203,15 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
           <div class="streak-warning-dismiss" onclick="dismissStreakWarning()" ontouchend="this.onclick()">✕</div>
         </div>
 
-        <!-- MISSIONS FIRST — Duolingo style: always show the next action first -->
-        <div class="brief-section-label">🎯 Your Missions</div>
-        <div class="panel" style="margin-bottom:14px">
-          <div class="panel-header">
-            <div class="panel-title">This Week</div>
-            <div class="panel-action" id="missionXpPool"></div>
-          </div>
-          <div id="missionsList" class="panel-body" style="padding:0"></div>
-        </div>
-
         <!-- DAILY BRIEF CARD -->
         <div class="brief-section-label">👀 What Needs Attention</div>
         <div id="briefCardWrap">
           <div class="brief-card clear brief-card-enter" id="briefCard">
             <div class="brief-card-body" id="briefCardBody">
-              <div style="padding:24px;text-align:center;">
-                <div style="font-size:28px;margin-bottom:8px;">📷</div>
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.08em;color:var(--text2);margin-bottom:6px;">Nothing tracked yet</div>
-                <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Scan your fridge to see what needs attention this week</div>
-                <button onclick="showPage('scanner')" style="background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;">
-                  Start my first scan →
-                </button>
+              <div class="empty-state" style="padding:28px;text-align:center">
+                <span class="empty-icon">✅</span>
+                <div class="empty-title">All Clear</div>
+                <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
               </div>
             </div>
           </div>
@@ -2323,6 +2231,16 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
             <div class="brief-vault-label">Items Tracked</div>
             <div class="brief-vault-sub" id="bvv">$0 value</div>
           </div>
+        </div>
+
+        <!-- MISSIONS COMPACT -->
+        <div class="brief-section-label">🎯 Today's Actions</div>
+        <div class="panel" style="margin-bottom:0">
+          <div class="panel-header">
+            <div class="panel-title">This Week</div>
+            <div class="panel-action" id="missionXpPool"></div>
+          </div>
+          <div id="missionsList" class="panel-body" style="padding:0"></div>
         </div>
 
         <!-- hidden elements still needed by other functions -->
@@ -2369,38 +2287,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
             <input type="file" accept="image/*,application/pdf" id="scanFileInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
             <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
 
-            <!-- First-time guest prompt — shown until first scan -->
-            <div id="firstTimeScanPrompt" style="display:none;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.3);border-radius:14px;padding:20px;margin-bottom:10px;text-align:center;">
-              <div style="font-size:32px;margin-bottom:10px;">🧊</div>
-              <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">Your inventory is empty</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:16px;">
-                Scan your fridge, pantry, or a receipt.<br>GuardNest identifies everything automatically.
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <button onclick="setScanType('fridge');triggerScan();gtag('event','first_scan_prompt_fridge');"
-                  style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-                  🧊 Scan my fridge now
-                </button>
-                <div style="display:flex;gap:8px;">
-                  <button onclick="setScanType('pantry');triggerScan();gtag('event','first_scan_prompt_pantry');"
-                    style="flex:1;background:rgba(136,102,255,.12);color:#9d8fff;border:1px solid rgba(136,102,255,.3);border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">
-                    🗄️ Pantry
-                  </button>
-                  <button onclick="setScanType('receipt');triggerScan();gtag('event','first_scan_prompt_receipt');"
-                    style="flex:1;background:rgba(245,200,66,.08);color:#D4A843;border:1px solid rgba(245,200,66,.2);border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">
-                    🧾 Receipt
-                  </button>
-                </div>
-              </div>
-              <div style="text-align:center;margin-top:12px;">
-                <button onclick="gtag('event','demo_link_clicked',{location:'first_scan_prompt'});showSampleReport();" 
-                  style="background:none;border:none;color:rgba(255,255,255,.3);font-size:11px;cursor:pointer;text-decoration:underline;padding:4px;">
-                  Not sure? See how GuardNest works first →
-                </button>
-              </div>
-            </div>
-
-            <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer;display:none;">
+            <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer">
               <span class="scan-icon" id="scanIcon">📷</span>
               <div class="scan-title" id="scanTitle">What are we scanning?</div>
               <div class="scan-sub" id="scanSub">Choose receipt, fridge, or pantry above — then tap to scan</div>
@@ -2453,35 +2340,16 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
             <div id="scanCelebSub" style="font-size:13px;color:var(--text2);"></div>
           </div>
 
-          <!-- Live XP counter — animates as items appear -->
-          <div id="scanXpBar" style="display:none;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.3);border-radius:12px;padding:14px 16px;margin-top:12px;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-              <span style="font-size:12px;font-weight:700;color:#4CAF82;letter-spacing:.08em;">⚡ BUILDING YOUR INVENTORY</span>
-              <span id="scanXpCount" style="font-size:14px;font-weight:800;color:#4CAF82;">+0 XP</span>
-            </div>
-            <div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:6px;">
-              <div id="scanXpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .4s ease;"></div>
-            </div>
-            <div style="font-size:10px;color:rgba(255,255,255,.3);">Each item tracked = +10 XP. Save to keep your progress.</div>
-          </div>
-
-          <div class="panel" style="margin-top:0;">
+          <div class="panel" style="margin-top:12px;">
             <div class="panel-header">
               <div class="panel-title" id="resultsTitle">📦 Your Fridge</div>
+              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px;display:none;">
+                ✅ Save
+              </button>
             </div>
             <div class="panel-body">
               <div id="manifestGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
             </div>
-          </div>
-
-          <!-- Duolingo-style save CTA — replaces old small save button -->
-          <div id="saveCta" style="display:none;position:sticky;bottom:70px;margin:12px 0;z-index:100;">
-            <button onclick="saveScanResults()" id="btnSave"
-              style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 20px rgba(76,175,130,.4);">
-              <span>💾</span>
-              <span id="saveBtnLabel">Save my inventory — earn XP →</span>
-            </button>
-            <div style="text-align:center;margin-top:6px;font-size:11px;color:rgba(255,255,255,.3);">Your items disappear if you close without saving</div>
           </div>
 
           <!-- Persistent save banner — only shows after interaction -->
@@ -3477,11 +3345,6 @@ function refreshMissionsCompact() {
 }
 
 async function bootApp() {
-  // Always show scan zone for logged-in users
-  const scanZone = document.getElementById('scanZone');
-  const prompt   = document.getElementById('firstTimeScanPrompt');
-  if (scanZone) scanZone.style.display = 'block';
-  if (prompt)   prompt.style.display   = 'none';
   setLoadingMsg('LOADING VAULT...');
   try {
     await loadItems();
@@ -4119,32 +3982,13 @@ function refreshDashboard() {
 
   if (missionsEl) {
     if (missions.length === 0 || total === 0) {
-      missionsEl.innerHTML = `<div style="padding:20px;text-align:center;">
-        <div style="font-size:32px;margin-bottom:10px;">🎯</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">Your missions unlock after your first scan</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Scan your fridge, pantry, or a receipt to get started</div>
-        <button onclick="showPage('scanner')" style="background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:12px 20px;font-size:13px;font-weight:700;cursor:pointer;">
-          📷 Start my first scan →
-        </button>
-      </div>`;
+      missionsEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🎯</span><div class="empty-title">No Missions Yet</div><div class="empty-sub">Scan your first receipt to unlock missions</div></div>`;
     } else {
-      let firstActive = true;
       missionsEl.innerHTML = missions.map(m => {
-        const doneClass  = m.done ? ' done' : '';
-        const isNext     = !m.done && firstActive;
-        if (!m.done) firstActive = false;
+        const doneClass = m.done ? ' done' : '';
         const checkContent = m.done ? '✓' : '';
-        const checkClick   = m.done || m.auto ? '' : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
-        const actionBtn    = isNext && m.action && m.actionLabel
-          ? `<div style="padding:0 14px 12px;">
-               <button onclick="(${m.action.toString()})()" 
-                 style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;animation:chevronPulse 2s ease-in-out infinite;">
-                 ${m.actionLabel}
-               </button>
-             </div>`
-          : '';
-        const highlight = isNext ? 'border-left:3px solid #4CAF82;background:rgba(76,175,130,.04);' : '';
-        return `<div class="mission-item${doneClass}" style="${highlight}">
+        const checkClick = m.done || m.auto ? '' : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
+        return `<div class="mission-item${doneClass}">
           <div class="mission-icon">${m.icon}</div>
           <div class="mission-body">
             <div class="mission-title">${m.title}</div>
@@ -4152,7 +3996,7 @@ function refreshDashboard() {
           </div>
           <div class="mission-xp-badge">${m.done ? '✓' : '+' + m.xp + ' XP'}</div>
           ${!m.auto ? `<button class="mission-check" ${checkClick}>${checkContent}</button>` : ''}
-        </div>${actionBtn}`;
+        </div>`;
       }).join('');
     }
   }
@@ -4488,6 +4332,7 @@ async function handleImageScan(input) {
   gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
   gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
   if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: 'receipt' });
+  incrementScanCount();
   // Trigger save prompt after user has absorbed results
   scheduleGuestSavePrompt('scanResults', 'manifestGrid');
 }
@@ -4938,16 +4783,6 @@ function renderManifest(items, gridId, titleId) {
       card.style.opacity = '1';
       card.style.transform = 'translateY(0)';
 
-      // Tick up XP bar on real scan
-      setTimeout(() => {
-        const xpCount = document.getElementById('scanXpCount');
-        const xpFill  = document.getElementById('scanXpFill');
-        const earned  = (i + 1) * 10;
-        const pct     = Math.min(100, Math.round((earned / (items.length * 10)) * 100));
-        if (xpCount) xpCount.textContent = `+${earned} XP`;
-        if (xpFill)  xpFill.style.width  = pct + '%';
-      }, 100);
-
       // Auto-expand first card after it appears so user sees the interaction
       if (i === 0) {
         setTimeout(() => {
@@ -4960,22 +4795,9 @@ function renderManifest(items, gridId, titleId) {
     }, i * 80 + 200);
   });
 
-  // Show XP bar
-  const xpBar = document.getElementById('scanXpBar');
-  if (xpBar) xpBar.style.display = 'block';
-
-  // Show save CTA for all users after items load
-  setTimeout(() => {
-    const saveCta = document.getElementById('saveCta');
-    const btnSave = document.getElementById('btnSave');
-    const label   = document.getElementById('saveBtnLabel');
-    if (saveCta) saveCta.style.display = 'block';
-    if (btnSave) btnSave.style.display = 'flex';
-    if (label) {
-      const xpEarned = items.length * 10;
-      label.textContent = `Save my inventory — earn +${xpEarned} XP →`;
-    }
-  }, items.length * 80 + 600);
+  // Show save button for logged-in users
+  const btnSave = document.getElementById('btnSave');
+  if (btnSave) btnSave.style.display = currentUser ? 'inline-flex' : 'none';
 
   // Reset banner flag for new scan
   window._bannerShown = false;
@@ -5221,41 +5043,15 @@ async function saveItems(btnId, resultsId) {
     refreshVault();
     updateSidebar();
 
-    // Gamification — sequenced Duolingo-style, not all at once
+    // Gamification
+    checkLevelUp(prevCredits, totalCredits);
     const newValue = allItems.reduce((s,i) => s + (i.price||0), 0);
+    checkAndShowBadge(prevCount, allItems.length, prevValue, newValue);
+    checkBadges();
     const _fromRestore = !!window._savingFromGuestRestore;
-
-    // Step 1: Hide scan UI and show XP celebration immediately
-    const scanXpBar = document.getElementById('scanXpBar');
-    const saveCta   = document.getElementById('saveCta');
-    if (scanXpBar) scanXpBar.style.display = 'none';
-    if (saveCta)   saveCta.style.display   = 'none';
-
-    // Step 2: Show celebration (first save only) or level up
-    const didLevelUp = getLevelInfo(totalCredits).level > getLevelInfo(prevCredits).level;
-
-    if (!localStorage.getItem('guardnest_celebrated')) {
-      // First save ever — show the big celebration
-      showCelebrationIfNew(allItems, _fromRestore);
-    } else if (didLevelUp) {
-      // Level up — show that first
-      setTimeout(() => {
-        const info = getLevelInfo(totalCredits);
-        showLevelUp(info.level, info.title);
-      }, 400);
-    } else {
-      // Returning save — show XP toast and go straight to mission
-      showToast(`+${rows.length * 10} XP earned 🌿`, 'success');
-      setTimeout(() => _showPostSaveMission(), 600);
-    }
-
-    // Step 3: Badge check (quiet — no modal collision)
-    setTimeout(() => {
-      checkAndShowBadge(prevCount, allItems.length, prevValue, newValue);
-    }, 3000);
-
-    // Step 4: Near miss check last
-    setTimeout(() => checkNearMiss(allItems), 4000);
+    showCelebrationIfNew(allItems, _fromRestore);
+    showFirstWin(allItems);
+    setTimeout(() => checkNearMiss(allItems), 2000);
   }
 }
 
@@ -5643,55 +5439,45 @@ function shareNearMiss() {
 }
 
 // ─── FIRST WIN MODAL ───────────────────────────────────────────
-function _showPostSaveMission() {
-  // Surface the most urgent mission after save — Duolingo style
-  const { missions } = buildMissions();
-  const next = missions.find(m => !m.done);
-  if (!next) {
-    // All missions done — go to dashboard
-    showPage('dashboard');
-    return;
+function showFirstWin(items) {
+  const hasSeenWin = localStorage.getItem('guardnest_first_win');
+  if (hasSeenWin) return;
+
+  const totalValue    = items.reduce((s,i) => s + (parseFloat(i.price || 0)||0), 0);
+  const warrantyItems = items.filter(i => (i.warranty_days||0) > 0);
+  const spoilItems    = items.filter(i => (i.days_until_spoil||0) > 0);
+
+  document.getElementById('fwProtectedValue').textContent = '$' + totalValue.toFixed(0);
+
+  const wins = [];
+
+  if (warrantyItems.length > 0) {
+    const warrantyValue = warrantyItems.reduce((s,i) => s + (parseFloat(i.price)||0), 0);
+    wins.push(`🛡️ <strong>${warrantyItems.length} warranty${warrantyItems.length>1?'s':''}</strong> now tracked — $${warrantyValue.toFixed(0)} protected`);
   }
 
-  // Remove existing if any
-  const existing = document.getElementById('postSaveMissionCard');
-  if (existing) existing.remove();
+  if (spoilItems.length > 0) {
+    const mostUrgent = spoilItems.sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99))[0];
+    wins.push(`⏰ <strong>${mostUrgent.item_name}</strong> expires in ${mostUrgent.days_until_spoil} day${mostUrgent.days_until_spoil!==1?'s':''} — we'll remind you`);
+  }
 
-  const card = document.createElement('div');
-  card.id = 'postSaveMissionCard';
-  card.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99990;display:flex;align-items:center;justify-content:center;padding:24px;';
-  card.innerHTML = `
-    <div style="max-width:360px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.3);text-align:center;">
-      <div style="font-size:32px;margin-bottom:6px;">🎯</div>
-      <div style="font-size:11px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:8px;">YOUR FIRST MISSION</div>
-      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">${next.title}</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px;">${next.desc}</div>
-      <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;padding:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-size:13px;color:rgba(255,255,255,.6);">Complete this mission</span>
-        <span style="font-size:14px;font-weight:800;color:#4CAF82;">+${next.xp} XP</span>
-      </div>
-      <button onclick="document.getElementById('postSaveMissionCard').remove();showPage('dashboard');${next.action ? 'setTimeout(()=>{try{(' + next.action.toString() + ')()}catch(e){}},300);' : ''}" 
-        style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px;">
-        Got it — take me there →
-      </button>
-      <button onclick="document.getElementById('postSaveMissionCard').remove();showPage('dashboard');"
-        style="background:none;border:none;color:rgba(255,255,255,.25);font-size:11px;cursor:pointer;padding:4px;">
-        Skip for now
-      </button>
-    </div>`;
-  document.body.appendChild(card);
-  gtag('event', 'post_save_mission_shown', { mission_id: next.id, mission_xp: next.xp });
-}
+  if (wins.length === 0) {
+    wins.push(`📦 <strong>${items.length} item${items.length>1?'s':''}</strong> added to your vault`);
+  }
 
-function showFirstWin(items) {
-  // Retired — celebration modal handles first save moment
-  // Kept as stub to avoid errors from any remaining calls
+  wins.push(`📬 Every Monday you'll get a report showing what you used vs what slipped`);
+
+  document.getElementById('fwWinsList').innerHTML = wins.map(w =>
+    `<div class="fw-win-item">${w}</div>`
+  ).join('');
+
+  document.getElementById('firstWinModal').classList.remove('hidden');
   localStorage.setItem('guardnest_first_win', 'true');
 }
 
 function closeFirstWin() {
   document.getElementById('firstWinModal').classList.add('hidden');
-  showPage('dashboard');
+  showPage('vault');
 }
 
 // ─── CONFETTI ─────────────────────────────────────────────────
@@ -5750,13 +5536,13 @@ function showXpFloat(xp, x, y) {
 
 // ─── LEVEL UP MODAL ────────────────────────────────────────────
 const LEVEL_UNLOCKS = {
-  2: "Weekly report unlocked — every Monday you'll see what you used vs what quietly slipped.",
-  3: "Pattern tracking active — GuardNest is learning what you buy regularly.",
-  4: "Early warnings on — you'll get a heads up 3 days before anything expires.",
-  5: "Habit insights unlocked — you can now see which items you consistently waste.",
-  6: "You're in the top tier. Keep your streak going to maintain it.",
-  7: "Waste Warrior level — your inventory habits are genuinely different now.",
-  8: "Max level reached. Your grocery awareness is on a different level entirely.",
+  2: 'Weekly clarity report unlocked — every Monday you see what got used and what slipped.',
+  3: 'Shopping pattern learning — GuardNest notices what you buy regularly and checks in.',
+  4: 'Early warnings — get a heads up before things expire, not just on the day.',
+  5: 'Habit insights — see which items you consistently use and which ones slip.',
+  6: 'Last chance bonus — earn double XP when you use something in its final 24 hours.',
+  7: 'Monthly picture — see your monthly used vs wasted breakdown over time.',
+  8: 'Receipt archive — your receipt images saved and searchable forever.',
 };
 
 function checkLevelUp(prevCredits, newCredits) {
@@ -5778,8 +5564,6 @@ function showLevelUp(level, title) {
 
 function closeLevelUp() {
   document.getElementById('levelUpModal').classList.add('hidden');
-  // Chain to mission card — Duolingo style: always show next action
-  setTimeout(() => _showPostSaveMission(), 300);
 }
 
 // ─── BADGE EARNED MODAL ────────────────────────────────────────
@@ -6097,98 +5881,11 @@ function bootNewUser() {
     const xp       = demoState.xp  || 80;
     _showDemoContinuityBanner(itemName, xp);
   } else {
-    // Direct scan path — show onboarding overlay explaining the game layer
+    // No demo context — land on scanner with simple welcome
     showPage('scanner');
+    setTimeout(() => showToast('Welcome to GuardNest! Scan your fridge, pantry, or a receipt to start. 🌿', 'success'), 400);
     gtag('event', 'new_user_no_demo');
-    _showDirectScanOnboarding();
   }
-}
-
-function _showDirectScanOnboarding() {
-  const existing = document.getElementById('directOnboardingBanner');
-  if (existing) existing.remove();
-
-  const banner = document.createElement('div');
-  banner.id = 'directOnboardingBanner';
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99990;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;';
-  banner.innerHTML = `
-    <div style="max-width:360px;width:100%;background:#1a2330;border-radius:20px;padding:28px 24px;border:1px solid rgba(76,175,130,.3);text-align:center;">
-      <div style="font-size:36px;margin-bottom:12px;">🌿</div>
-      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;">Welcome to GuardNest</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:20px;">
-        Your grocery inventory is now live.<br>Here's how it works.
-      </div>
-
-      <!-- 3 quick steps -->
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;text-align:left;">
-        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
-          <span style="font-size:22px;flex-shrink:0;">📷</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Scan anything</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);">Receipt, fridge, or pantry — GuardNest identifies every item</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
-          <span style="font-size:22px;flex-shrink:0;">⚡</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Earn XP as you track</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);">Every item tracked, every item used before it expires = XP</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
-          <span style="font-size:22px;flex-shrink:0;">📬</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Weekly report every Monday</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);">We'll show you what you used vs what quietly disappeared</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- XP bar starting at 0 -->
-      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">
-          <span>Level 1 — First Scan</span>
-          <span>0 / 100 XP</span>
-        </div>
-        <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
-          <div style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;"></div>
-        </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Scan your first item to start earning XP</div>
-      </div>
-
-      <!-- Scan options -->
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button onclick="document.getElementById('directOnboardingBanner').remove();setScanType('fridge');showPage('scanner');gtag('event','direct_onboard_chose_fridge');"
-          style="display:flex;align-items:center;gap:12px;background:rgba(76,175,130,.1);border:1px solid rgba(76,175,130,.3);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
-          <span style="font-size:24px;">🧊</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;">Scan my fridge</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);">Track perishables and expiry dates</div>
-          </div>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
-        </button>
-        <button onclick="document.getElementById('directOnboardingBanner').remove();setScanType('pantry');showPage('scanner');gtag('event','direct_onboard_chose_pantry');"
-          style="display:flex;align-items:center;gap:12px;background:rgba(136,102,255,.08);border:1px solid rgba(136,102,255,.25);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
-          <span style="font-size:24px;">🗄️</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;">Scan my pantry</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);">Canned goods, dry goods, snacks</div>
-          </div>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
-        </button>
-        <button onclick="document.getElementById('directOnboardingBanner').remove();setScanType('receipt');showPage('scanner');gtag('event','direct_onboard_chose_receipt');"
-          style="display:flex;align-items:center;gap:12px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
-          <span style="font-size:24px;">🧾</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;">Scan a receipt</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);">Most accurate — tracks everything from your shop</div>
-          </div>
-          <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
-        </button>
-      </div>
-    </div>`;
-  document.body.appendChild(banner);
-  gtag('event', 'direct_onboarding_shown');
 }
 
 function _showDemoContinuityBanner(itemName, xp) {
@@ -6319,11 +6016,6 @@ function setScanType(type) {
 
 function triggerScan() {
   const type = window._scanPageType || 'receipt';
-  // Hide first-time prompt and restore scan zone
-  const prompt = document.getElementById('firstTimeScanPrompt');
-  const scanZone = document.getElementById('scanZone');
-  if (prompt) prompt.style.display = 'none';
-  if (scanZone) scanZone.style.display = 'block';
   // Track first scan attempt
   if (!localStorage.getItem('guardnest_first_scan_started')) {
     localStorage.setItem('guardnest_first_scan_started', 'true');
@@ -6692,6 +6384,7 @@ async function handleFridgePhoto(input, scanType) {
       }
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
       if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
+      incrementScanCount();
 
       // If user came from "Scan my real fridge" in demo — show the report modal
       if (window._showRealReportAfterScan) {
@@ -6811,8 +6504,7 @@ function showCelebration(items, fromGuestRestore) {
 
 function dismissCelebration() {
   document.getElementById('celebrationModal').classList.add('hidden');
-  // Surface mission after celebration instead of going straight to dashboard
-  setTimeout(() => _showPostSaveMission(), 300);
+  showPage('dashboard');
 }
 
 // ─── SCAN ANIMATION ───────────────────────────────────────────
@@ -7088,9 +6780,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- STEP 2: Scanning animation -->
       <div id="demoStep2" style="display:none;padding:32px 24px;text-align:center;">
-        <div style="background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);border-radius:8px;padding:8px 12px;margin-bottom:20px;font-size:11px;color:#D4A843;font-weight:600;letter-spacing:.06em;">
-          🎬 SIMULATION — using a sample fridge to show you how GuardNest works
-        </div>
         <div style="font-size:40px;margin-bottom:16px;" id="demoScanEmoji">🧾</div>
         <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;" id="demoScanTitle">Reading your grocery receipt...</div>
         <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:24px;" id="demoScanSub">Identifying every item</div>
@@ -7122,40 +6811,28 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;" id="demoReportHeadline">Building your inventory...</div>
         </div>
 
-        <!-- Simulation notice -->
-        <div style="background:rgba(245,200,66,.06);border-bottom:1px solid rgba(245,200,66,.15);padding:8px 16px;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:12px;">🎬</span>
-          <span style="font-size:11px;color:#D4A843;font-weight:600;">Sample fridge — your real scan will show your actual groceries</span>
-        </div>
-
         <!-- Live inventory list — items drop in here -->
         <div id="demoInventoryList" style="padding:12px 16px;display:flex;flex-direction:column;gap:6px;min-height:120px;"></div>
 
         <!-- Mission card — hidden until items loaded -->
-        <div id="demoMissionCard" style="display:none;margin:16px;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.35);border-radius:16px;padding:20px;">
-          <div style="text-align:center;margin-bottom:16px;">
-            <div style="font-size:32px;margin-bottom:8px;">🎯</div>
-            <div style="font-size:11px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:6px;">FIRST MISSION UNLOCKED</div>
-            <div style="font-size:17px;font-weight:800;color:#fff;margin-bottom:6px;" id="demoMissionTitle">Mark your item as used before it expires</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.6;">This is what GuardNest does every week — catches what is about to slip before it does.</div>
-          </div>
-          <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:12px;color:rgba(255,255,255,.6);">Complete this mission</span>
-            <span style="font-size:15px;font-weight:800;color:#4CAF82;">+50 XP</span>
-          </div>
-          <div id="demoMissionItem" onclick="demoCompleteFirstMission()" style="background:rgba(255,80,80,.08);border:2px solid rgba(255,80,80,.35);border-radius:12px;padding:16px;cursor:pointer;margin-bottom:6px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-              <span id="demoMissionEmoji" style="font-size:32px;">🥬</span>
-              <div style="flex:1;">
-                <div id="demoMissionItemName" style="font-size:16px;font-weight:700;color:#fff;margin-bottom:3px;">Spinach</div>
-                <div id="demoMissionItemDays" style="font-size:12px;color:#E05555;font-weight:600;">Expires in 2 days — use it tonight</div>
+        <div id="demoMissionCard" style="display:none;margin:0 16px 14px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:12px;padding:14px;">
+          <div style="font-size:10px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:6px;">🎯 FIRST MISSION</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;" id="demoMissionTitle">Mark your item as used before it expires</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px;">Tap the item below to complete your first action</div>
+          <!-- The highlighted item to act on -->
+          <div id="demoMissionItem" style="background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="demoCompleteFirstMission()">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span id="demoMissionEmoji" style="font-size:22px;">🥬</span>
+              <div>
+                <div id="demoMissionItemName" style="font-size:13px;font-weight:600;color:#fff;">Spinach</div>
+                <div id="demoMissionItemDays" style="font-size:11px;color:#E05555;">Expires in 2 days — use it tonight</div>
               </div>
             </div>
-            <button onclick="event.stopPropagation();demoCompleteFirstMission();" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;color:#0e1117;cursor:pointer;animation:chevronPulse 1.8s ease-in-out infinite;">
-              Mark as used — earn 50 XP
+            <button onclick="event.stopPropagation();demoCompleteFirstMission();" style="background:#4CAF82;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0e1117;cursor:pointer;">
+              ✓ Used it
             </button>
           </div>
-          <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;">Tap above to complete your first mission</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-top:8px;">+50 XP for completing your first mission</div>
         </div>
 
         <!-- Level up burst — hidden until mission done -->
@@ -7227,29 +6904,13 @@ function showSampleReport() {
   // Block clicks falling through to app behind modal
   const appEl = document.getElementById('screen-app');
   if (appEl) appEl.style.pointerEvents = 'none';
-  // Reset state
+  // Reset — show step 0 first
   window._demoSelectedItems = new Set();
   window._demoAllItems = [];
+  document.getElementById('demoStep0').style.display = 'block';
+  document.getElementById('demoStep1').style.display = 'none';
   document.getElementById('demoStep2').style.display = 'none';
   document.getElementById('demoStep3').style.display = 'none';
-
-  // Skip Step 0 for paid social traffic — they're already warmed up by the ad
-  const ref = document.referrer || '';
-  const isPaidSocial = ref.includes('facebook') || ref.includes('instagram') ||
-    ref.includes('fb.com') || ref.includes('l.facebook') ||
-    new URLSearchParams(window.location.search).get('utm_source') === 'facebook' ||
-    new URLSearchParams(window.location.search).get('utm_medium') === 'paid_social' ||
-    new URLSearchParams(window.location.search).get('fbclid');
-
-  if (isPaidSocial) {
-    document.getElementById('demoStep0').style.display = 'none';
-    document.getElementById('demoStep1').style.display = 'block';
-    gtag('event', 'demo_step0_skipped', { reason: 'paid_social' });
-    _preselectDemoItem();
-  } else {
-    document.getElementById('demoStep0').style.display = 'block';
-    document.getElementById('demoStep1').style.display = 'none';
-  }
   const inp = document.getElementById('demoUserItem');
   if (inp) inp.value = '';
   const remindForm = document.getElementById('demoRemindForm');
@@ -7525,32 +7186,8 @@ function showDemoResults(userItem) {
             insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. Not carelessness — you just couldn't see it. That's the gap GuardNest closes.`;
           }
         }
-        // Transition: shrink item list and make mission card dominant
-        const inventoryList = document.getElementById('demoInventoryList');
-        const missionCard   = document.getElementById('demoMissionCard');
-        const simNotice     = document.querySelector('#demoStep3 [style*="SAMPLE FRIDGE"]') ||
-                              document.querySelector('#demoStep3 div[style*="rgba(245,200,66"]');
-
-        // Collapse item list with animation
-        if (inventoryList) {
-          inventoryList.style.transition = 'max-height .4s ease, opacity .3s ease';
-          inventoryList.style.maxHeight  = inventoryList.scrollHeight + 'px';
-          setTimeout(() => {
-            inventoryList.style.maxHeight = '0';
-            inventoryList.style.opacity   = '0';
-            inventoryList.style.overflow  = 'hidden';
-            inventoryList.style.padding   = '0';
-          }, 100);
-        }
-
-        // Show mission card as full takeover after list collapses
-        setTimeout(() => {
-          missionCard.style.display   = 'block';
-          missionCard.style.animation = 'fadeIn .4s ease both';
-          // Scroll modal to top so mission is first thing they see
-          const modal = document.getElementById('sampleReportModal');
-          if (modal) modal.scrollTop = 0;
-        }, 500);
+        document.getElementById('demoMissionCard').style.display = 'block';
+        document.getElementById('demoMissionCard').style.animation = 'fadeIn .4s ease both';
       }, 300);
       return;
     }
@@ -7737,120 +7374,44 @@ async function submitDemoReminder() {
       <!-- Reciprocity + identity framing -->
       <div id="saveModalCta" style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:16px;line-height:1.7;text-align:center;"></div>
 
-      <!-- Email — primary CTA (visible by default) -->
-      <div id="guestMagicForm" style="margin-bottom:8px;">
-        <input id="guestMagicEmail" type="email" placeholder="Enter your email to save free" 
-          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:13px 14px;font-size:16px;color:#fff;margin-bottom:8px;outline:none;"
-          onkeydown="if(event.key==='Enter') { gtag('event','cta_click',{location:'guest_save_email'}); guestSignupMagicLink(); }">
-        <button onclick="gtag('event','cta_click',{location:'guest_save_email'});guestSignupMagicLink()" 
-          style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
-          Save my inventory free →
-        </button>
-      </div>
-      <div id="guestMagicSuccess" style="display:none;text-align:center;padding:14px;background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:10px;margin-bottom:8px;">
-        <div style="font-size:16px;margin-bottom:6px;">📬</div>
-        <div style="font-size:13px;font-weight:700;color:#4CAF82;margin-bottom:4px;">Check your email</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.5);">We sent you a link to save your results.</div>
-      </div>
-      <!-- OTP entry form — shown after email submitted -->
-      <div id="guestOtpForm" style="display:none;margin-bottom:8px;">
-        <div style="text-align:center;margin-bottom:12px;">
-          <div style="font-size:20px;margin-bottom:6px;">📬</div>
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Check your email</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;">We sent a 6-digit code to<br><strong style="color:rgba(255,255,255,.7);" id="guestOtpEmailDisplay"></strong></div>
-        </div>
-        <input id="guestOtpCode" type="number" placeholder="Enter 8-digit code" maxlength="8"
-          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:13px 14px;font-size:20px;color:#fff;margin-bottom:8px;outline:none;text-align:center;letter-spacing:.2em;"
-          onkeydown="if(event.key==='Enter') guestVerifyOtp()">
-        <button id="guestOtpBtn" onclick="guestVerifyOtp()" 
-          style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
-          Verify code →
-        </button>
-        <div style="text-align:center;">
-          <button onclick="document.getElementById('guestOtpForm').style.display='none';document.getElementById('guestMagicForm').style.display='block';" 
-            style="background:none;border:none;color:rgba(255,255,255,.3);font-size:11px;cursor:pointer;text-decoration:underline;">
-            Use a different email
-          </button>
-        </div>
-      </div>
-      <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:10px;">🔒 No password needed. We only use your email to save your results.</div>
-
-      <!-- Google — secondary CTA -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.08);"></div>
-        <span style="font-size:11px;color:rgba(255,255,255,.25);">or</span>
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.08);"></div>
-      </div>
-      <button onclick="gtag('event','cta_click',{location:'guest_save_google'});guestSignupWithGoogle()" 
-        style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.7);margin-bottom:4px;">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continue with Google
+      <!-- One-tap anonymous save — primary CTA -->
+      <button onclick="guestSaveAnonymous()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
+        Save my results →
       </button>
 
-      <!-- Remind me instead — low commitment alternative -->
-      <div id="saveModalRemindRow" style="margin-bottom:6px;display:none;">
-        <div style="display:flex;gap:8px;">
-          <input id="saveModalRemindEmail" type="email" placeholder="Remind me later via email" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;font-size:16px;color:#fff;outline:none;min-width:0;">
-          <button onclick="saveModalRemindMe()" style="background:rgba(76,175,130,.15);border:1px solid rgba(76,175,130,.3);color:#4CAF82;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
-            Remind me
-          </button>
-        </div>
-      </div>
-
       <!-- Dismiss -->
-      <button onclick="showSaveModalRemind()" id="saveModalDismissBtn" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;text-align:center;">
+      <button onclick="hideGuestSaveModal()" id="saveModalDismissBtn" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;text-align:center;">
         I don't mind losing this
       </button>
     </div>
   </div>
 </div>
 
-<script>
-function dismissSplash() {
-  const splash = document.getElementById('splashScreen');
-  if (splash) {
-    splash.style.transition = 'opacity .3s ease';
-    splash.style.opacity = '0';
-    setTimeout(() => { splash.style.display = 'none'; }, 300);
-  }
-  localStorage.setItem('guardnest_seen_splash', 'true');
-  // After splash — go straight into demo
-  showSampleReport();
-  gtag('event', 'splash_dismissed');
-}
+<!-- Deferred email ask — shown after 3 scans -->
+<div id="deferredEmailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:380px;width:100%;background:#1a2330;border-radius:20px;border:1px solid rgba(76,175,130,.3);padding:28px 24px;text-align:center;">
+    <div style="font-size:36px;margin-bottom:12px;">🌿</div>
+    <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">You've scanned 3 times</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.6;">Want a weekly report showing what you're actually using — and what keeps disappearing?</div>
+    <input id="deferredEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:16px;color:#fff;margin-bottom:10px;outline:none;">
+    <button onclick="submitDeferredEmail()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
+      Send me the weekly report →
+    </button>
+    <button onclick="document.getElementById('deferredEmailModal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;">
+      No thanks
+    </button>
+  </div>
+</div>
 
+<script>
 function bootGuestMode() {
-  const isDemoMode  = new URLSearchParams(window.location.search).get('demo') === 'true';
-  const seenSplash  = localStorage.getItem('guardnest_seen_splash');
-  const seenSample  = localStorage.getItem('guardnest_seen_sample');
-  const hasScanned  = localStorage.getItem('guardnest_first_scan_started');
+  const isDemoMode = new URLSearchParams(window.location.search).get('demo') === 'true';
 
   // Show the app directly in guest mode — no auth required
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
   applyMobileLayout();
   showPage('scanner');
-
-  // Show first-time prompt or scan zone depending on history
-  if (!isDemoMode) {
-    const prompt   = document.getElementById('firstTimeScanPrompt');
-    const scanZone = document.getElementById('scanZone');
-    if (!hasScanned) {
-      if (prompt)   prompt.style.display   = 'block';
-      if (scanZone) scanZone.style.display = 'none';
-    } else {
-      if (prompt)   prompt.style.display   = 'none';
-      if (scanZone) scanZone.style.display = 'block';
-    }
-  }
-
-  // Cold user who has never seen splash or demo — show splash first
-  if (!isDemoMode && !seenSplash && !seenSample && !hasScanned) {
-    const splash = document.getElementById('splashScreen');
-    if (splash) splash.style.display = 'block';
-    gtag('event', 'splash_shown');
-    return; // splash dismissal handles the rest
-  }
 
   if (isDemoMode) {
     // Make app transparent and non-interactive instead of visibility:hidden
@@ -7868,9 +7429,9 @@ function bootGuestMode() {
     // Show guest banner
     const banner = document.getElementById('guestBanner');
     if (banner) banner.style.display = 'flex';
-    // Auto-trigger demo for users who have seen splash but not demo
-    if (seenSplash && !seenSample) {
-      setTimeout(() => showSampleReport(), 400);
+    // Show onboarding for first time guests
+    if (!localStorage.getItem('guardnest_seen_sample')) {
+      setTimeout(() => showSampleReport(), 600);
     } else {
       try { checkOnboarding(); } catch(e) {}
     }
@@ -8121,105 +7682,35 @@ function hideGuestSaveModal() {
 }
 
 async function guestSignupMagicLink() {
-  // Prevent double-submission
-  if (window._otpSending) return;
-  window._otpSending = true;
   window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   const email = document.getElementById('guestMagicEmail')?.value?.trim();
   if (!email || !email.includes('@')) {
     showToast('Please enter a valid email', 'error');
-    window._otpSending = false;
     return;
   }
-  // Show loading state on button
-  const saveBtn = document.querySelector('#guestMagicForm button');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Sending code...'; }
-
-  gtag('event', 'signup_started', { method: 'email_otp' });
+  gtag('event', 'signup_started', { method: 'magic_link' });
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   }
 
-  // Save email to leads table immediately — capture intent even if they don't verify
-  try {
-    await supa.from('email_leads').insert({
-      email,
-      source: 'save_modal_otp',
-      selected_items: (window._demoAllItems || []).join(',') || null,
-      email_sent: false,
-      created_at: new Date().toISOString()
-    });
-  } catch(e) { console.log('Lead capture:', e.message); }
-
-  // Send OTP — no redirect needed, user enters code in app
   const { error } = await supa.auth.signInWithOtp({
     email,
     options: {
+      emailRedirectTo: 'https://guardnest.app/',
       shouldCreateUser: true,
     }
   });
 
   if (error) {
     showToast('Error: ' + error.message, 'error');
-    gtag('event', 'signup_failed', { method: 'email_otp', reason: error.message });
-    window._otpSending = false;
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save my inventory free →'; }
+    gtag('event', 'signup_failed', { method: 'magic_link', reason: error.message });
   } else {
-    // Show OTP entry form
+    // Show success state
     document.getElementById('guestMagicForm').style.display = 'none';
-    document.getElementById('guestMagicSuccess').style.display = 'none';
-    document.getElementById('guestOtpForm').style.display = 'block';
-    window._otpEmail = email;
-    const emailDisplay = document.getElementById('guestOtpEmailDisplay');
-    if (emailDisplay) emailDisplay.textContent = email;
-    window._otpSending = false;
-    gtag('event', 'otp_sent', { email_domain: email.split('@')[1] });
-    if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'otp_sent' });
-  }
-}
-
-async function guestVerifyOtp() {
-  const code = document.getElementById('guestOtpCode')?.value?.trim();
-  if (!code || code.length < 8) {
-    showToast('Please enter the 8-digit code', 'error');
-    return;
-  }
-  const btn = document.getElementById('guestOtpBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Verifying...'; }
-
-  const { data, error } = await supa.auth.verifyOtp({
-    email: window._otpEmail,
-    token: code,
-    type: 'email',
-  });
-
-  if (error) {
-    if (btn) { btn.disabled = false; btn.textContent = 'Verify code →'; }
-    showToast('Invalid code — check your email and try again', 'error');
-    gtag('event', 'otp_failed', { reason: error.message });
-  } else {
-    gtag('event', 'otp_verified');
-    if(typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'email_otp' });
-
-    // Close all modals and overlays
-    hideGuestSaveModal();
-    document.body.style.overflow = '';
-    const sampleModal = document.getElementById('sampleReportModal');
-    if (sampleModal) sampleModal.style.display = 'none';
-
-    // Get the verified session and boot app directly
-    const { data: { session } } = await supa.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
-      window._bootingApp = false; // reset guard so bootApp can run
-      showToast('Welcome to GuardNest! 🌿', 'success');
-      await bootApp();
-      bootNewUser();
-    } else {
-      // onAuthStateChange will handle it
-      showToast('Welcome to GuardNest! 🌿', 'success');
-    }
+    document.getElementById('guestMagicSuccess').style.display = 'block';
+    gtag('event', 'magic_link_sent', { email_domain: email.split('@')[1] });
+    if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'magic_link_signup' });
   }
 }
 
@@ -8411,6 +7902,80 @@ function openCameraFromCoach() {
 }
 </script>
 <!-- ── END SCAN COACHING MODAL ──────────────────────────────────── -->
+
+<script>
+// ── ONE-TAP ANONYMOUS SAVE ─────────────────────────────────────
+function guestSaveAnonymous() {
+  window._savePromptFired = true;
+  if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
+
+  // Reuse existing guest ID or create a new one
+  let guestId = localStorage.getItem('guardnest_guest_id');
+  if (!guestId) {
+    guestId = crypto.randomUUID();
+    localStorage.setItem('guardnest_guest_id', guestId);
+  }
+
+  // Save pending items to localStorage under guest ID
+  if (pendingItems && pendingItems.length > 0) {
+    localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
+  }
+
+  gtag('event', 'signup_completed', { method: 'anonymous' });
+  if (typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'anonymous' });
+
+  hideGuestSaveModal();
+  showToast('Saved! Scan again anytime 🌿', 'success');
+}
+
+// ── SCAN COUNTER + DEFERRED EMAIL ASK ─────────────────────────
+function incrementScanCount() {
+  // Only track anonymous guests — logged-in users don't need this
+  if (localStorage.getItem('guardnest_user_id')) return;
+
+  const count = parseInt(localStorage.getItem('guardnest_scan_count') || '0') + 1;
+  localStorage.setItem('guardnest_scan_count', count);
+  gtag('event', 'guest_scan_count', { count });
+
+  // Show deferred email ask after 3rd scan — only once
+  if (count === 3 && !localStorage.getItem('guardnest_email_asked')) {
+    localStorage.setItem('guardnest_email_asked', 'true');
+    setTimeout(() => {
+      const modal = document.getElementById('deferredEmailModal');
+      if (modal) modal.style.display = 'flex';
+      gtag('event', 'deferred_email_prompt_shown', { scan_count: count });
+    }, 2000); // small delay so results are visible first
+  }
+}
+
+async function submitDeferredEmail() {
+  const email = document.getElementById('deferredEmail')?.value?.trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email', 'error');
+    return;
+  }
+
+  try {
+    await supa.from('email_leads').insert({
+      email,
+      source: 'deferred_3scan_ask',
+      email_sent: false,
+      created_at: new Date().toISOString()
+    });
+  } catch(e) {
+    console.log('Deferred email insert:', e.message);
+  }
+
+  // Also store locally so we can associate future scans
+  localStorage.setItem('guardnest_guest_email', email);
+
+  gtag('event', 'deferred_email_captured', { scan_count: localStorage.getItem('guardnest_scan_count') });
+  if (typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'deferred_email' });
+
+  document.getElementById('deferredEmailModal').style.display = 'none';
+  showToast('You\'ll get your weekly report 🌿', 'success');
+}
+</script>
 
 </body>
 </html>
