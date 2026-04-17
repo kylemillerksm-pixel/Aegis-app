@@ -7370,36 +7370,14 @@ async function submitDemoReminder() {
 
     <!-- CTA section -->
     <div style="padding:20px;">
-
-      <!-- Reciprocity + identity framing -->
       <div id="saveModalCta" style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:16px;line-height:1.7;text-align:center;"></div>
-
-      <!-- One-tap anonymous save — primary CTA -->
       <button onclick="guestSaveAnonymous()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
         Save my results →
       </button>
-
-      <!-- Dismiss -->
-      <button onclick="hideGuestSaveModal()" id="saveModalDismissBtn" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;text-align:center;">
+      <button onclick="hideGuestSaveModal()" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;text-align:center;">
         I don't mind losing this
       </button>
     </div>
-  </div>
-</div>
-
-<!-- Deferred email ask — shown after 3 scans -->
-<div id="deferredEmailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;">
-  <div style="max-width:380px;width:100%;background:#1a2330;border-radius:20px;border:1px solid rgba(76,175,130,.3);padding:28px 24px;text-align:center;">
-    <div style="font-size:36px;margin-bottom:12px;">🌿</div>
-    <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">You've scanned 3 times</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.6;">Want a weekly report showing what you're actually using — and what keeps disappearing?</div>
-    <input id="deferredEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:16px;color:#fff;margin-bottom:10px;outline:none;">
-    <button onclick="submitDeferredEmail()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
-      Send me the weekly report →
-    </button>
-    <button onclick="document.getElementById('deferredEmailModal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;">
-      No thanks
-    </button>
   </div>
 </div>
 
@@ -7903,79 +7881,116 @@ function openCameraFromCoach() {
 </script>
 <!-- ── END SCAN COACHING MODAL ──────────────────────────────────── -->
 
+</body>
+</html>
+<!-- Deferred engagement modal -->
+<div id="deferredEngageModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99999;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:380px;width:100%;background:#1a2330;border-radius:20px;border:1px solid rgba(76,175,130,.3);padding:28px 24px;text-align:center;">
+    <div style="font-size:36px;margin-bottom:12px;">🌿</div>
+    <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">You've scanned 3 times</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.6;">Want GuardNest to remind you before things expire?</div>
+    <div id="deferredPushSection">
+      <button onclick="requestPushPermission()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
+        🔔 Yes — notify me before things expire
+      </button>
+      <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:14px;">Works on Android now. On iPhone, add to home screen first.</div>
+    </div>
+    <div id="deferredEmailSection">
+      <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:8px;">or get a weekly report by email instead</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input id="deferredEmail" type="email" placeholder="your@email.com" style="flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;font-size:16px;color:#fff;outline:none;">
+        <button onclick="submitDeferredEmail()" style="background:rgba(76,175,130,.15);border:1px solid rgba(76,175,130,.3);color:#4CAF82;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Send</button>
+      </div>
+    </div>
+    <button onclick="document.getElementById('deferredEngageModal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;">No thanks</button>
+  </div>
+</div>
+
 <script>
-// ── ONE-TAP ANONYMOUS SAVE ─────────────────────────────────────
+const VAPID_PUBLIC = 'BPZ4GNmSknabacrVJeDyEPqssEtlgDDvIiUSjMNJbrgO6XvNKK7OpI5DeFk_diPxH9ZzECg2IL6U4zWjzmeiyvk';
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => { window._swReg = reg; })
+      .catch(err => console.log('SW failed:', err));
+  });
+}
+
 function guestSaveAnonymous() {
   window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
-
-  // Reuse existing guest ID or create a new one
   let guestId = localStorage.getItem('guardnest_guest_id');
-  if (!guestId) {
-    guestId = crypto.randomUUID();
-    localStorage.setItem('guardnest_guest_id', guestId);
-  }
-
-  // Save pending items to localStorage under guest ID
-  if (pendingItems && pendingItems.length > 0) {
-    localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
-  }
-
+  if (!guestId) { guestId = crypto.randomUUID(); localStorage.setItem('guardnest_guest_id', guestId); }
+  if (pendingItems && pendingItems.length > 0) localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
   gtag('event', 'signup_completed', { method: 'anonymous' });
   if (typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'anonymous' });
-
   hideGuestSaveModal();
   showToast('Saved! Scan again anytime 🌿', 'success');
 }
 
-// ── SCAN COUNTER + DEFERRED EMAIL ASK ─────────────────────────
 function incrementScanCount() {
-  // Only track anonymous guests — logged-in users don't need this
-  if (localStorage.getItem('guardnest_user_id')) return;
-
   const count = parseInt(localStorage.getItem('guardnest_scan_count') || '0') + 1;
   localStorage.setItem('guardnest_scan_count', count);
   gtag('event', 'guest_scan_count', { count });
-
-  // Show deferred email ask after 3rd scan — only once
-  if (count === 3 && !localStorage.getItem('guardnest_email_asked')) {
-    localStorage.setItem('guardnest_email_asked', 'true');
+  if (count === 3 && !localStorage.getItem('guardnest_engaged')) {
+    localStorage.setItem('guardnest_engaged', 'true');
     setTimeout(() => {
-      const modal = document.getElementById('deferredEmailModal');
-      if (modal) modal.style.display = 'flex';
-      gtag('event', 'deferred_email_prompt_shown', { scan_count: count });
-    }, 2000); // small delay so results are visible first
+      const modal = document.getElementById('deferredEngageModal');
+      if (modal) { modal.style.display = 'flex'; }
+      gtag('event', 'deferred_engage_shown', { scan_count: count });
+    }, 2000);
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = window.atob(base64);
+  const output = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; ++i) output[i] = raw.charCodeAt(i);
+  return output;
+}
+
+async function requestPushPermission() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    document.getElementById('deferredPushSection').style.display = 'none';
+    return;
+  }
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    document.getElementById('deferredPushSection').style.display = 'none';
+    gtag('event', 'push_permission_denied');
+    return;
+  }
+  try {
+    const reg = window._swReg || await navigator.serviceWorker.ready;
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+    });
+    const guestId = localStorage.getItem('guardnest_guest_id') || crypto.randomUUID();
+    localStorage.setItem('guardnest_guest_id', guestId);
+    await supa.from('push_subscriptions').insert({ guest_id: guestId, subscription: subscription.toJSON() });
+    gtag('event', 'push_subscribed');
+    document.getElementById('deferredEngageModal').style.display = 'none';
+    showToast("You'll be notified before things expire 🌿", 'success');
+  } catch(err) {
+    document.getElementById('deferredPushSection').style.display = 'none';
+    gtag('event', 'push_subscribe_failed', { reason: err.message });
   }
 }
 
 async function submitDeferredEmail() {
   const email = document.getElementById('deferredEmail')?.value?.trim();
-  if (!email || !email.includes('@')) {
-    showToast('Please enter a valid email', 'error');
-    return;
-  }
-
+  if (!email || !email.includes('@')) { showToast('Please enter a valid email', 'error'); return; }
   try {
-    await supa.from('email_leads').insert({
-      email,
-      source: 'deferred_3scan_ask',
-      email_sent: false,
-      created_at: new Date().toISOString()
-    });
-  } catch(e) {
-    console.log('Deferred email insert:', e.message);
-  }
-
-  // Also store locally so we can associate future scans
+    await supa.from('email_leads').insert({ email, source: 'deferred_3scan_ask', email_sent: false, created_at: new Date().toISOString() });
+  } catch(e) { console.log('Deferred email:', e.message); }
   localStorage.setItem('guardnest_guest_email', email);
-
   gtag('event', 'deferred_email_captured', { scan_count: localStorage.getItem('guardnest_scan_count') });
   if (typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'deferred_email' });
-
-  document.getElementById('deferredEmailModal').style.display = 'none';
-  showToast('You\'ll get your weekly report 🌿', 'success');
+  document.getElementById('deferredEngageModal').style.display = 'none';
+  showToast('Weekly report coming your way 🌿', 'success');
 }
 </script>
-
-</body>
-</html>
