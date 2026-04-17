@@ -2292,6 +2292,9 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
               <div class="scan-title" id="scanTitle">What are we scanning?</div>
               <div class="scan-sub" id="scanSub">Choose receipt, fridge, or pantry above — then tap to scan</div>
             </div>
+            <div id="scanPhotoTip" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(76,175,130,.06);border:1px solid rgba(76,175,130,.15);border-radius:8px;font-size:11px;color:rgba(255,255,255,.45);text-align:center;line-height:1.5;">
+              📸 Best results: one shelf at a time · get close · good lighting
+            </div>
             <div style="margin-top:10px;display:flex;gap:8px">
               <button class="btn btn-gold" style="flex:1;justify-content:center;position:relative;z-index:4" onclick="triggerScan()">
                 📷 <span id="scanBtnLabel">Select to Scan</span>
@@ -2333,12 +2336,11 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 
         <!-- SCAN RESULTS -->
         <div id="scanResults" class="hidden" style="margin-top:18px">
-          <!-- Insight summary bar -->
-          <div id="scanCelebration" style="display:none;animation:fadeIn .4s ease;">
-            <div id="scanInsightBar" style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.25);border-radius:12px;padding:14px 16px;margin-bottom:4px;">
-              <div id="scanCelebTitle" style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.4;"></div>
-              <div id="scanCelebSub" style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;"></div>
-            </div>
+          <!-- Celebration moment -->
+          <div id="scanCelebration" style="display:none;text-align:center;padding:20px;animation:fadeIn .4s ease;">
+            <div id="scanCelebEmoji" style="font-size:48px;margin-bottom:8px;">✅</div>
+            <div id="scanCelebTitle" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;"></div>
+            <div id="scanCelebSub" style="font-size:13px;color:var(--text2);"></div>
           </div>
 
           <div class="panel" style="margin-top:12px;">
@@ -4636,37 +4638,25 @@ function renderManifest(items, gridId, titleId) {
       items.length === 1 ? '📦 Your Fridge' : `📦 Your Fridge`;
   }
 
-  // Show insight summary bar for main scanner grid
+  // Show celebration moment for main scanner grid
   if (isMainGrid) {
     const celebEl    = document.getElementById('scanCelebration');
     const celebTitle = document.getElementById('scanCelebTitle');
     const celebSub   = document.getElementById('scanCelebSub');
-    const insightBar = document.getElementById('scanInsightBar');
+    const totalVal   = (items.length * 3.5).toFixed(0);
+    const urgent     = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 3);
 
-    const urgent   = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 3);
-    const expiring = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 7);
-    const totalVal = items.reduce((s, i) => s + parseFloat(i.price || 3.50), 0);
-    const atRiskVal = expiring.reduce((s, i) => s + parseFloat(i.price || 3.50), 0);
-
-    if (celebEl && celebTitle && celebSub && insightBar) {
-      if (urgent.length > 0) {
-        const names = urgent.slice(0, 2).map(i => i.item_name).join(' and ');
-        celebTitle.textContent = urgent.length + ' item' + (urgent.length !== 1 ? 's' : '') + ' will likely go bad this week — that\'s $' + atRiskVal.toFixed(2) + ' at risk.';
-        celebSub.textContent   = names + (urgent.length > 2 ? ' and ' + (urgent.length - 2) + ' more' : '') + ' expire in ' + urgent[0].days_until_spoil + ' day' + (urgent[0].days_until_spoil !== 1 ? 's' : '') + '. Save to get reminded before they\'re gone.';
-        insightBar.style.background  = 'rgba(224,85,85,.08)';
-        insightBar.style.borderColor = 'rgba(224,85,85,.25)';
-      } else if (expiring.length > 0) {
-        celebTitle.textContent = expiring.length + ' item' + (expiring.length !== 1 ? 's' : '') + ' expire this week — $' + atRiskVal.toFixed(2) + ' that could quietly disappear.';
-        celebSub.textContent   = 'Most people don\'t notice until it\'s in the bin. Save free and we\'ll remind you before it gets there.';
-        insightBar.style.background  = 'rgba(212,168,67,.08)';
-        insightBar.style.borderColor = 'rgba(212,168,67,.25)';
-      } else {
-        celebTitle.textContent = items.length + ' item' + (items.length !== 1 ? 's' : '') + ' tracked — $' + totalVal.toFixed(2) + ' in groceries now visible.';
-        celebSub.textContent   = 'Nothing urgent this week. Save free and we\'ll tell you when that changes.';
-        insightBar.style.background  = 'rgba(76,175,130,.08)';
-        insightBar.style.borderColor = 'rgba(76,175,130,.25)';
-      }
+    if (celebEl && celebTitle && celebSub) {
+      celebTitle.textContent = `${items.length} ITEM${items.length !== 1 ? 'S' : ''} FOUND`;
+      celebSub.textContent   = urgent.length > 0
+        ? `${urgent.length} item${urgent.length !== 1 ? 's' : ''} need attention this week · ~$${totalVal} tracked`
+        : `~$${totalVal} of groceries tracked · looking good`;
       celebEl.style.display = 'block';
+
+      // Flash animation
+      celebEl.style.background = 'rgba(76,175,130,.08)';
+      celebEl.style.borderRadius = '12px';
+      setTimeout(() => { celebEl.style.background = 'transparent'; }, 800);
     }
   }
 
@@ -6003,8 +5993,8 @@ function setScanType(type) {
   };
   const subs = {
     receipt: 'Photo any grocery receipt — GuardNest identifies every item automatically',
-    fridge: "Open your fridge and point your camera inside — we'll identify everything",
-    pantry: "Open your pantry and point your camera — we'll track cans, dry goods and more",
+    fridge: "One shelf at a time gets the best results — good lighting, phone close, steady hand",
+    pantry: "One section at a time gets the best results — good lighting, phone close, steady hand",
   };
   const btnLabels = {
     receipt: 'Select Receipt',
@@ -6016,6 +6006,10 @@ function setScanType(type) {
   document.getElementById('scanTitle').textContent = titles[type];
   document.getElementById('scanSub').textContent = subs[type];
   document.getElementById('scanBtnLabel').textContent = btnLabels[type];
+
+  // Show photo tip for fridge/pantry only
+  const tipEl = document.getElementById('scanPhotoTip');
+  if (tipEl) tipEl.style.display = (type === 'fridge' || type === 'pantry') ? 'block' : 'none';
 
   // Update button styles
   ['receipt','fridge','pantry'].forEach(t => {
