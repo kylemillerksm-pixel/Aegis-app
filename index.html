@@ -1979,7 +1979,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 <div class="loading-overlay" id="loadingOverlay" style="display:none;visibility:hidden;pointer-events:none;z-index:-1;">
   <div class="loading-spinner"></div>
   <div class="loading-text">GuardNest</div>
-  <div class="loading-sub" id="loadingMsg">INITIALIZING SYSTEM...</div>
+  <div class="loading-sub" id="loadingMsg"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -2974,7 +2974,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
     <div class="scan-line"></div>
   </div>
   <div class="scan-shield"></div>
-  <div class="scan-status" id="scanStatusText">INITIALIZING</div>
+  <div class="scan-status" id="scanStatusText">SCANNING</div>
   <div class="scan-substatus" id="scanSubText">Preparing analysis...</div>
   <div class="scan-progress-track">
     <div class="scan-progress-fill" id="scanProgressFill"></div>
@@ -4878,13 +4878,18 @@ function fileToBase64(file) {
   });
 }
 
-function setLoadingMsg(msg) { document.getElementById('loadingMsg').textContent = msg; }
+function setLoadingMsg(msg) {
+  // Silent — never show loading overlay to users
+  // Dead clicks on "INITIALIZING" text was causing immediate exits
+}
 function hideLoading() {
   const overlay = document.getElementById('loadingOverlay');
-  overlay.style.display = 'none';
-  overlay.style.visibility = 'hidden';
-  overlay.style.pointerEvents = 'none';
-  overlay.style.zIndex = '-1';
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.style.visibility = 'hidden';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '-1';
+  }
 }
 
 function showToast(msg, type = 'info') {
@@ -6852,13 +6857,17 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;" id="ds2Price">~$3.49 at risk</div>
         </div>
         <!-- The ONE action — no scrolling needed -->
-        <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">
+        <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
           <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.7;" id="ds2Tip">You probably bought this last week. Use it tonight — add it to a salad or smoothie before it wilts.</div>
         </div>
-        <button id="ds2ActionBtn" onclick="demoMarkUsed()" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;">
-          ✓ I'll use it tonight
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;">
+          <div style="font-size:16px;animation:chevronPulse 1.4s ease-in-out infinite;">👇</div>
+          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.04em;">Tap the button below to continue the demo</div>
+        </div>
+        <button id="ds2ActionBtn" onclick="demoMarkUsed()" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;">
+          👍 Got it — show me what happens next
         </button>
-        <div style="font-size:11px;color:rgba(255,255,255,.2);">Tap to see what happens when you stay on top of it</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.2);">This is a demo — nothing is being saved yet</div>
       </div>
     </div>
 
@@ -6879,26 +6888,30 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
           <div id="ds3XpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .8s ease;"></div>
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Scan your real fridge to keep building your inventory</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Complete your first real scan to level up</div>
       </div>
       <!-- Insight -->
       <div style="background:rgba(255,255,255,.03);border-radius:12px;padding:14px;margin-bottom:24px;text-align:left;">
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;margin-bottom:6px;">WHY THIS HAPPENS</div>
         <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.7;" id="ds3Insight">You buy this most weeks. But without a reminder, it sits at the back of the fridge until it's too late. That's not carelessness — that's just not being able to see it.</div>
       </div>
-      <!-- Primary CTA -->
-      <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});launchRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;">
-        Scan my real fridge →
+      <!-- Bridge line — makes clear demo is over, real step is next -->
+      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left;">
+        <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;">That was a demo. Your kitchen probably has 8 of these right now — and you won’t remember them all by Thursday.</div>
+      </div>
+      <!-- Primary CTA — universal, works for any scan method -->
+      <button onclick="gtag('event','cta_click',{location:'demo_see_mine'});demoGoToRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;">
+        Show me what I have →
       </button>
-      <!-- Email fallback -->
-      <div id="ds3RemindWrap" style="margin-top:4px;">
-        <input id="ds3Email" type="email" placeholder="Or enter email — get your Monday report"
+      <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:14px;">Receipt · Fridge · Pantry — your choice</div>
+      <div id="ds3RemindWrap" style="display:none;margin-top:4px;">
+        <input id="ds3Email" type="email" placeholder="Enter email — get your Monday report"
           style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;font-size:16px;color:#fff;margin-bottom:6px;outline:none;text-align:center;">
         <button onclick="submitDemoReminderNew()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);border-radius:10px;padding:10px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;">
           Send me the report →
         </button>
       </div>
-      <div id="ds3RemindSuccess" style="display:none;padding:10px;font-size:13px;color:#4CAF82;">✓ Report coming Monday. Check your inbox.</div>
+      <div id="ds3RemindSuccess" style="display:none;padding:10px;font-size:13px;color:#4CAF82;">✓ Saved! Check your inventory.</div>
     </div>
 
   </div>
@@ -7156,6 +7169,47 @@ function demoCompleteFirstMission() { demoMarkUsed(); }
 
 // Keep submitDemoReminder for backwards compat
 function submitDemoReminder() { submitDemoReminderNew(); }
+
+// Opens real scanner with all three tabs visible — user picks their method
+function demoGoToRealScanner() {
+  hideSampleReport();
+  const onboarding = document.getElementById('onboardingScreen');
+  if (onboarding) onboarding.classList.add('hidden');
+  localStorage.setItem('guardnest_onboarded', 'true');
+  // Reset scan type selector so all three tabs are visible and none pre-selected
+  window._scanPageType = 'receipt';
+  setScanType('receipt');
+  showPage('scanner');
+  // Scroll to top so scan zone is immediately visible
+  setTimeout(() => {
+    const content = document.querySelector('.content');
+    if (content) content.scrollTo(0, 0);
+    window.scrollTo(0, 0);
+  }, 100);
+  gtag('event', 'demo_to_scanner', { method: 'show_me_what_i_have' });
+}
+
+// Save demo state as guest and close modal
+async function demoSaveAndClose() {
+  const pick = window._demoPick || { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
+
+  // Store as pending guest item so guestSaveAnonymous picks it up
+  const today = new Date().toISOString().split('T')[0];
+  pendingItems = [{
+    item_name:        pick.name,
+    merchant:         'Home',
+    price:            pick.price || 0,
+    purchase_date:    today,
+    category:         'Groceries',
+    warranty_days:    0,
+    days_until_spoil: pick.days || 3,
+    image_url:        'demo',
+  }];
+
+  hideSampleReport();
+  await guestSaveAnonymous();
+  gtag('event', 'demo_guest_save', { item: pick.name });
+}
 </script>
 
 
