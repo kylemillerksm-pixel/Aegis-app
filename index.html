@@ -7171,9 +7171,8 @@ async function submitDemoReminderNew() {
   setTimeout(() => hideSampleReport(), 1500);
 }
 
-// Patch showSampleReport to use new flow
-const _origShowSampleReport = showSampleReport;
-showSampleReport = function() {
+// Define showSampleReport for new flow
+function showSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
   const appEl = document.getElementById('screen-app');
