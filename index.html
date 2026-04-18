@@ -1970,6 +1970,31 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<script>
+// ── ERROR MONITORING — catches all JS errors and sends to GA4 ──
+window.onerror = function(msg, url, line, col, error) {
+  if (typeof gtag === 'undefined') return;
+  gtag('event', 'js_error', {
+    error_message: (msg || '').substring(0, 150),
+    line_number: line || 0,
+    column: col || 0,
+    stack: error && error.stack ? error.stack.substring(0, 200) : 'none'
+  });
+};
+
+// Catches silent Promise failures — failed Supabase calls, Gemini timeouts etc
+window.addEventListener('unhandledrejection', function(e) {
+  if (typeof gtag === 'undefined') return;
+  const msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
+  const stack = e.reason && e.reason.stack ? e.reason.stack.substring(0, 200) : 'none';
+  gtag('event', 'js_error', {
+    error_message: ('Promise: ' + msg).substring(0, 150),
+    line_number: 0,
+    column: 0,
+    stack: stack
+  });
+});
+</script>
 </head>
 <body>
 
