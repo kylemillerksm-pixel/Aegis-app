@@ -4608,15 +4608,26 @@ function parseJSON(raw) {
 
 // ─── REMOVE MANIFEST ITEM ────────────────────────────────────
 function removeManifestItem(index) {
-  // Animate out
+  // Animate out the card visually first
   const card = document.getElementById('mc-' + index);
-  if (card) card.classList.add('removed');
+  if (card) {
+    card.style.transition = 'all .2s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    card.style.maxHeight = card.offsetHeight + 'px';
+    // Collapse height after fade
+    setTimeout(() => {
+      card.style.maxHeight = '0';
+      card.style.padding = '0';
+      card.style.margin = '0';
+      card.style.overflow = 'hidden';
+    }, 150);
+  }
 
-  // Remove from pendingItems after animation
+  // Remove from pendingItems and re-render after animation completes
   setTimeout(() => {
     pendingItems.splice(index, 1);
 
-    // If no items left hide the results section
     if (pendingItems.length === 0) {
       document.getElementById('scanResults')?.classList.add('hidden');
       document.getElementById('pdfResults')?.classList.add('hidden');
@@ -4624,13 +4635,13 @@ function removeManifestItem(index) {
       return;
     }
 
-    // Re-render with updated list
-    const activeGrid = document.getElementById('manifestGrid')?.innerHTML !== undefined
+    // Re-render with updated indices
+    const activeGrid = document.getElementById('manifestGrid') 
       ? 'manifestGrid' : 'pdfManifestGrid';
     const titleId = activeGrid === 'manifestGrid' ? 'resultsTitle' : 'pdfResultsTitle';
     renderManifest(pendingItems, activeGrid, titleId);
     showToast('Item removed', 'info');
-  }, 200);
+  }, 300);
 }
 
 // ─── RENDER MANIFEST ──────────────────────────────────────────
@@ -7786,6 +7797,10 @@ if ('serviceWorker' in navigator) {
 }
 
 async function guestSaveAnonymous() {
+  // Prevent duplicate saves from multiple button taps
+  if (window._guestSaving) return;
+  window._guestSaving = true;
+  setTimeout(() => { window._guestSaving = false; }, 3000);
   window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
 
@@ -7798,15 +7813,21 @@ async function guestSaveAnonymous() {
 
   if (pendingItems && pendingItems.length > 0) {
     const today = new Date().toISOString().split('T')[0];
+    // Sanitize date — reject anything that isn't a valid YYYY-MM-DD string
+    const safeDate = (val) => {
+      if (!val || typeof val !== 'string') return today;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return today;
+      return val;
+    };
     const rows = pendingItems.map(item => ({
       guest_id:         guestId,
       item_name:        item.item_name        || 'Unknown',
-      merchant:         item.merchant         || null,
+      merchant:         item.merchant && item.merchant !== 'Unknown' ? item.merchant : null,
       price:            parseFloat(item.price || 0),
-      purchase_date:    item.purchase_date    || today,
+      purchase_date:    safeDate(item.purchase_date),
       category:         item.category         || 'General',
       days_until_spoil: parseInt(item.days_until_spoil || 0),
-      expiry_date:      item.expiry_date      || null,
+      expiry_date:      item.expiry_date && /^\d{4}-\d{2}-\d{2}$/.test(item.expiry_date) ? item.expiry_date : null,
       image_url:        item.image_url        || null,
       status:           'active',
     }));
