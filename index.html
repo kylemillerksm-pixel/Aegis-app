@@ -2072,7 +2072,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
     <div style="font-size:12px;color:rgba(255,255,255,.7);">
       🌿 <strong style="color:#4CAF82;">Guest mode</strong> — scan your fridge, then save your results free
     </div>
-    <button onclick="showAuth();document.getElementById('guestBanner').style.display='none';" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
+    <button onclick="guestSaveAnonymous();document.getElementById('guestBanner').style.display='none';" style="background:#4CAF82;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
       Save Free →
     </button>
   </div>
@@ -2362,7 +2362,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
               <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">This disappears when you close.</div>
               <div style="font-size:11px;color:rgba(255,255,255,.4);">Save free to keep tracking.</div>
             </div>
-            <button onclick="gtag('event','cta_click',{location:'save_banner'});showGuestSavePrompt();" style="background:#4CAF82;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;">
+            <button onclick="gtag('event','cta_click',{location:'save_banner'});guestSaveAnonymous();" style="background:#4CAF82;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;touch-action:manipulation;">
               Save free →
             </button>
           </div>
@@ -7926,7 +7926,7 @@ function openCameraFromCoach() {
         <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.7;">1. Tap the Share button in Safari<br>2. Tap "Add to Home Screen"<br>3. Open GuardNest from your home screen<br>4. You'll get a notification prompt</div>
       </div>
     </div>
-    <button onclick="document.getElementById('postSavePushModal').style.display='none';showPage('vault');" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;">
+    <button onclick="document.getElementById('postSavePushModal').style.display='none';showPage('vault');" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:16px;width:100%;text-align:center;touch-action:manipulation;min-height:44px;">
       No thanks
     </button>
   </div>
