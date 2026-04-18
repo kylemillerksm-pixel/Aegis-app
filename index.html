@@ -6241,49 +6241,66 @@ function startPhotoScan(type) {
 function startFridgePhoto() { startPhotoScan('fridge'); }
 
 async function compressImage(file, maxWidth=1200) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        // More aggressive compression for large files
-        const targetWidth = Math.min(maxWidth, img.width);
-        const scale = targetWidth / img.width;
-        canvas.width = targetWidth;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(url);
-        // Use lower quality (0.6) to keep payload small
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-        const b64 = dataUrl.split(',')[1];
-        if (b64 && b64.length > 100) {
-          resolve(b64);
-        } else {
-          // Canvas failed silently — fall back to FileReader
-          const r = new FileReader();
-          r.onload = () => resolve(r.result.split(',')[1]);
-          r.onerror = reject;
-          r.readAsDataURL(file);
-        }
-      } catch(e) {
-        URL.revokeObjectURL(url);
-        const r = new FileReader();
-        r.onload = () => resolve(r.result.split(',')[1]);
-        r.onerror = reject;
-        r.readAsDataURL(file);
-      }
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+
+  function fileReaderFallback() {
+    return new Promise((resolve, reject) => {
       const r = new FileReader();
-      r.onload = () => resolve(r.result.split(',')[1]);
-      r.onerror = reject;
+      r.onload = () => {
+        const result = r.result;
+        if (!result || typeof result !== 'string') { reject(new Error('FileReader empty')); return; }
+        const b64 = result.split(',')[1];
+        if (b64 && b64.length > 100) resolve(b64);
+        else reject(new Error('FileReader b64 too short'));
+      };
+      r.onerror = () => reject(new Error('FileReader error'));
       r.readAsDataURL(file);
-    };
-    img.src = url;
-  });
+    });
+  }
+
+  function canvasCompress() {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      const cleanup = () => { try { URL.revokeObjectURL(url); } catch(e) {} };
+      const timeout = setTimeout(() => { cleanup(); reject(new Error('Canvas timeout')); }, 8000);
+      img.onload = () => {
+        clearTimeout(timeout);
+        try {
+          const targetWidth = Math.min(maxWidth, img.width);
+          const scale = targetWidth / img.width;
+          const canvas = document.createElement('canvas');
+          canvas.width = targetWidth;
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { cleanup(); reject(new Error('No canvas context')); return; }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          cleanup();
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          const b64 = dataUrl.split(',')[1];
+          if (b64 && b64.length > 100) resolve(b64);
+          else reject(new Error('Canvas b64 empty'));
+        } catch(e) {
+          clearTimeout(timeout);
+          cleanup();
+          reject(e);
+        }
+      };
+      img.onerror = () => { clearTimeout(timeout); cleanup(); reject(new Error('Image load failed')); };
+      img.src = url;
+    });
+  }
+
+  if (isIOS) {
+    try { return await fileReaderFallback(); } catch(e) { console.warn('FileReader failed on iOS:', e.message); throw e; }
+  }
+
+  try {
+    return await canvasCompress();
+  } catch(e) {
+    console.warn('Canvas compress failed, falling back to FileReader:', e.message);
+    return await fileReaderFallback();
+  }
 }
 
 async function handleFridgePhoto(input, scanType) {
@@ -6718,679 +6735,427 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <!-- SAMPLE REPORT MODAL -->
 <!-- DEMO MODE MODAL — Duolingo-style 4-step flow -->
-<div id="sampleReportModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:99999;overflow-y:auto;-webkit-overflow-scrolling:touch;" onclick="event.stopPropagation()">
-  <div style="max-width:420px;margin:20px auto;padding:0 20px 20px;" onclick="event.stopPropagation()">
-    <div style="background:#1a2330;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);">
+<div id="sampleReportModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,10,15,.97);z-index:99999;overflow:hidden;" onclick="event.stopPropagation()">
 
-      <!-- STEP 0: Gamification welcome -->
-      <div id="demoStep0" style="padding:32px 24px 28px;text-align:center;position:relative;">
-        <button onclick="hideSampleReport()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:rgba(255,255,255,.3);font-size:22px;cursor:pointer;line-height:1;padding:4px;">✕</button>
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;">
-          <div style="width:28px;height:28px;background:#4CAF82;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);"></div>
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.15em;color:#4CAF82;">GuardNest</span>
-        </div>
-        <div style="font-size:20px;font-weight:800;color:#fff;line-height:1.3;margin-bottom:8px;">Your fridge is a game.<br>Most people are losing it.</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:28px;">Stuff goes in. You lose track. It quietly disappears.<br>GuardNest gives you the inventory screen you never had.</div>
-        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:20px;text-align:left;">
-          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;margin-bottom:12px;">YOUR FRIDGE INVENTORY</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:18px;">🥬</span>
-              <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:15%;background:#E05555;border-radius:3px;"></div></div></div>
-              <span style="font-size:10px;font-weight:700;color:#E05555;">2 days</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:18px;">🍗</span>
-              <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:25%;background:#D4A843;border-radius:3px;"></div></div></div>
-              <span style="font-size:10px;font-weight:700;color:#D4A843;">3 days</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:18px;">🧀</span>
-              <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:75%;background:#4CAF82;border-radius:3px;"></div></div></div>
-              <span style="font-size:10px;font-weight:700;color:#4CAF82;">11 days</span>
-            </div>
-          </div>
-        </div>
-        <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:12px;padding:14px;margin-bottom:24px;text-align:left;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:12px;font-weight:700;color:#4CAF82;">Level 1 — First Scan</span>
-            <span style="font-size:11px;color:rgba(255,255,255,.3);">0 / 100 XP</span>
-          </div>
-          <div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:8px;">
-            <div style="height:100%;width:0%;background:#4CAF82;border-radius:3px;"></div>
-          </div>
-          <div style="font-size:11px;color:rgba(255,255,255,.4);">Scan your fridge → earn XP → unlock insights about your habits</div>
-        </div>
-        <button onclick="advanceDemoToStep1()" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">
-          Build my inventory →
-        </button>
-        <div style="font-size:11px;color:rgba(255,255,255,.2);">Free · No download · Takes 30 seconds</div>
+  <!-- PROGRESS DOTS -->
+  <div id="demoDots" style="position:absolute;top:16px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:10;">
+    <div class="demo-dot active" id="dot0"></div>
+    <div class="demo-dot" id="dot1"></div>
+    <div class="demo-dot" id="dot2"></div>
+    <div class="demo-dot" id="dot3"></div>
+  </div>
+
+  <!-- CLOSE BUTTON -->
+  <button id="demoCloseBtn" onclick="hideSampleReport()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.25);font-size:24px;cursor:pointer;z-index:10;padding:8px;touch-action:manipulation;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;">✕</button>
+
+  <!-- SCREEN WRAPPER — slides between steps -->
+  <div id="demoScreenWrap" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 32px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+
+    <!-- ── SCREEN 0: Hook ───────────────────────────────────────── -->
+    <div id="ds0" style="max-width:380px;width:100%;text-align:center;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:28px;">
+        <div style="width:24px;height:24px;background:#4CAF82;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);flex-shrink:0;"></div>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:#4CAF82;">GuardNest</span>
       </div>
-
-      <!-- STEP 1: Tap to select -->
-      <div id="demoStep1" style="display:none;padding:28px 20px 24px;text-align:center;position:relative;">
-        <button onclick="hideSampleReport()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:rgba(255,255,255,.3);font-size:22px;cursor:pointer;line-height:1;padding:4px;display:none;">✕</button>
-        <div style="font-size:36px;margin-bottom:12px;">🛒</div>
-        <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.3;">What usually goes bad in your fridge?</div>
-        <p style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px;">Tap anything that sounds familiar</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;" id="demoItemPicker">
-          <div onclick="selectDemoItem(this,'spinach')" data-item="spinach" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🥬</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Spinach</div>
+      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1.25;margin-bottom:12px;">You bought it.<br>Now where did it go?</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:32px;">Most people waste $31 of groceries a week without realizing it. Not because they're careless — because they couldn't see what they had.</div>
+      <!-- Animated fridge preview -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;margin-bottom:28px;text-align:left;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.12em;margin-bottom:14px;">YOUR FRIDGE — WITHOUT GUARDNEST</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:22px;">🥬</span>
+            <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:12%;background:#E05555;border-radius:3px;transition:width 1s ease;" id="hook-bar-1"></div></div></div>
+            <span style="font-size:11px;font-weight:700;color:#E05555;min-width:52px;text-align:right;">2 days left</span>
           </div>
-          <div onclick="selectDemoItem(this,'chicken')" data-item="chicken" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🍗</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Chicken</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:22px;">🍗</span>
+            <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:20%;background:#D4A843;border-radius:3px;transition:width 1s ease;" id="hook-bar-2"></div></div></div>
+            <span style="font-size:11px;font-weight:700;color:#D4A843;min-width:52px;text-align:right;">3 days left</span>
           </div>
-          <div onclick="selectDemoItem(this,'berries')" data-item="berries" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🍓</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Berries</div>
-          </div>
-          <div onclick="selectDemoItem(this,'yogurt')" data-item="yogurt" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🥛</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Yogurt</div>
-          </div>
-          <div onclick="selectDemoItem(this,'avocado')" data-item="avocado" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🥑</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Avocado</div>
-          </div>
-          <div onclick="selectDemoItem(this,'bread')" data-item="bread" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🍞</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Bread</div>
-          </div>
-          <div onclick="selectDemoItem(this,'broccoli')" data-item="broccoli" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🥦</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Broccoli</div>
-          </div>
-          <div onclick="selectDemoItem(this,'milk')" data-item="milk" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🥛</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Milk</div>
-          </div>
-          <div onclick="selectDemoItem(this,'leftovers')" data-item="leftovers" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 6px;cursor:pointer;transition:all .15s;">
-            <div style="font-size:24px;">🍱</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;">Leftovers</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:22px;">🍓</span>
+            <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:8%;background:#E05555;border-radius:3px;transition:width 1s ease;" id="hook-bar-3"></div></div></div>
+            <span style="font-size:11px;font-weight:700;color:#E05555;min-width:52px;text-align:right;">1 day left</span>
           </div>
         </div>
-        <div id="demoSelectHint" style="font-size:11px;color:rgba(76,175,130,.7);margin-bottom:10px;min-height:16px;text-align:center;"></div>
-        <button id="demoStartBtn" onclick="gtag('event','cta_click',{location:'demo_start'});startDemo()" 
-          style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;opacity:.5;transition:opacity .2s;" disabled>
-          Show me what GuardNest finds →
-        </button>
-        <!-- Add your own item -->
-        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:2px;">
-          <div style="flex:1;height:1px;background:rgba(255,255,255,.07);"></div>
-          <span style="font-size:11px;color:rgba(255,255,255,.25);">or type your own</span>
-          <div style="flex:1;height:1px;background:rgba(255,255,255,.07);"></div>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:10px;">
-          <input id="demoCustomItem" type="text" placeholder="e.g. tomatoes, salmon..." maxlength="30"
-            style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;font-size:16px;color:#fff;outline:none;"
-            oninput="onDemoCustomInput(this)"
-            onkeydown="if(event.key==='Enter'&&this.value.trim()) selectCustomDemoItem(this.value.trim())">
-          <button onclick="selectCustomDemoItem(document.getElementById('demoCustomItem').value.trim())"
-            style="background:rgba(76,175,130,.2);border:1px solid rgba(76,175,130,.3);color:#4CAF82;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
-            Add
-          </button>
-        </div>
-        <button onclick="gtag('event','cta_click',{location:'demo_skip'});startDemo(true)" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:4px;">
-          Skip — just show me the demo
-        </button>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.3);line-height:1.5;">You won't remember this tomorrow.<br>GuardNest reminds you before it's too late.</div>
       </div>
-
-      <!-- STEP 2: Scanning animation -->
-      <div id="demoStep2" style="display:none;padding:32px 24px;text-align:center;">
-        <div style="font-size:40px;margin-bottom:16px;" id="demoScanEmoji">🧾</div>
-        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;" id="demoScanTitle">Reading your grocery receipt...</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:24px;" id="demoScanSub">Identifying every item</div>
-        <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:24px;">
-          <div id="demoScanBar" style="height:100%;background:#4CAF82;border-radius:2px;width:0%;transition:width .4s;"></div>
-        </div>
-        <div id="demoItemsAppearing" style="text-align:left;"></div>
-      </div>
-
-      <!-- STEP 3: Gamified inventory reveal -->
-      <div id="demoStep3" style="display:none;">
-
-        <!-- Header with live XP bar -->
-        <div style="background:linear-gradient(135deg,#1a2e1a,#1e3a1e);padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:20px;height:20px;background:#4CAF82;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);"></div>
-              <span style="font-size:12px;font-weight:700;color:#4CAF82;letter-spacing:.08em;">GUARDNEST</span>
-            </div>
-            <span id="demoLevelLabel" style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);">Level 1 — First Scan</span>
-          </div>
-          <!-- XP bar -->
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
-              <div id="demoXpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .4s ease;"></div>
-            </div>
-            <span id="demoXpLabel" style="font-size:11px;font-weight:700;color:#4CAF82;min-width:52px;text-align:right;">0 XP</span>
-          </div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;" id="demoReportHeadline">Building your inventory...</div>
-        </div>
-
-        <!-- Live inventory list — items drop in here -->
-        <div id="demoInventoryList" style="padding:12px 16px;display:flex;flex-direction:column;gap:6px;min-height:120px;"></div>
-
-        <!-- Mission card — hidden until items loaded -->
-        <div id="demoMissionCard" style="display:none;margin:0 16px 14px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:12px;padding:14px;">
-          <div style="font-size:10px;font-weight:700;color:#D4A843;letter-spacing:.1em;margin-bottom:6px;">🎯 FIRST MISSION</div>
-          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;" id="demoMissionTitle">Mark your item as used before it expires</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px;">Tap the item below to complete your first action</div>
-          <!-- The highlighted item to act on -->
-          <div id="demoMissionItem" style="background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="demoCompleteFirstMission()">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span id="demoMissionEmoji" style="font-size:22px;">🥬</span>
-              <div>
-                <div id="demoMissionItemName" style="font-size:13px;font-weight:600;color:#fff;">Spinach</div>
-                <div id="demoMissionItemDays" style="font-size:11px;color:#E05555;">Expires in 2 days — use it tonight</div>
-              </div>
-            </div>
-            <button onclick="event.stopPropagation();demoCompleteFirstMission();" style="background:#4CAF82;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#0e1117;cursor:pointer;">
-              ✓ Used it
-            </button>
-          </div>
-          <div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-top:8px;">+50 XP for completing your first mission</div>
-        </div>
-
-        <!-- Level up burst — hidden until mission done -->
-        <div id="demoLevelUpBurst" style="display:none;margin:0 16px 14px;background:rgba(76,175,130,.12);border:1px solid rgba(76,175,130,.4);border-radius:12px;padding:16px;text-align:center;">
-          <div style="font-size:32px;margin-bottom:6px;animation:levelNumPop .4s cubic-bezier(.36,1.5,.64,1) both;">⚡</div>
-          <div style="font-size:16px;font-weight:800;color:#4CAF82;margin-bottom:4px;">Mission Complete!</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;" id="demoLevelUpText">You saved ~$3.49. Do that every week and it's $42/year back in your pocket.</div>
-        </div>
-
-        <!-- Insight -->
-        <div id="demoInsightBox" style="display:none;margin:0 16px 14px;background:rgba(76,175,130,.06);border:1px solid rgba(76,175,130,.15);border-radius:10px;padding:14px;">
-          <div style="font-size:10px;font-weight:700;color:#4CAF82;letter-spacing:.08em;margin-bottom:6px;">👁️ VISIBILITY GAP</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;" id="demoInsightText">You likely buy this every week but don't always use it. Not because you're careless — because you couldn't see it. That's the gap GuardNest closes.</div>
-        </div>
-
-        <!-- CTA — hidden until mission done -->
-        <div id="demoCta" style="display:none;padding:0 16px 20px;">
-          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:14px;text-align:left;">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.08em;margin-bottom:6px;">FROM R/EATCHEAPANDHEALTHY</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7;font-style:italic;">"Anticipating what to buy, staying on top of what's in the fridge, what needs to get eaten — that alone can feel like a full-time job."</div>
-          </div>
-          <div style="font-size:13px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:12px;line-height:1.6;">Your inventory is live.<br><strong style="color:rgba(255,255,255,.8);">Sign up free to keep it — and never lose progress.</strong></div>
-          <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});launchRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;">
-            Scan my real fridge →
-          </button>
-          <div id="demoRemindForm" style="text-align:center;">
-            <input id="demoReminderEmail" type="email" placeholder="Or drop your email — we'll remind you"
-              style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;font-size:16px;color:#fff;margin-bottom:6px;outline:none;text-align:center;">
-            <button onclick="gtag('event','cta_click',{location:'demo_remind_submit'});submitDemoReminder()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;">
-              Remind me later
-            </button>
-          </div>
-          <div id="demoRemindSuccess" style="display:none;text-align:center;padding:10px;">
-            <div style="font-size:13px;color:#4CAF82;">✓ We'll remind you! Check your inbox.</div>
-          </div>
-        </div>
-
-      </div>
-
+      <button onclick="demoGoTo(1)" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;">
+        Show me what's going bad →
+      </button>
+      <div style="font-size:11px;color:rgba(255,255,255,.2);">Free · No download · 30 seconds</div>
     </div>
+
+    <!-- ── SCREEN 1: Pick your item ─────────────────────────────── -->
+    <div id="ds1" style="display:none;max-width:380px;width:100%;text-align:center;">
+      <div style="font-size:28px;margin-bottom:14px;">🛒</div>
+      <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.3;">What's in your fridge right now?</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:22px;">Tap one thing — we'll show you what GuardNest sees</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;" id="demoPickerS1">
+        <div onclick="demoPickItem(this,'Baby Spinach','🥬',2,3.49)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🥬</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Spinach</div>
+        </div>
+        <div onclick="demoPickItem(this,'Chicken Breast','🍗',1,9.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🍗</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Chicken</div>
+        </div>
+        <div onclick="demoPickItem(this,'Strawberries','🍓',2,4.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🍓</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Berries</div>
+        </div>
+        <div onclick="demoPickItem(this,'Greek Yogurt','🥛',3,5.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🥛</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Yogurt</div>
+        </div>
+        <div onclick="demoPickItem(this,'Avocado','🥑',1,1.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🥑</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Avocado</div>
+        </div>
+        <div onclick="demoPickItem(this,'Broccoli','🥦',4,2.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🥦</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Broccoli</div>
+        </div>
+        <div onclick="demoPickItem(this,'Whole Milk','🥛',5,4.29)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🥛</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Milk</div>
+        </div>
+        <div onclick="demoPickItem(this,'Leftovers','🍱',2,0)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🍱</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Leftovers</div>
+        </div>
+        <div onclick="demoPickItem(this,'Bread','🍞',3,3.49)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
+          <div style="font-size:26px;">🍞</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Bread</div>
+        </div>
+      </div>
+      <button onclick="demoGoTo(2,true)" style="background:none;border:none;color:rgba(255,255,255,.25);font-size:12px;cursor:pointer;padding:10px;touch-action:manipulation;">Skip — just show me →</button>
+    </div>
+
+    <!-- ── SCREEN 2: The reveal — one item, full focus ───────────── -->
+    <div id="ds2" style="display:none;max-width:380px;width:100%;text-align:center;">
+      <!-- Scanning animation — auto-hides -->
+      <div id="ds2-scanning" style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:16px;" id="ds2ScanEmoji">🔍</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;" id="ds2ScanTitle">Checking your fridge...</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px;" id="ds2ScanSub">Calculating freshness</div>
+        <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:0;max-width:280px;margin:0 auto;">
+          <div id="ds2Bar" style="height:100%;width:0%;background:#4CAF82;border-radius:2px;transition:width .3s;"></div>
+        </div>
+      </div>
+      <!-- Result — shown after scan -->
+      <div id="ds2-result" style="display:none;">
+        <!-- Big urgent item card -->
+        <div id="ds2Card" style="background:rgba(224,85,85,.08);border:1.5px solid rgba(224,85,85,.3);border-radius:20px;padding:24px;margin-bottom:20px;text-align:center;">
+          <div style="font-size:11px;font-weight:700;color:#E05555;letter-spacing:.12em;margin-bottom:12px;">⚠️ GOING BAD SOON</div>
+          <div style="font-size:56px;margin-bottom:10px;" id="ds2Emoji">🥬</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.06em;color:#fff;margin-bottom:6px;" id="ds2Name">Baby Spinach</div>
+          <!-- Freshness bar -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;">
+              <div id="ds2FreshBar" style="height:100%;width:15%;background:#E05555;border-radius:4px;transition:width .8s ease;"></div>
+            </div>
+          </div>
+          <div style="font-size:15px;font-weight:700;" id="ds2Days" style="color:#E05555;">Expires in 2 days</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;" id="ds2Price">~$3.49 at risk</div>
+        </div>
+        <!-- The ONE action — no scrolling needed -->
+        <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">
+          <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.7;" id="ds2Tip">You probably bought this last week. Use it tonight — add it to a salad or smoothie before it wilts.</div>
+        </div>
+        <button id="ds2ActionBtn" onclick="demoMarkUsed()" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;">
+          ✓ I'll use it tonight
+        </button>
+        <div style="font-size:11px;color:rgba(255,255,255,.2);">Tap to see what happens when you stay on top of it</div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 3: Payoff + CTA ───────────────────────────────── -->
+    <div id="ds3" style="display:none;max-width:380px;width:100%;text-align:center;">
+      <!-- XP burst -->
+      <div id="ds3XpBurst" style="background:rgba(76,175,130,.12);border:1px solid rgba(76,175,130,.4);border-radius:16px;padding:20px;margin-bottom:20px;">
+        <div style="font-size:40px;margin-bottom:8px;animation:levelNumPop .4s cubic-bezier(.36,1.5,.64,1) both;">⚡</div>
+        <div style="font-size:18px;font-weight:800;color:#4CAF82;margin-bottom:6px;">Nothing wasted.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;" id="ds3SaveText">You just saved ~$3.49. Do that every week and it's $42/year back in your pocket.</div>
+      </div>
+      <!-- XP bar progress -->
+      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">
+          <span>Level 1 — First Action</span>
+          <span id="ds3XpCount">50 / 100 XP</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
+          <div id="ds3XpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .8s ease;"></div>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Scan your real fridge to keep building your inventory</div>
+      </div>
+      <!-- Insight -->
+      <div style="background:rgba(255,255,255,.03);border-radius:12px;padding:14px;margin-bottom:24px;text-align:left;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;margin-bottom:6px;">WHY THIS HAPPENS</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.7;" id="ds3Insight">You buy this most weeks. But without a reminder, it sits at the back of the fridge until it's too late. That's not carelessness — that's just not being able to see it.</div>
+      </div>
+      <!-- Primary CTA -->
+      <button onclick="gtag('event','cta_click',{location:'demo_scan_now'});launchRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;">
+        Scan my real fridge →
+      </button>
+      <!-- Email fallback -->
+      <div id="ds3RemindWrap" style="margin-top:4px;">
+        <input id="ds3Email" type="email" placeholder="Or enter email — get your Monday report"
+          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;font-size:16px;color:#fff;margin-bottom:6px;outline:none;text-align:center;">
+        <button onclick="submitDemoReminderNew()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);border-radius:10px;padding:10px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;">
+          Send me the report →
+        </button>
+      </div>
+      <div id="ds3RemindSuccess" style="display:none;padding:10px;font-size:13px;color:#4CAF82;">✓ Report coming Monday. Check your inbox.</div>
+    </div>
+
   </div>
 </div>
 
+<style>
+.demo-dot {
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+  transition:all .25s;
+}
+.demo-dot.active {
+  background:#4CAF82;width:18px;border-radius:3px;
+}
+</style>
+
 <script>
-const DEMO_ITEMS = [
-  { name: 'Baby Spinach', emoji: '🥬', days: 2, price: 3.49 },
-  { name: 'Chicken Breast', emoji: '🍗', days: 1, price: 9.99 },
-  { name: 'Greek Yogurt', emoji: '🥛', days: 4, price: 5.99 },
-  { name: 'Strawberries', emoji: '🍓', days: 3, price: 4.99 },
-  { name: 'Whole Milk', emoji: '🥛', days: 6, price: 4.29 },
-  { name: 'Broccoli', emoji: '🥦', days: 5, price: 2.99 },
-  { name: 'Eggs (12ct)', emoji: '🥚', days: 18, price: 4.49 },
-  { name: 'Cheddar Cheese', emoji: '🧀', days: 14, price: 5.99 },
-  { name: 'Butter', emoji: '🧈', days: 30, price: 4.99 },
-  { name: 'Orange Juice', emoji: '🍊', days: 7, price: 4.99 },
-  { name: 'Pasta Sauce', emoji: '🍅', days: 5, price: 3.49 },
-];
+// ── NEW LINEAR DEMO FLOW ────────────────────────────────────────
 
-function advanceDemoToStep1() {
-  gtag('event', 'demo_step0_complete');
-  document.getElementById('demoStep0').style.display = 'none';
-  document.getElementById('demoStep1').style.display = 'block';
-  _preselectDemoItem();
+window._demoPick = { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
+
+function demoGoTo(screen, skip) {
+  ['ds0','ds1','ds2','ds3'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = i === screen ? 'block' : 'none';
+    const dot = document.getElementById('dot'+i);
+    if (dot) dot.className = 'demo-dot' + (i === screen ? ' active' : '');
+  });
+  // Scroll modal back to top
+  const wrap = document.getElementById('demoScreenWrap');
+  if (wrap) wrap.scrollTop = 0;
+
+  if (screen === 0) _demoAnimateHookBars();
+  if (screen === 2) _demoRunScan();
+  if (screen === 3) _demoShowPayoff();
+
+  gtag('event', 'demo_screen_' + screen, { skipped: !!skip });
 }
 
-function showSampleReport() {
-  document.getElementById('sampleReportModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  // Block clicks falling through to app behind modal
-  const appEl = document.getElementById('screen-app');
-  if (appEl) appEl.style.pointerEvents = 'none';
-  // Reset — show step 0 first
-  window._demoSelectedItems = new Set();
-  window._demoAllItems = [];
-  document.getElementById('demoStep0').style.display = 'block';
-  document.getElementById('demoStep1').style.display = 'none';
-  document.getElementById('demoStep2').style.display = 'none';
-  document.getElementById('demoStep3').style.display = 'none';
-  const inp = document.getElementById('demoUserItem');
-  if (inp) inp.value = '';
-  const remindForm = document.getElementById('demoRemindForm');
-  const remindSuccess = document.getElementById('demoRemindSuccess');
-  if (remindForm) remindForm.style.display = 'block';
-  if (remindSuccess) remindSuccess.style.display = 'none';
-}
-
-function _preselectDemoItem() {
+function _demoAnimateHookBars() {
   setTimeout(() => {
-    const items = document.querySelectorAll('#demoItemPicker [data-item]');
-    if (items.length > 0) {
-      const randomIdx = Math.floor(Math.random() * items.length);
-      const randomItem = items[randomIdx];
-      const itemName = randomItem.dataset.item;
-      randomItem.classList.add('demo-item-selected');
-      window._demoSelectedItems.add(itemName);
-      const hint = document.getElementById('demoSelectHint');
-      if (hint) hint.textContent = `✓ ${itemName.charAt(0).toUpperCase() + itemName.slice(1)} selected — tap others to add, or continue`;
-      const btn = document.getElementById('demoStartBtn');
-      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
-    }
-  }, 200);
+    const b1 = document.getElementById('hook-bar-1');
+    const b2 = document.getElementById('hook-bar-2');
+    const b3 = document.getElementById('hook-bar-3');
+    if (b1) b1.style.width = '12%';
+    if (b2) b2.style.width = '20%';
+    if (b3) b3.style.width = '8%';
+  }, 400);
 }
 
-function hideSampleReport() {
-  document.getElementById('sampleReportModal').style.display = 'none';
-  document.body.style.overflow = '';
-  localStorage.setItem('guardnest_seen_sample', 'true');
-  // Always fully restore app — covers opacity:0 (demo URL) and pointerEvents:none paths
-  const appEl = document.getElementById('screen-app');
-  const guestBanner = document.getElementById('guestBanner');
-  if (appEl) {
-    appEl.style.visibility = 'visible';
-    appEl.style.pointerEvents = 'auto';
-    appEl.style.opacity = '1';
-  }
-  if (guestBanner) guestBanner.style.display = 'flex';
+function demoPickItem(el, name, emoji, days, price) {
+  // Highlight selection
+  document.querySelectorAll('#demoPickerS1 > div').forEach(d => {
+    d.style.background = 'rgba(255,255,255,.05)';
+    d.style.borderColor = 'rgba(255,255,255,.1)';
+  });
+  el.style.background = 'rgba(76,175,130,.15)';
+  el.style.borderColor = 'rgba(76,175,130,.5)';
+  window._demoPick = { name, emoji, days, price };
+
+  // Brief visual feedback then auto-advance
+  setTimeout(() => demoGoTo(2), 300);
+  gtag('event', 'demo_item_picked', { item: name });
 }
 
-function showRealReport(items) {
-  // Close the demo modal
-  hideSampleReport();
+function _demoRunScan() {
+  const pick = window._demoPick || { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
+  const scanning = document.getElementById('ds2-scanning');
+  const result   = document.getElementById('ds2-result');
+  const bar      = document.getElementById('ds2Bar');
+  const emojiEl  = document.getElementById('ds2ScanEmoji');
+  const titleEl  = document.getElementById('ds2ScanTitle');
+  const subEl    = document.getElementById('ds2ScanSub');
 
-  // Populate the real results grid with the new animated experience
-  renderManifest(items, 'manifestGrid', 'resultsTitle');
-  document.getElementById('scanResults').classList.remove('hidden');
+  if (scanning) scanning.style.display = 'block';
+  if (result)   result.style.display   = 'none';
+  if (bar)      bar.style.width        = '0%';
+  if (emojiEl)  emojiEl.textContent    = pick.emoji;
 
-  // Show the scanner page so results are visible
-  showPage('scanner');
-
-  // Update scan zone to reflect completed scan
-  const urgent  = items.filter(i => (i.days_until_spoil || 0) > 0 && i.days_until_spoil <= 3);
-  const total   = items.length;
-  document.getElementById('scanIcon').textContent  = '✅';
-  document.getElementById('scanTitle').textContent = `Found ${total} item${total !== 1 ? 's' : ''} in your fridge`;
-  document.getElementById('scanSub').textContent   = urgent.length > 0
-    ? `${urgent.length} item${urgent.length !== 1 ? 's' : ''} need attention this week — tap any item to see what to do`
-    : `Tap any item to see freshness details and suggested uses`;
-
-  // Schedule save banner after interaction
-  scheduleGuestSavePrompt('scanResults', 'manifestGrid');
-
-  gtag('event', 'results_viewed', { scan_type: 'fridge', items_found: total, urgent_count: urgent.length });
-}
-
-function launchRealScanner() {
-  hideSampleReport();
-  // Dismiss onboarding if showing
-  const onboarding = document.getElementById('onboardingScreen');
-  if (onboarding) onboarding.classList.add('hidden');
-  localStorage.setItem('guardnest_onboarded', 'true');
-
-  // Flag: after this scan completes, show the real report (not bare manifest)
-  window._showRealReportAfterScan = true;
-
-  // Reset inputs
-  const scanPhoto  = document.getElementById('scanPhotoInput');
-  const fridgePhoto = document.getElementById('fridgePhotoInput');
-  if (scanPhoto)   scanPhoto.value  = '';
-  if (fridgePhoto) fridgePhoto.value = '';
-
-  // Set scan type to fridge and open camera directly
-  window._scanPageType    = 'fridge';
-  window._currentScanType = 'fridge';
-  setScanType('fridge');
-  showPage('scanner');
-
-  // Show coaching tips then open camera
-  setTimeout(() => showCoachModal('fridge'), 300);
-
-  gtag('event', 'cta_click', { location: 'demo_to_real_scan' });
-}
-
-// Multi-select demo items
-window._demoSelectedItems = new Set();
-
-function selectDemoItem(el, item) {
-  if (window._demoSelectedItems.has(item)) {
-    window._demoSelectedItems.delete(item);
-    el.classList.remove('demo-item-selected');
-  } else {
-    window._demoSelectedItems.add(item);
-    el.classList.add('demo-item-selected');
-  }
-  // Update hint text
-  const count = window._demoSelectedItems.size;
-  const hint = document.getElementById('demoSelectHint');
-  if (hint) {
-    if (count === 0) hint.textContent = '';
-    else if (count === 1) hint.textContent = `✓ ${item.charAt(0).toUpperCase() + item.slice(1)} selected — tap others to add`;
-    else hint.textContent = `✓ ${count} items selected`;
-  }
-  updateDemoStartBtn();
-}
-
-function updateDemoStartBtn() {
-  const count = window._demoSelectedItems.size;
-  const custom = document.getElementById('demoCustomItem')?.value?.trim();
-  const hasSelection = count > 0 || !!custom;
-  const btn = document.getElementById('demoStartBtn');
-  if (btn) {
-    btn.disabled = !hasSelection;
-    btn.style.opacity = hasSelection ? '1' : '.5';
-    if (count > 1) {
-      btn.textContent = `Show me what happens with these ${count} items →`;
-    } else {
-      btn.textContent = 'Show me what GuardNest finds →';
-    }
-  }
-}
-
-function onDemoCustomInput(input) {
-  updateDemoStartBtn();
-}
-
-function selectCustomDemoItem(item) {
-  if (!item) return;
-  // Add to selected set
-  window._demoSelectedItems.add(item);
-  const input = document.getElementById('demoCustomItem');
-  if (input) {
-    input.style.borderColor = 'rgba(76,175,130,.6)';
-    input.style.background = 'rgba(76,175,130,.1)';
-  }
-  updateDemoStartBtn();
-}
-
-function startDemo(skip) {
-  const selectedSet = window._demoSelectedItems || new Set();
-  const customItem = document.getElementById('demoCustomItem')?.value?.trim() || '';
-  if (customItem) selectedSet.add(customItem);
-  const allItems = Array.from(selectedSet);
-  const userItem = skip ? '' : (allItems[0] || '');
-  window._demoUserItem = userItem;
-  window._demoAllItems = allItems;
-
-  // Step 1 → Step 2
-  document.getElementById('demoStep1').style.display = 'none';
-  document.getElementById('demoStep2').style.display = 'block';
-
-  gtag('event', 'demo_scan_started', { has_personal_item: !!userItem, item_count: allItems.length });
-
-  // Animate scanning
-  const bar = document.getElementById('demoScanBar');
-  const title = document.getElementById('demoScanTitle');
-  const sub = document.getElementById('demoScanSub');
-  const appearing = document.getElementById('demoItemsAppearing');
-  appearing.innerHTML = '';
-
-  const messages = [
-    [0, 'Reading your grocery receipt...', 'Identifying every item'],
-    [20, 'Found perishables...', 'Calculating shelf life'],
-    [45, 'Checking expiry dates...', 'Cross-referencing 547 products'],
-    [70, 'Building your report...', 'Almost done'],
-    [90, 'Done!', '11 items identified'],
+  const steps = [
+    [0,   'Found ' + pick.name + '...', 'Checking freshness'],
+    [35,  'Calculating expiry...', 'Cross-referencing shelf life data'],
+    [70,  'Almost done...', 'Building your alert'],
+    [95,  'Done!', ''],
   ];
 
   let progress = 0;
-  let msgIdx = 0;
-  let itemIdx = 0;
-
   const interval = setInterval(() => {
-    progress = Math.min(progress + 4, 100);
-    bar.style.width = progress + '%';
+    progress = Math.min(progress + 5, 100);
+    if (bar) bar.style.width = progress + '%';
 
-    // Update messages
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (progress >= messages[i][0]) {
-        if (msgIdx !== i) {
-          msgIdx = i;
-          title.textContent = messages[i][1];
-          sub.textContent = messages[i][2];
-        }
+    for (let i = steps.length - 1; i >= 0; i--) {
+      if (progress >= steps[i][0]) {
+        if (titleEl) titleEl.textContent = steps[i][1];
+        if (subEl)   subEl.textContent   = steps[i][2];
         break;
       }
     }
 
-    // Add items appearing one by one
-    if (progress > 20 && itemIdx < DEMO_ITEMS.length && progress > 20 + itemIdx * 7) {
-      const item = DEMO_ITEMS[itemIdx];
-      const div = document.createElement('div');
-      div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;margin-bottom:4px;animation:fadeIn .3s ease;';
-      div.innerHTML = `<span style="font-size:13px;color:rgba(255,255,255,.8);">${item.emoji} ${item.name}</span><span style="font-size:11px;color:#4CAF82;">$${item.price.toFixed(2)}</span>`;
-      appearing.appendChild(div);
-      itemIdx++;
-    }
-
     if (progress >= 100) {
       clearInterval(interval);
-      setTimeout(() => showDemoResults(userItem), 500);
+      setTimeout(() => _demoShowResult(pick), 300);
     }
-  }, 80);
+  }, 50);
 }
 
-function showDemoResults(userItem) {
-  document.getElementById('demoStep2').style.display = 'none';
-  document.getElementById('demoStep3').style.display = 'block';
+function _demoShowResult(pick) {
+  const scanning = document.getElementById('ds2-scanning');
+  const result   = document.getElementById('ds2-result');
+  if (scanning) scanning.style.display = 'none';
+  if (result)   result.style.display   = 'block';
 
-  const itemName  = userItem || 'spinach';
-  const itemCap   = itemName.charAt(0).toUpperCase() + itemName.slice(1);
-  const allSelected = window._demoAllItems || [itemName];
+  // Populate card
+  const urgColor = pick.days <= 2 ? '#E05555' : pick.days <= 4 ? '#D4A843' : '#4CAF82';
+  const barWidth = Math.max(8, Math.min(100, Math.round((pick.days / 14) * 100)));
+  const daysText = pick.days === 1 ? 'Expires tomorrow' : `Expires in ${pick.days} days`;
+  const tips = {
+    'Baby Spinach':   'Probably bought last week. Add to a salad or smoothie tonight — it won\'t last.',
+    'Chicken Breast': 'Raw chicken is on borrowed time. Cook or freeze it today — no exceptions.',
+    'Strawberries':   'Berries go fast once they turn. Eat them today or blend into a smoothie.',
+    'Greek Yogurt':   'Check the seal. If it\'s open, use it this week before it turns.',
+    'Avocado':        'Once it\'s ripe it\'s a 24-hour window. If it\'s soft — use it now.',
+    'Broccoli':       'Gets bitter and wilts fast. Roast it tonight and it\'ll be great.',
+    'Whole Milk':     'Open milk goes fast. Check the smell — if it\'s fine, use it this week.',
+    'Leftovers':      'Most leftovers are only safe for 3 days. If you\'re not eating it today, toss it.',
+    'Bread':          'Bread molds quickly. Freeze what you won\'t eat in the next 2 days.',
+  };
 
-  // Reset state
-  window._demoXp = 0;
-  window._demoMissionDone = false;
-  document.getElementById('demoXpFill').style.width = '0%';
-  document.getElementById('demoXpLabel').textContent = '0 XP';
-  document.getElementById('demoLevelLabel').textContent = 'Level 1 — First Scan';
-  document.getElementById('demoReportHeadline').textContent = 'Building your inventory...';
-  document.getElementById('demoInventoryList').innerHTML = '';
-  document.getElementById('demoMissionCard').style.display = 'none';
-  document.getElementById('demoLevelUpBurst').style.display = 'none';
-  document.getElementById('demoInsightBox').style.display = 'none';
-  document.getElementById('demoCta').style.display = 'none';
-  const remindForm = document.getElementById('demoRemindForm');
-  const remindSuccess = document.getElementById('demoRemindSuccess');
-  if (remindForm) remindForm.style.display = 'block';
-  if (remindSuccess) remindSuccess.style.display = 'none';
+  document.getElementById('ds2Emoji').textContent  = pick.emoji;
+  document.getElementById('ds2Name').textContent   = pick.name;
+  document.getElementById('ds2Days').textContent   = daysText;
+  document.getElementById('ds2Days').style.color   = urgColor;
+  document.getElementById('ds2Price').textContent  = pick.price > 0 ? `~$${pick.price.toFixed(2)} at risk` : 'Don\'t let it go to waste';
+  document.getElementById('ds2Tip').textContent    = tips[pick.name] || `Use your ${pick.name} before it expires — plan a meal around it tonight.`;
 
-  // Build item list — put the user's item first
-  const userItemObj = DEMO_ITEMS.find(i => i.name.toLowerCase().includes(itemName.toLowerCase()))
-    || { name: itemCap, emoji: '🥗', days: 2, price: 3.49 };
-  const otherItems  = DEMO_ITEMS.filter(i => i !== userItemObj).slice(0, 7);
-  const orderedItems = [userItemObj, ...otherItems];
-
-  // Drop items in one by one with XP ticking up
-  const list = document.getElementById('demoInventoryList');
-  let itemsRevealed = 0;
-
-  function revealNextItem() {
-    if (itemsRevealed >= orderedItems.length) {
-      // All items loaded — show headline and mission
-      setTimeout(() => {
-        document.getElementById('demoReportHeadline').textContent =
-          `${orderedItems.length} items in your inventory`;
-        _demoBumpXp(0); // refresh bar label
-        // Mission card
-        const missionTitle = document.getElementById('demoMissionTitle');
-        const missionEmoji = document.getElementById('demoMissionEmoji');
-        const missionName  = document.getElementById('demoMissionItemName');
-        const missionDays  = document.getElementById('demoMissionItemDays');
-        const insightText  = document.getElementById('demoInsightText');
-        if (missionTitle) missionTitle.textContent = `Mark your ${itemCap} as used before it expires`;
-        if (missionEmoji) missionEmoji.textContent = userItemObj.emoji;
-        if (missionName)  missionName.textContent  = itemCap;
-        if (missionDays)  missionDays.textContent  = `Expires in ${userItemObj.days} day${userItemObj.days !== 1 ? 's' : ''} — use it tonight`;
-        if (insightText) {
-          if (allSelected.length > 1) {
-            const list2 = allSelected.slice(0,3).join(', ');
-            insightText.textContent = `You buy ${list2} regularly but don't always use them before they go bad. Not carelessness — you just couldn't see it. That's the gap GuardNest closes.`;
-          } else {
-            insightText.textContent = `You likely buy ${itemName} most weeks but don't always use it. Not carelessness — you just couldn't see it. That's the gap GuardNest closes.`;
-          }
-        }
-        document.getElementById('demoMissionCard').style.display = 'block';
-        document.getElementById('demoMissionCard').style.animation = 'fadeIn .4s ease both';
-      }, 300);
-      return;
+  const freshBar = document.getElementById('ds2FreshBar');
+  const card     = document.getElementById('ds2Card');
+  if (freshBar) {
+    freshBar.style.background = urgColor;
+    setTimeout(() => { freshBar.style.width = barWidth + '%'; }, 100);
+  }
+  if (card) {
+    card.style.background   = pick.days <= 2 ? 'rgba(224,85,85,.08)' : 'rgba(212,168,67,.08)';
+    card.style.borderColor  = pick.days <= 2 ? 'rgba(224,85,85,.3)'  : 'rgba(212,168,67,.3)';
+    const label = card.querySelector('div:first-child');
+    if (label) {
+      label.style.color    = urgColor;
+      label.textContent    = pick.days <= 2 ? '⚠️ GOING BAD SOON' : '📅 USE THIS WEEK';
     }
-    const item  = orderedItems[itemsRevealed];
-    const isUser = itemsRevealed === 0;
-    const urgColor = item.days <= 2 ? '#E05555' : item.days <= 5 ? '#D4A843' : '#4CAF82';
-    const urgLabel = item.days <= 2 ? `${item.days}d — urgent` : item.days <= 5 ? `${item.days}d left` : `${item.days}d fresh`;
-    const barW  = Math.min(100, Math.round((item.days / 14) * 100));
+  }
 
-    const row = document.createElement('div');
-    row.style.cssText = `display:flex;align-items:center;gap:10px;background:${isUser ? 'rgba(255,80,80,.06)' : 'rgba(255,255,255,.03)'};border:1px solid ${isUser ? 'rgba(255,80,80,.2)' : 'rgba(255,255,255,.06)'};border-radius:10px;padding:10px 12px;opacity:0;transform:translateY(6px);transition:all .25s ease;`;
-    row.innerHTML = `
-      <span style="font-size:20px;flex-shrink:0;">${item.emoji}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px;">${item.name}</div>
-        <div style="height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;">
-          <div style="height:100%;width:0%;background:${urgColor};border-radius:2px;transition:width .5s ease;" data-w="${barW}"></div>
-        </div>
-      </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div style="font-size:10px;font-weight:700;color:${urgColor};">${urgLabel}</div>
-        <div id="demoXpPop-${itemsRevealed}" style="font-size:10px;color:#4CAF82;opacity:0;transition:opacity .3s;">+10 XP</div>
-      </div>`;
-    list.appendChild(row);
-
-    // Animate in
+  // Animate in
+  if (result) {
+    result.style.opacity   = '0';
+    result.style.transform = 'translateY(8px)';
+    result.style.transition = 'all .3s ease';
     setTimeout(() => {
-      row.style.opacity = '1';
-      row.style.transform = 'translateY(0)';
-      // Fill freshness bar
-      setTimeout(() => {
-        const bar = row.querySelector('[data-w]');
-        if (bar) bar.style.width = bar.dataset.w + '%';
-      }, 150);
-      // XP pop
-      setTimeout(() => {
-        const pop = document.getElementById(`demoXpPop-${itemsRevealed}`);
-        if (pop) { pop.style.opacity = '1'; setTimeout(() => pop.style.opacity = '0', 600); }
-        _demoBumpXp(10);
-      }, 250);
-    }, 60);
-
-    itemsRevealed++;
-    setTimeout(revealNextItem, 200);
+      result.style.opacity   = '1';
+      result.style.transform = 'translateY(0)';
+    }, 50);
   }
-
-  revealNextItem();
-  gtag('event', 'demo_results_shown', { user_item: itemName, item_count: orderedItems.length });
 }
 
-function _demoBumpXp(amount) {
-  window._demoXp = (window._demoXp || 0) + amount;
-  const xp  = window._demoXp;
-  const pct = Math.min(100, Math.round((xp / 100) * 100));
-  const fill  = document.getElementById('demoXpFill');
-  const label = document.getElementById('demoXpLabel');
-  if (fill)  fill.style.width  = pct + '%';
-  if (label) label.textContent = xp + ' XP';
-}
-
-function demoCompleteFirstMission() {
-  if (window._demoMissionDone) return;
-  window._demoMissionDone = true;
-
-  // Replace mission item with done state
-  const missionItem = document.getElementById('demoMissionItem');
-  if (missionItem) {
-    missionItem.style.background  = 'rgba(76,175,130,.12)';
-    missionItem.style.borderColor = 'rgba(76,175,130,.4)';
-    missionItem.style.cursor      = 'default';
-    missionItem.innerHTML = `<div style="width:100%;text-align:center;padding:4px 0;">
-      <div style="font-size:20px;margin-bottom:4px;">✅</div>
-      <div style="font-size:13px;font-weight:700;color:#4CAF82;">Marked as used</div>
-    </div>`;
+function demoMarkUsed() {
+  const pick = window._demoPick || { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
+  // Visual feedback on button
+  const btn = document.getElementById('ds2ActionBtn');
+  if (btn) {
+    btn.textContent = '✅ Marked!';
+    btn.style.background = 'rgba(76,175,130,.3)';
+    btn.disabled = true;
   }
-
-  // Big XP bump — bar jumps toward 100%
-  setTimeout(() => {
-    _demoBumpXp(50);
-    document.getElementById('demoLevelLabel').textContent = 'Level 1 — Almost there';
-  }, 200);
-
-  // Level up burst
-  setTimeout(() => {
-    _demoBumpXp(30);
-    document.getElementById('demoLevelLabel').textContent = '🏆 Level 2 — Unlocked';
-    document.getElementById('demoXpFill').style.background = 'linear-gradient(90deg,#4CAF82,#A8DDBE)';
-    const burst     = document.getElementById('demoLevelUpBurst');
-    const levelText = document.getElementById('demoLevelUpText');
-    const itemName  = document.getElementById('demoMissionItemName')?.textContent || 'that item';
-    if (levelText) levelText.textContent = `You saved ~$3.49 on ${itemName}. Do that every week and it's $42/year back in your pocket.`;
-    if (burst) { burst.style.display = 'block'; burst.style.animation = 'fadeIn .3s ease both'; }
-    document.getElementById('demoInsightBox').style.display  = 'block';
-  }, 700);
-
-  // CTA appears after the dust settles
-  setTimeout(() => {
-    document.getElementById('demoCta').style.display = 'block';
-    document.getElementById('demoCta').style.animation = 'fadeIn .4s ease both';
-    // Persist demo state so post-signup can pick it up
-    const demoItem = document.getElementById('demoMissionItemName')?.textContent || 'spinach';
-    localStorage.setItem('guardnest_demo_complete', JSON.stringify({
-      xp: window._demoXp || 80,
-      item: demoItem,
-      ts: Date.now()
-    }));
-    gtag('event', 'demo_mission_complete');
-  }, 1400);
+  setTimeout(() => demoGoTo(3), 500);
+  gtag('event', 'demo_mission_complete', { item: pick.name });
 }
 
-async function submitDemoReminder() {
-  const email = document.getElementById('demoReminderEmail')?.value?.trim();
+function _demoShowPayoff() {
+  const pick = window._demoPick || { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
+  const saveVal = pick.price > 0 ? `~$${pick.price.toFixed(2)}` : 'money';
+  const yearVal = pick.price > 0 ? `$${(pick.price * 52).toFixed(0)}/year` : 'real money every year';
+
+  const saveText = document.getElementById('ds3SaveText');
+  const insight  = document.getElementById('ds3Insight');
+  const xpFill   = document.getElementById('ds3XpFill');
+  const xpCount  = document.getElementById('ds3XpCount');
+
+  if (saveText) saveText.textContent = `You just saved ${saveVal} on ${pick.name}. Do that every week and it\'s ${yearVal} back in your pocket.`;
+  if (insight)  insight.textContent  = `You probably buy ${pick.name} most weeks. Without a reminder it sits at the back of the fridge until it\'s too late. That\'s not carelessness — that\'s just not being able to see it.`;
+
+  // Animate XP bar
+  if (xpFill)  setTimeout(() => { xpFill.style.width = '50%'; }, 300);
+  if (xpCount) xpCount.textContent = '50 / 100 XP';
+
+  // Reset email form
+  const emailInput = document.getElementById('ds3Email');
+  const remindWrap = document.getElementById('ds3RemindWrap');
+  const remindSucc = document.getElementById('ds3RemindSuccess');
+  if (emailInput) emailInput.value = '';
+  if (remindWrap) remindWrap.style.display = 'block';
+  if (remindSucc) remindSucc.style.display = 'none';
+}
+
+async function submitDemoReminderNew() {
+  const email = document.getElementById('ds3Email')?.value?.trim();
   if (!email || !email.includes('@')) {
     hideSampleReport();
     return;
   }
-  // Collect selected items
-  const selectedItems = Array.from(window._demoSelectedItems || []);
-  const customItem = document.getElementById('demoCustomItem')?.value?.trim();
-  if (customItem) selectedItems.push(customItem);
-  const allItems = (window._demoAllItems?.length ? window._demoAllItems : selectedItems);
-  const itemsStr = allItems.length > 0 ? allItems.join(',') : null;
-
   try {
     await supa.from('email_leads').insert({
       email,
-      source: 'demo_reminder',
-      selected_items: itemsStr,
+      source: 'demo_reminder_v2',
+      selected_items: window._demoPick?.name || null,
       email_sent: false,
       created_at: new Date().toISOString()
     });
-  } catch(e) { console.log('Lead:', e.message); }
+  } catch(e) { console.log('Lead insert:', e.message); }
 
-  const form = document.getElementById('demoRemindForm');
-  const success = document.getElementById('demoRemindSuccess');
-  if (form) form.style.display = 'none';
-  if (success) success.style.display = 'block';
   localStorage.setItem('guardnest_seen_sample', 'true');
   localStorage.setItem('guardnest_lead_email', email);
-  gtag('event', 'demo_email_submitted', { items: itemsStr || 'none' });
+  gtag('event', 'demo_email_submitted', { item: window._demoPick?.name || 'none' });
+  if (typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'demo_email_v2' });
 
-  // Always restore app so user can interact after submitting email
+  const remindWrap = document.getElementById('ds3RemindWrap');
+  const remindSucc = document.getElementById('ds3RemindSuccess');
+  if (remindWrap) remindWrap.style.display = 'none';
+  if (remindSucc) remindSucc.style.display = 'block';
+
   setTimeout(() => hideSampleReport(), 1500);
 }
+
+// Patch showSampleReport to use new flow
+const _origShowSampleReport = showSampleReport;
+showSampleReport = function() {
+  document.getElementById('sampleReportModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  const appEl = document.getElementById('screen-app');
+  if (appEl) appEl.style.pointerEvents = 'none';
+  window._demoPick = { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
+  window._demoMissionDone = false;
+  demoGoTo(0);
+};
+
+// Keep advanceDemoToStep1 as no-op for backwards compat
+function advanceDemoToStep1() { demoGoTo(1); }
+
+// Keep startDemo as no-op for backwards compat  
+function startDemo(skip) { demoGoTo(2, skip); }
+
+// Keep showDemoResults for backwards compat
+function showDemoResults(userItem) { demoGoTo(2); }
+
+// Keep demoCompleteFirstMission for backwards compat
+function demoCompleteFirstMission() { demoMarkUsed(); }
+
+// Keep submitDemoReminder for backwards compat
+function submitDemoReminder() { submitDemoReminderNew(); }
 </script>
 
 
