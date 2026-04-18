@@ -6095,7 +6095,7 @@ function dismissOnboarding() {
 
 function showObStep1() {
   document.getElementById('ob-step1').style.display = 'block';
-  document.getElementById('ob-step2').style.display = 'none';
+  const _s2 = document.getElementById('ob-step2'); if (_s2) _s2.style.display = 'none';
   document.getElementById('ob-step3').style.display = 'none';
   const s4 = document.getElementById('ob-step4');
   if (s4) s4.style.display = 'none';
@@ -6135,7 +6135,7 @@ async function saveObResults() {
 
 function showStarterList() {
   document.getElementById('ob-step1').style.display = 'none';
-  document.getElementById('ob-step2').style.display = 'block';
+  const _s2b = document.getElementById('ob-step2'); if (_s2b) _s2b.style.display = 'block';
 
   const items = [
     { name: 'Eggs', emoji: '🥚', days: 21 },
