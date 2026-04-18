@@ -2362,7 +2362,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
               <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">This disappears when you close.</div>
               <div style="font-size:11px;color:rgba(255,255,255,.4);">Save free to keep tracking.</div>
             </div>
-            <button onclick="gtag('event','cta_click',{location:'save_banner'});guestSaveAnonymous();" style="background:#4CAF82;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;touch-action:manipulation;">
+            <button onclick="guestSaveAnonymous();" style="background:#4CAF82;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;touch-action:manipulation;">
               Save free →
             </button>
           </div>
@@ -3075,13 +3075,7 @@ const UNLOCK_HINTS = [
 
       const isNewUser = isNewByTime || isNewByFlag;
 
-      gtag('event', isNewUser ? 'new_user_session' : 'signin_completed', {
-        method: 'google',
-        user_id: session.user.id,
-        account_age_ms: accountAgeMs,
-        is_new_by_time: isNewByTime,
-        is_new_by_flag: isNewByFlag,
-      });
+      
 
       if (isNewUser) {
         localStorage.removeItem('guardnest_onboarded');
@@ -3406,7 +3400,7 @@ async function bootApp() {
         window._savingFromGuestRestore = true;
         await saveItems('btnSave', 'scanResults');
         window._savingFromGuestRestore = false;
-        gtag('event', 'guest_scan_restored', { item_count: pendingItems.length });
+        
       }
     } catch(e) { console.error('Guest item restore error:', e); }
   }
@@ -4342,7 +4336,7 @@ async function handleImageScan(input) {
   hideScanOverlay();
 
   if (!result || result.length === 0) {
-    gtag('event', 'scan_failed', { scan_type: 'receipt', reason: 'no_items_found' });
+    
     document.getElementById('scanIcon').textContent  = '📸';
     document.getElementById('scanTitle').textContent = 'Nothing found on this receipt';
     document.getElementById('scanSub').innerHTML = '<div style="margin-bottom:12px;">Make sure the receipt is flat, well-lit, and fully in frame — then try again.</div><button onclick="triggerScan()" style="background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">📷 Try again</button>';
@@ -4358,7 +4352,6 @@ async function handleImageScan(input) {
   document.getElementById('scanResults').classList.remove('hidden');
   if (!localStorage.getItem('guardnest_first_scan_completed')) {
     localStorage.setItem('guardnest_first_scan_completed', 'true');
-    gtag('event', 'first_scan_completed', { item_count: result.length, scan_type: 'receipt', is_new_user: !localStorage.getItem('guardnest_celebrated') });
   }
   gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
   gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
@@ -4829,7 +4822,7 @@ function renderManifest(items, gridId, titleId) {
         const banner = document.getElementById('guestSaveBanner');
         if (banner) {
           banner.style.display = 'flex';
-          gtag('event', 'save_banner_shown');
+          
         }
       }
     });
@@ -5083,7 +5076,7 @@ async function saveItems(btnId, resultsId) {
     // Track first save
     if (!localStorage.getItem('guardnest_first_save_done')) {
       localStorage.setItem('guardnest_first_save_done', 'true');
-      gtag('event', 'first_save_completed', { item_count: rows.length, from_guest_restore: !!window._savingFromGuestRestore });
+      
     }
     pendingItems = [];
     document.getElementById(resultsId)?.classList.add('hidden');
@@ -5937,7 +5930,7 @@ function bootNewUser() {
   if (demoState) {
     // They came from the demo — skip dashboard, land on scanner with continuity
     showPage('scanner');
-    gtag('event', 'new_user_from_demo', { demo_xp: demoState.xp, demo_item: demoState.item });
+    
 
     // Show continuity welcome overlay
     const itemName = demoState.item || 'your item';
@@ -5947,7 +5940,7 @@ function bootNewUser() {
     // No demo context — land on scanner with simple welcome
     showPage('scanner');
     setTimeout(() => showToast('Welcome to GuardNest! Scan your fridge, pantry, or a receipt to start. 🌿', 'success'), 400);
-    gtag('event', 'new_user_no_demo');
+    
   }
 }
 
@@ -5981,7 +5974,7 @@ function _showDemoContinuityBanner(itemName, xp) {
       <!-- Scan options -->
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.08em;margin-bottom:2px;">🎯 BUILD YOUR INVENTORY</div>
-        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('fridge');showPage('scanner');gtag('event','continuity_chose_fridge');"
+        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('fridge');showPage('scanner');"
           style="display:flex;align-items:center;gap:12px;background:rgba(76,175,130,.1);border:1px solid rgba(76,175,130,.3);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
           <span style="font-size:24px;">🧊</span>
           <div>
@@ -5990,7 +5983,7 @@ function _showDemoContinuityBanner(itemName, xp) {
           </div>
           <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
         </button>
-        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('pantry');showPage('scanner');gtag('event','continuity_chose_pantry');"
+        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('pantry');showPage('scanner');"
           style="display:flex;align-items:center;gap:12px;background:rgba(136,102,255,.08);border:1px solid rgba(136,102,255,.25);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
           <span style="font-size:24px;">🗄️</span>
           <div>
@@ -5999,7 +5992,7 @@ function _showDemoContinuityBanner(itemName, xp) {
           </div>
           <span style="margin-left:auto;font-size:11px;font-weight:700;color:#4CAF82;">+100 XP</span>
         </button>
-        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('receipt');showPage('scanner');gtag('event','continuity_chose_receipt');"
+        <button onclick="document.getElementById('demoContinuityBanner').remove();setScanType('receipt');showPage('scanner');"
           style="display:flex;align-items:center;gap:12px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%;">
           <span style="font-size:24px;">🧾</span>
           <div>
@@ -6011,7 +6004,7 @@ function _showDemoContinuityBanner(itemName, xp) {
       </div>
     </div>`;
   document.body.appendChild(banner);
-  gtag('event', 'demo_continuity_banner_shown');
+  
 }
 
 function checkOnboarding() {
@@ -6086,7 +6079,7 @@ function triggerScan() {
   // Track first scan attempt
   if (!localStorage.getItem('guardnest_first_scan_started')) {
     localStorage.setItem('guardnest_first_scan_started', 'true');
-    gtag('event', 'first_scan_started', { scan_type: type, is_new_user: !localStorage.getItem('guardnest_celebrated') });
+    
   }
   if (type === 'receipt') {
     const input = document.getElementById('scanFileInput');
@@ -6445,7 +6438,7 @@ async function handleFridgePhoto(input, scanType) {
       const items = json.items || [];
 
       if (items.length === 0) {
-        gtag('event', 'scan_failed', { scan_type: type, reason: 'no_items_found' });
+        
         document.getElementById('scanIcon').textContent  = '📸';
         document.getElementById('scanTitle').textContent = "Too much to read at once";
         document.getElementById('scanSub').innerHTML = `
@@ -6472,7 +6465,6 @@ async function handleFridgePhoto(input, scanType) {
       document.getElementById('scanResults').classList.remove('hidden');
       if (!localStorage.getItem('guardnest_first_scan_completed')) {
         localStorage.setItem('guardnest_first_scan_completed', 'true');
-        gtag('event', 'first_scan_completed', { item_count: items.length, scan_type: type, is_new_user: !localStorage.getItem('guardnest_celebrated') });
       }
       gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
       if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
@@ -6498,7 +6490,7 @@ async function handleFridgePhoto(input, scanType) {
 
     } catch (err) {
       hideScanOverlay();
-      gtag('event', 'scan_failed', { scan_type: type, reason: 'api_error' });
+      
       console.error('Fridge scan error (scanner):', err);
       document.getElementById('scanIcon').textContent  = '⚠️';
       document.getElementById('scanTitle').textContent = 'Scan failed';
@@ -6553,7 +6545,7 @@ function showCelebration(items, fromGuestRestore) {
 
   document.getElementById('celebrationModal').classList.remove('hidden');
   localStorage.setItem('guardnest_celebrated', 'true');
-  gtag('event', 'first_save_celebration_shown', { item_count: itemCount, urgent_count: urgent, from_guest_restore: !!fromGuestRestore });
+  
 
   // Animate items dropping in with XP ticking up
   const preview = Array.isArray(itemsArray) ? itemsArray.slice(0, 5) : [];
@@ -6911,7 +6903,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;">That was a demo. Your kitchen probably has 8 of these right now — and you won’t remember them all by Thursday.</div>
       </div>
       <!-- Primary CTA — universal, works for any scan method -->
-      <button onclick="gtag('event','cta_click',{location:'demo_see_mine'});demoGoToRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;">
+      <button onclick="gtag('event','demo_see_mine');demoGoToRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;">
         Show me what I have →
       </button>
       <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:14px;">Receipt · Fridge · Pantry — your choice</div>
@@ -7143,7 +7135,7 @@ async function submitDemoReminderNew() {
 
   localStorage.setItem('guardnest_seen_sample', 'true');
   localStorage.setItem('guardnest_lead_email', email);
-  gtag('event', 'demo_email_submitted', { item: window._demoPick?.name || 'none' });
+  
   if (typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'demo_email_v2' });
 
   const remindWrap = document.getElementById('ds3RemindWrap');
@@ -7197,7 +7189,7 @@ function demoGoToRealScanner() {
     if (content) content.scrollTo(0, 0);
     window.scrollTo(0, 0);
   }, 100);
-  gtag('event', 'demo_to_scanner', { method: 'show_me_what_i_have' });
+  
 }
 
 // Save demo state as guest and close modal
@@ -7219,7 +7211,7 @@ async function demoSaveAndClose() {
 
   hideSampleReport();
   await guestSaveAnonymous();
-  gtag('event', 'demo_guest_save', { item: pick.name });
+  
 }
 </script>
 
@@ -7330,7 +7322,7 @@ function guestMarkUsed(index, event) {
     }
   }
 
-  gtag('event', 'guest_item_marked_used', { item_index: index, item_name: itemName });
+  
 
   // Show save banner with personalized message
   if (!currentUser) {
@@ -7344,7 +7336,7 @@ function guestMarkUsed(index, event) {
     if (banner) {
       banner.style.display = 'flex';
       window._bannerShown = true;
-      gtag('event', 'save_banner_shown', { trigger: 'mark_used', saved_amount: totalSaved });
+      
     }
   }
 }
@@ -7364,7 +7356,7 @@ function scheduleGuestSavePrompt(containerId, gridId) {
     if (banner && !window._bannerShown) {
       banner.style.display = 'flex';
       window._bannerShown = true;
-      gtag('event', 'save_banner_shown', { trigger: 'timeout' });
+      
     }
   }, 10000);
 }
@@ -7476,7 +7468,7 @@ function showGuestSavePrompt() {
   }
 
   modal.style.display = 'block';
-  gtag('event', 'guest_save_prompted', { items_pending: count, urgent_count: urgent.length });
+  
 }
 
 function selectCommitmentItem(btn, itemName) {
@@ -7491,7 +7483,7 @@ function selectCommitmentItem(btn, itemName) {
   btn.style.borderColor  = 'rgba(76,175,130,.4)';
   btn.style.color        = '#fff';
   window._commitmentItem = itemName;
-  gtag('event', 'commitment_item_selected', { item: itemName });
+  
 
   // Update CTA to reference their specific item
   const ctaEl = document.getElementById('saveModalCta');
@@ -7512,7 +7504,7 @@ function hideGuestSaveModal() {
   const modal = document.getElementById('guestSaveModal');
   if (modal) modal.style.display = 'none';
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
-  gtag('event', 'save_modal_dismissed');
+  
 }
 
 async function guestSignupMagicLink() {
@@ -7538,12 +7530,12 @@ async function guestSignupMagicLink() {
 
   if (error) {
     showToast('Error: ' + error.message, 'error');
-    gtag('event', 'signup_failed', { method: 'magic_link', reason: error.message });
+    
   } else {
     // Show success state
     document.getElementById('guestMagicForm').style.display = 'none';
     document.getElementById('guestMagicSuccess').style.display = 'block';
-    gtag('event', 'magic_link_sent', { email_domain: email.split('@')[1] });
+    
     if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'magic_link_signup' });
   }
 }
@@ -7552,7 +7544,6 @@ async function guestSignupWithGoogle() {
   window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   gtag('event', 'signup_started', { method: 'google' });
-  gtag('event', 'signup_started_google');
   hideGuestSaveModal();
   if (pendingItems.length > 0) {
     localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems));
@@ -7585,7 +7576,7 @@ async function guestSignupWithEmail() {
   if (!signInError && signInData?.session) {
     // Existing user — logged in successfully
     showToast('Welcome back! 🌿', 'success');
-    gtag('event', 'signin_completed', { method: 'email' });
+    
     return;
   }
 
@@ -7594,7 +7585,7 @@ async function guestSignupWithEmail() {
 
   if (error) {
     showToast('Error: ' + error.message, 'error');
-    gtag('event', 'signup_failed', { method: 'email', reason: error.message });
+    
     showGuestSavePrompt();
   } else if (data?.user && data?.session) {
     // Verify user actually exists by querying Supabase directly
@@ -7602,7 +7593,7 @@ async function guestSignupWithEmail() {
 
     if (getUserError || !confirmedUser) {
       showToast('Something went wrong — try Google instead', 'error');
-      gtag('event', 'signup_failed', { method: 'email', reason: 'getuser_failed' });
+      
       showGuestSavePrompt();
       return;
     }
@@ -7612,13 +7603,7 @@ async function guestSignupWithEmail() {
     const isNewByFlag  = !localStorage.getItem('guardnest_boot_done_' + confirmedUser.id);
     const isNewUser    = isNewByTime || isNewByFlag;
 
-    gtag('event', isNewUser ? 'new_user_session' : 'signin_completed', {
-      method: 'email',
-      user_id: confirmedUser.id,
-      account_age_ms: accountAgeMs,
-      is_new_by_time: isNewByTime,
-      is_new_by_flag: isNewByFlag,
-    });
+    
 
     if (isNewUser) {
       localStorage.removeItem('guardnest_onboarded');
@@ -7632,20 +7617,20 @@ async function guestSignupWithEmail() {
     }
   } else if (data?.user && !data?.session) {
     // User created but no session — try signing them in immediately
-    gtag('event', 'signup_no_session', { method: 'email', user_id: data.user.id });
+    
     const { data: signInRetry, error: retryError } = await supa.auth.signInWithPassword({ email, password });
     if (!retryError && signInRetry?.session) {
       showToast('Welcome to GuardNest! 🌿', 'success');
-      gtag('event', 'new_user_session', { method: 'email_retry', user_id: data.user.id });
+      
     } else {
       // Last resort — redirect to Google
       showToast('Almost there — try signing in with Google to complete setup', 'info');
-      gtag('event', 'signup_failed', { method: 'email', reason: 'no_session_retry_failed' });
+      
       showGuestSavePrompt();
     }
   } else {
     showToast('Something went wrong — try Google instead', 'error');
-    gtag('event', 'signup_failed', { method: 'email', reason: 'silent_failure' });
+    
     showGuestSavePrompt();
   }
 }
@@ -7719,7 +7704,7 @@ function showCoachModal(type) {
     sub.textContent   = 'Follow these tips for the best results';
   }
   modal.style.display = 'block';
-  gtag('event', 'coach_modal_shown', { scan_type: type });
+  
 }
 
 function dismissCoachModal() {
@@ -7732,7 +7717,7 @@ function openCameraFromCoach() {
   document.getElementById('scanCoachModal').style.display = 'none';
   const input = document.getElementById('scanPhotoInput');
   if (input) { input.value = ''; input.click(); }
-  gtag('event', 'coach_modal_dismissed');
+  
 }
 </script>
 <!-- ── END SCAN COACHING MODAL ──────────────────────────────────── -->
@@ -7833,13 +7818,13 @@ async function guestSaveAnonymous() {
     }));
     try {
       await supa.from('guest_items').insert(rows);
-      gtag('event', 'guest_items_saved', { count: rows.length });
+      gtag('event', 'guest_items_saved', { count: rows.length, status: 'success' });
     } catch(e) {
       console.log('guest_items insert failed, localStorage fallback active:', e.message);
     }
   }
 
-  gtag('event', 'signup_completed', { method: 'anonymous' });
+  
   if (typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'anonymous' });
   hideGuestSaveModal();
 
@@ -7875,13 +7860,13 @@ async function guestSaveAnonymous() {
 function incrementScanCount() {
   const count = parseInt(localStorage.getItem('guardnest_scan_count') || '0') + 1;
   localStorage.setItem('guardnest_scan_count', count);
-  gtag('event', 'guest_scan_count', { count });
+  
   if (count === 3 && !localStorage.getItem('guardnest_engaged')) {
     localStorage.setItem('guardnest_engaged', 'true');
     setTimeout(() => {
       const modal = document.getElementById('deferredEngageModal');
       if (modal) { modal.style.display = 'flex'; }
-      gtag('event', 'deferred_engage_shown', { scan_count: count });
+      
     }, 2000);
   }
 }
@@ -7903,7 +7888,7 @@ async function requestPushPermission() {
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
     document.getElementById('deferredPushSection').style.display = 'none';
-    gtag('event', 'push_permission_denied');
+    
     return;
   }
   try {
@@ -7916,12 +7901,12 @@ async function requestPushPermission() {
     localStorage.setItem('guardnest_guest_id', guestId);
     await supa.from('push_subscriptions').insert({ guest_id: guestId, subscription: subscription.toJSON() });
     localStorage.setItem('guardnest_push_subscribed', 'true');
-    gtag('event', 'push_subscribed');
+    
     document.getElementById('deferredEngageModal').style.display = 'none';
     showToast("You'll be notified before things expire 🌿", 'success');
   } catch(err) {
     document.getElementById('deferredPushSection').style.display = 'none';
-    gtag('event', 'push_subscribe_failed', { reason: err.message });
+    
   }
 }
 
@@ -7934,7 +7919,7 @@ async function requestPostSavePush() {
   }
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
-    gtag('event', 'push_permission_denied', { source: 'post_save' });
+    
     document.getElementById('postSavePushModal').style.display = 'none';
     showToast('Saved! Scan again anytime 🌿', 'success');
     showPage('vault');
@@ -7950,12 +7935,12 @@ async function requestPostSavePush() {
     localStorage.setItem('guardnest_guest_id', guestId);
     localStorage.setItem('guardnest_push_subscribed', 'true');
     await supa.from('push_subscriptions').insert({ guest_id: guestId, subscription: subscription.toJSON() });
-    gtag('event', 'push_subscribed', { source: 'post_save' });
+    
     document.getElementById('postSavePushModal').style.display = 'none';
     showToast("Saved! We'll remind you before things expire 🌿", 'success');
     showPage('vault');
   } catch(err) {
-    gtag('event', 'push_subscribe_failed', { source: 'post_save', reason: err.message });
+    
     document.getElementById('postSavePushModal').style.display = 'none';
     showToast('Saved! Scan again anytime 🌿', 'success');
     showPage('vault');
@@ -7969,7 +7954,7 @@ async function submitDeferredEmail() {
     await supa.from('email_leads').insert({ email, source: 'deferred_3scan_ask', email_sent: false, created_at: new Date().toISOString() });
   } catch(e) { console.log('Deferred email:', e.message); }
   localStorage.setItem('guardnest_guest_email', email);
-  gtag('event', 'deferred_email_captured', { scan_count: localStorage.getItem('guardnest_scan_count') });
+  
   if (typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'deferred_email' });
   document.getElementById('deferredEngageModal').style.display = 'none';
   showToast('Weekly report coming your way 🌿', 'success');
