@@ -7200,6 +7200,18 @@ async function submitDemoReminderNew() {
   setTimeout(() => hideSampleReport(), 1500);
 }
 
+// Hide the demo modal
+function hideSampleReport() {
+  const modal = document.getElementById('sampleReportModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  const appEl = document.getElementById('screen-app');
+  if (appEl) {
+    appEl.style.pointerEvents = '';
+    appEl.style.opacity = '';
+  }
+}
+
 // Define showSampleReport for new flow
 function showSampleReport() {
   document.getElementById('sampleReportModal').style.display = 'block';
