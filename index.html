@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,6 +34,19 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-87DCQ5CB9M');
+</script>
+<script>
+// ── VERSION CHECK — forces cache refresh on deploy ──
+(function() {
+  const APP_VERSION = '1.0.5';
+  const stored = localStorage.getItem('gn_version');
+  if (stored && stored !== APP_VERSION) {
+    localStorage.setItem('gn_version', APP_VERSION);
+    window.location.reload(true);
+    return;
+  }
+  localStorage.setItem('gn_version', APP_VERSION);
+})();
 </script>
 <!-- Preconnect to speed up external resources -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
