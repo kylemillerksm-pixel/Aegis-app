@@ -1994,6 +1994,18 @@ window.addEventListener('unhandledrejection', function(e) {
     stack: stack
   });
 });
+
+// ── DIAGNOSTIC LOGGER — fires named errors to GA4 with full context ──
+function logError(source, message, extra) {
+  if (typeof gtag === 'undefined') return;
+  const fullMsg = (source + ': ' + message).substring(0, 150);
+  gtag('event', 'js_error', {
+    error_message: fullMsg,
+    line_number: extra && extra.status ? extra.status : 0,
+    column: 0,
+    stack: extra ? JSON.stringify(extra).substring(0, 200) : 'none'
+  });
+}
 </script>
 </head>
 <body>
@@ -4361,7 +4373,7 @@ async function handleImageScan(input) {
   hideScanOverlay();
 
   if (!result || result.length === 0) {
-    
+    logError('receipt_scan_empty', 'No items returned from receipt', { file: file.name, size: file.size });
     document.getElementById('scanIcon').textContent  = '📸';
     document.getElementById('scanTitle').textContent = 'Nothing found on this receipt';
     document.getElementById('scanSub').innerHTML = '<div style="margin-bottom:12px;">Make sure the receipt is flat, well-lit, and fully in frame — then try again.</div><button onclick="triggerScan()" style="background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">📷 Try again</button>';
@@ -4595,14 +4607,20 @@ async function callGemini(b64data, mimeType, sourceType) {
     });
 
     if (!res.ok) {
-      const err = await res.json();
-      showToast('AI error: ' + (err.error || res.statusText), 'error');
+      const err = await res.json().catch(() => ({}));
+      const errMsg = err.error || res.statusText || 'unknown';
+      logError('gemini_failed', errMsg, { status: res.status, sourceType, mimeType });
+      showToast('AI error: ' + errMsg, 'error');
       return [];
     }
 
     const json = await res.json();
+    if (!json.items || json.items.length === 0) {
+      logError('gemini_empty', 'No items returned', { status: res.status, sourceType, mimeType });
+    }
     return json.items || [];
   } catch (err) {
+    logError('gemini_exception', err.message, { sourceType, mimeType });
     showToast('AI error: ' + err.message, 'error');
     return [];
   }
@@ -5913,6 +5931,7 @@ async function startCheckout(plan) {
     const data = await res.json();
 
     if (data.error) {
+      logError('checkout_failed', data.error, { plan });
       showToast('Checkout error: ' + data.error, 'error');
       return;
     }
@@ -5921,6 +5940,7 @@ async function startCheckout(plan) {
       window.location.href = data.url;
     }
   } catch (err) {
+    logError('checkout_exception', err.message, { plan });
     showToast('Checkout error: ' + err.message, 'error');
   }
 }
@@ -6326,14 +6346,20 @@ async function compressImage(file, maxWidth=1200) {
   }
 
   if (isIOS) {
-    try { return await fileReaderFallback(); } catch(e) { console.warn('FileReader failed on iOS:', e.message); throw e; }
+    try { return await fileReaderFallback(); } catch(e) {
+      logError('compress_ios_failed', e.message, { source: 'fileReaderFallback' });
+      throw e;
+    }
   }
 
   try {
     return await canvasCompress();
   } catch(e) {
-    console.warn('Canvas compress failed, falling back to FileReader:', e.message);
-    return await fileReaderFallback();
+    logError('compress_canvas_failed', e.message, { source: 'canvasCompress' });
+    try { return await fileReaderFallback(); } catch(e2) {
+      logError('compress_fallback_failed', e2.message, { source: 'fileReaderFallback_fallback' });
+      throw e2;
+    }
   }
 }
 
@@ -6457,13 +6483,16 @@ async function handleFridgePhoto(input, scanType) {
 
       hideScanOverlay();
 
-      if (!response.ok) throw new Error('API error: ' + response.status);
+      if (!response.ok) {
+        logError('fridge_scan_failed', 'API error ' + response.status, { status: response.status, type });
+        throw new Error('API error: ' + response.status);
+      }
 
       const json  = await response.json();
       const items = json.items || [];
 
       if (items.length === 0) {
-        
+        logError('fridge_scan_empty', 'No items returned', { type });
         document.getElementById('scanIcon').textContent  = '📸';
         document.getElementById('scanTitle').textContent = "Too much to read at once";
         document.getElementById('scanSub').innerHTML = `
@@ -7841,10 +7870,20 @@ async function guestSaveAnonymous() {
       status:           'active',
     }));
     try {
-      await supa.from('guest_items').insert(rows);
-      gtag('event', 'guest_items_saved', { count: rows.length, status: 'success' });
+      const { error: insertError } = await supa.from('guest_items').insert(rows);
+      if (insertError) {
+        logError('supabase_insert_failed', insertError.message, {
+          status: insertError.code,
+          hint: (insertError.hint || '').substring(0, 80),
+          details: (insertError.details || '').substring(0, 80),
+        });
+        console.log('guest_items insert error:', insertError);
+      } else {
+        gtag('event', 'guest_items_saved', { count: rows.length, status: 'success' });
+      }
     } catch(e) {
-      console.log('guest_items insert failed, localStorage fallback active:', e.message);
+      logError('supabase_exception', e.message, { source: 'guest_items_insert' });
+      console.log('guest_items insert failed:', e.message);
     }
   }
 
