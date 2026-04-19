@@ -4385,7 +4385,12 @@ async function handleImageScan(input) {
   document.getElementById('scanSub').textContent   = 'Review below and save to vault';
 
   pendingItems = result.map(i => ({ ...i, image_url: file.name }));
-  renderManifest(result, 'manifestGrid', 'resultsTitle');
+  try {
+    renderManifest(result, 'manifestGrid', 'resultsTitle');
+  } catch(renderErr) {
+    logError('render_manifest_failed', renderErr.message, { scan_type: 'receipt', items: result.length });
+    console.error('renderManifest crashed:', renderErr);
+  }
   document.getElementById('scanResults').classList.remove('hidden');
   if (!localStorage.getItem('guardnest_first_scan_completed')) {
     localStorage.setItem('guardnest_first_scan_completed', 'true');
@@ -6515,7 +6520,12 @@ async function handleFridgePhoto(input, scanType) {
         days_until_spoil: item.days_until_spoil || 7,
       }));
 
-      renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
+      try {
+        renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
+      } catch(renderErr) {
+        logError('render_manifest_failed', renderErr.message, { scan_type: type, items: items.length });
+        console.error('renderManifest crashed:', renderErr);
+      }
       document.getElementById('scanResults').classList.remove('hidden');
       if (!localStorage.getItem('guardnest_first_scan_completed')) {
         localStorage.setItem('guardnest_first_scan_completed', 'true');
@@ -6524,11 +6534,9 @@ async function handleFridgePhoto(input, scanType) {
       if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
       incrementScanCount();
 
-      // If user came from "Scan my real fridge" in demo — show the report modal
-      if (window._showRealReportAfterScan) {
-        window._showRealReportAfterScan = false;
-        showRealReport(pendingItems);
-      } else {
+      // showRealReport removed — always show inline results
+      window._showRealReportAfterScan = false;
+      {
         gtag('event', 'results_viewed', { scan_type: type, items_found: items.length });
         // Explicitly show results and scroll to them — fixes Android not routing back
         const scanResults = document.getElementById('scanResults');
