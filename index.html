@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.0.6';
+  const APP_VERSION = '1.0.7';
   const stored = localStorage.getItem('gn_version');
   if (stored && stored !== APP_VERSION) {
     localStorage.setItem('gn_version', APP_VERSION);
@@ -2562,7 +2562,7 @@ function logError(source, message, extra) {
               <input type="file" accept=".pdf,application/pdf" id="pdfFileInput" onchange="handlePdfScan(this)" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
               <span class="scan-icon" id="pdfIcon">📄</span>
               <div class="scan-title" id="pdfTitle" style="color:var(--purple)">Drop PDF Here</div>
-              <div class="scan-sub" id="pdfSub">Warranty certificates · Insurance policies<br>Old invoices · Emailed receipts<br>Recover warranties from years ago.</div>
+              <div class="scan-sub" id="pdfSub">Emailed grocery receipts · Warranty certificates<br>Insurance policies · Service records<br><span style="font-size:11px;opacity:.6;">Text-based PDFs only — photos of documents won't work</span></div>
             </div>
             <div style="margin-top:10px">
               <button class="btn btn-purple btn-full" onclick="document.getElementById('pdfFileInput').click()">
@@ -2575,12 +2575,24 @@ function logError(source, message, extra) {
             <div class="panel-header"><div class="panel-title">💡 Why PDF Scanning?</div></div>
             <div class="panel-body">
               <div style="font-size:13px;color:var(--text2);line-height:1.9">
-                <div style="margin-bottom:10px">📧 <strong style="color:var(--text)">Email receipts</strong><br><span style="font-size:11px;color:var(--text3)">Forward any receipt email as PDF, Aegis extracts everything</span></div>
-                <div style="margin-bottom:10px">🛡️ <strong style="color:var(--text)">Warranty certificates</strong><br><span style="font-size:11px;color:var(--text3)">Scan the PDF that came in the box</span></div>
-                <div style="margin-bottom:10px">🏠 <strong style="color:var(--text)">Insurance policies</strong><br><span style="font-size:11px;color:var(--text3)">Know exactly what's covered and when</span></div>
+
+                <div style="padding:12px;background:rgba(76,175,130,.08);border-radius:10px;border:1px solid rgba(76,175,130,.2);margin-bottom:14px;">
+                  <div style="font-size:12px;font-weight:700;color:#4CAF82;margin-bottom:8px;">📧 How to scan an emailed receipt</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.8;">
+                    1. Open the receipt email on your phone<br>
+                    2. Tap the share icon → tap <strong style="color:rgba(255,255,255,.8);">Print</strong><br>
+                    3. Pinch to zoom out → tap the share icon again<br>
+                    4. Tap <strong style="color:rgba(255,255,255,.8);">Save to Files</strong> as a PDF<br>
+                    5. Upload that PDF here — GuardNest reads every item
+                  </div>
+                </div>
+
+                <div style="margin-bottom:10px">🛡️ <strong style="color:var(--text)">Warranty certificates</strong><br><span style="font-size:11px;color:var(--text3)">The PDF that came in the box or was emailed to you</span></div>
+                <div style="margin-bottom:10px">🏠 <strong style="color:var(--text)">Insurance policies</strong><br><span style="font-size:11px;color:var(--text3)">Know exactly what's covered and when it expires</span></div>
                 <div style="margin-bottom:14px">🚗 <strong style="color:var(--text)">Service records</strong><br><span style="font-size:11px;color:var(--text3)">Track car maintenance and extended coverage</span></div>
-                <div style="padding:12px;background:rgba(136,102,255,.1);border-radius:8px;border:1px solid rgba(136,102,255,.2);color:var(--purple);font-size:12px;line-height:1.6">
-                  💡 Email receipts count too. Forward any receipt email as a PDF and GuardNest will track everything inside it.
+
+                <div style="padding:10px 12px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.35);line-height:1.6;">
+                  ⚠️ Text-based PDFs only. Scanned photos saved as PDF won't work — Gemini needs actual text to read.
                 </div>
               </div>
             </div>
