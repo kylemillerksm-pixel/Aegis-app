@@ -4609,9 +4609,17 @@ function emojiAvatar(itemName, category) {
 // Your Gemini key never touches the browser — it lives in Supabase secrets
 async function callGemini(b64data, mimeType, sourceType) {
   if (!b64data || b64data.length < 100) {
+    logError('gemini_image_too_small', 'b64 length ' + (b64data ? b64data.length : 0), { sourceType, mimeType });
     showToast('Image could not be processed — try again', 'error');
     return [];
   }
+
+  // Log image size before sending — helps diagnose compression failures
+  const imageSizeKb = Math.round((b64data.length * 3) / 4 / 1024);
+  if (imageSizeKb < 10) {
+    logError('gemini_image_suspiciously_small', 'Only ' + imageSizeKb + 'kb', { sourceType, mimeType, kb: imageSizeKb });
+  }
+
   try {
     const res = await fetch(SUPABASE_FUNCTION_URL, {
       method:  'POST',
@@ -4630,18 +4638,19 @@ async function callGemini(b64data, mimeType, sourceType) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const errMsg = err.error || res.statusText || 'unknown';
-      logError('gemini_failed', errMsg, { status: res.status, sourceType, mimeType });
+      logError('gemini_failed', errMsg, { status: res.status, sourceType, mimeType, kb: imageSizeKb });
       showToast('AI error: ' + errMsg, 'error');
       return [];
     }
 
     const json = await res.json();
     if (!json.items || json.items.length === 0) {
-      logError('gemini_empty', 'No items returned', { status: res.status, sourceType, mimeType });
+      // Log image size on empty result — key diagnostic for compression issues
+      logError('gemini_empty', 'No items returned', { status: res.status, sourceType, mimeType, kb: imageSizeKb });
     }
     return json.items || [];
   } catch (err) {
-    logError('gemini_exception', err.message, { sourceType, mimeType });
+    logError('gemini_exception', err.message, { sourceType, mimeType, kb: imageSizeKb });
     showToast('AI error: ' + err.message, 'error');
     return [];
   }
