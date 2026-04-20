@@ -38,14 +38,19 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.0.8';
+  const APP_VERSION = '1.0.9';
   const stored = localStorage.getItem('gn_version');
-  if (stored && stored !== APP_VERSION) {
+  if (!stored) {
+    // First time visitor — just set version, no reload needed
+    localStorage.setItem('gn_version', APP_VERSION);
+    return;
+  }
+  if (stored !== APP_VERSION) {
+    // Returning visitor on old code — force fresh reload
     localStorage.setItem('gn_version', APP_VERSION);
     window.location.reload(true);
     return;
   }
-  localStorage.setItem('gn_version', APP_VERSION);
 })();
 </script>
 <!-- Preconnect to speed up external resources -->
