@@ -4390,9 +4390,34 @@ async function handleImageScan(input) {
 
   if (!result || result.length === 0) {
     logError('receipt_scan_empty', 'No items returned from receipt', { file: file.name, size: file.size });
-    document.getElementById('scanIcon').textContent  = '📸';
+    window._scanFailCount = (window._scanFailCount || 0) + 1;
+    document.getElementById('scanIcon').textContent = '📸';
     document.getElementById('scanTitle').textContent = 'Nothing found on this receipt';
-    document.getElementById('scanSub').innerHTML = '<div style="margin-bottom:12px;">Make sure the receipt is flat, well-lit, and fully in frame — then try again.</div><button onclick="triggerScan()" style="background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">📷 Try again</button>';
+    document.getElementById('scanSub').innerHTML = `
+      <div style="margin-bottom:14px;font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;">
+        ${window._scanFailCount >= 2
+          ? 'Still nothing — this receipt format might not scan well. Try these fixes or add items manually.'
+          : 'GuardNest couldn\'t read this receipt. Here\'s what usually helps:'}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;text-align:left;">
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+          <span style="font-size:16px;">💡</span><span><strong style="color:#fff;">Lay the receipt flat</strong> — no folds or creases in frame</span>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+          <span style="font-size:16px;">📐</span><span><strong style="color:#fff;">Get closer</strong> — fill the frame with just the receipt</span>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+          <span style="font-size:16px;">☀️</span><span><strong style="color:#fff;">Good lighting</strong> — avoid shadows across the text</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        <button onclick="triggerScan()" style="background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;">
+          📷 Try again
+        </button>
+        ${window._scanFailCount >= 2
+          ? '<button onclick="showManualEntry()" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;">✏️ Add manually</button>'
+          : ''}
+      </div>`;
     return;
   }
 
@@ -6523,13 +6548,41 @@ async function handleFridgePhoto(input, scanType) {
 
       if (items.length === 0) {
         logError('fridge_scan_empty', 'No items returned', { type });
+        window._scanFailCount = (window._scanFailCount || 0) + 1;
+        const typeLabel = type === 'pantry' ? 'pantry' : 'fridge';
         document.getElementById('scanIcon').textContent  = '📸';
-        document.getElementById('scanTitle').textContent = "Too much to read at once";
+        document.getElementById('scanTitle').textContent = window._scanFailCount >= 2 ? "Still nothing — let's try differently" : "Couldn't make out the items";
         document.getElementById('scanSub').innerHTML = `
-          <div style="margin-bottom:12px;">Your fridge might be too packed for one shot. Try scanning <strong>one shelf at a time</strong> — closer photos work much better.</div>
-          <button onclick="triggerScan()" style="background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
-            📷 Try a shelf instead
-          </button>`;
+          <div style="margin-bottom:14px;font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;">
+            ${window._scanFailCount >= 2
+              ? 'After multiple tries, here are your best options:'
+              : 'Your ' + typeLabel + ' photo didn\'t give GuardNest enough to work with. These fixes help a lot:'}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;text-align:left;">
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+              <span style="font-size:16px;">📚</span><span><strong style="color:#fff;">One shelf at a time</strong> — not the whole ${typeLabel} at once</span>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+              <span style="font-size:16px;">📐</span><span><strong style="color:#fff;">Get closer</strong> — 12 to 18 inches from the shelf</span>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+              <span style="font-size:16px;">💡</span><span><strong style="color:#fff;">Turn on the kitchen light</strong> — dark photos always fail</span>
+            </div>
+            <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+              <span style="font-size:16px;">🧾</span><span><strong style="color:#fff;">Try a receipt instead</strong> — always more reliable than photos</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+            <button onclick="triggerScan()" style="background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;">
+              📷 Try again
+            </button>
+            <button onclick="setScanType('receipt');triggerScan();" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;">
+              🧾 Scan receipt instead
+            </button>
+            ${window._scanFailCount >= 2
+              ? '<button onclick="showManualEntry()" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;">✏️ Add manually</button>'
+              : ''}
+          </div>`;
         return;
       }
 
@@ -7877,6 +7930,86 @@ if ('serviceWorker' in navigator) {
       .then(reg => { window._swReg = reg; })
       .catch(err => console.log('SW failed:', err));
   });
+}
+
+// ── MANUAL ITEM ENTRY — fallback when scanning fails ─────────────
+function showManualEntry() {
+  const existing = document.getElementById('manualEntryPanel');
+  if (existing) { existing.style.display = 'block'; return; }
+
+  const panel = document.createElement('div');
+  panel.id = 'manualEntryPanel';
+  panel.style.cssText = 'background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:16px;margin-top:16px;';
+  panel.innerHTML = `
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">✏️ Add items manually</div>
+    <div style="display:flex;flex-direction:column;gap:8px;" id="manualItemsList">
+      <div class="manual-item-row" style="display:flex;gap:8px;">
+        <input type="text" placeholder="Item name (e.g. Spinach)" style="flex:2;background:var(--dark);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text);outline:none;">
+        <input type="number" placeholder="Days fresh" style="flex:1;background:var(--dark);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text);outline:none;">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="addManualItemRow()" style="background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text2);border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;touch-action:manipulation;">+ Add another</button>
+      <button onclick="saveManualItems()" style="flex:1;background:var(--gold);color:var(--black);border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;">Save these items →</button>
+    </div>`;
+
+  const scanResults = document.getElementById('scanResults');
+  if (scanResults) {
+    scanResults.classList.remove('hidden');
+    const manifestGrid = document.getElementById('manifestGrid');
+    if (manifestGrid) manifestGrid.parentNode.insertBefore(panel, manifestGrid);
+  } else {
+    const scanZone = document.getElementById('scanZone');
+    if (scanZone) scanZone.parentNode.appendChild(panel);
+  }
+}
+
+function addManualItemRow() {
+  const list = document.getElementById('manualItemsList');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.className = 'manual-item-row';
+  row.style.cssText = 'display:flex;gap:8px;';
+  row.innerHTML = `
+    <input type="text" placeholder="Item name" style="flex:2;background:var(--dark);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text);outline:none;">
+    <input type="number" placeholder="Days fresh" style="flex:1;background:var(--dark);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text);outline:none;">`;
+  list.appendChild(row);
+}
+
+function saveManualItems() {
+  const rows = document.querySelectorAll('.manual-item-row');
+  const today = new Date().toISOString().split('T')[0];
+  const items = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0]?.value?.trim();
+    const days = parseInt(inputs[1]?.value || 7);
+    if (name) items.push({
+      item_name: name,
+      merchant: 'Home',
+      price: 0,
+      purchase_date: today,
+      category: 'Grocery',
+      warranty_days: 0,
+      days_until_spoil: days || 7,
+      image_url: 'manual-entry',
+    });
+  });
+
+  if (items.length === 0) {
+    showToast('Add at least one item name', 'info');
+    return;
+  }
+
+  pendingItems = items;
+  window._scanFailCount = 0;
+  const panel = document.getElementById('manualEntryPanel');
+  if (panel) panel.style.display = 'none';
+  renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
+  document.getElementById('scanResults').classList.remove('hidden');
+  gtag('event', 'results_viewed', { scan_type: 'manual', items_found: items.length });
+  showToast(`${items.length} item${items.length !== 1 ? 's' : ''} added — save to keep them`, 'success');
+  scheduleGuestSavePrompt('scanResults', 'manifestGrid');
 }
 
 async function guestSaveAnonymous() {
