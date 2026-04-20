@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.0.5';
+  const APP_VERSION = '1.0.6';
   const stored = localStorage.getItem('gn_version');
   if (stored && stored !== APP_VERSION) {
     localStorage.setItem('gn_version', APP_VERSION);
@@ -2559,7 +2559,7 @@ function logError(source, message, extra) {
         <div class="grid2">
           <div>
             <div class="pdf-zone" id="pdfZone" onclick="document.getElementById('pdfFileInput').click()" style="cursor:pointer">
-              <input type="file" accept=".pdf,application/pdf" id="pdfFileInput" onchange="handlePdfScan(this)" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px">
+              <input type="file" accept=".pdf,application/pdf" id="pdfFileInput" onchange="handlePdfScan(this)" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
               <span class="scan-icon" id="pdfIcon">📄</span>
               <div class="scan-title" id="pdfTitle" style="color:var(--purple)">Drop PDF Here</div>
               <div class="scan-sub" id="pdfSub">Warranty certificates · Insurance policies<br>Old invoices · Emailed receipts<br>Recover warranties from years ago.</div>
@@ -4455,18 +4455,58 @@ async function handlePdfScan(input) {
   document.getElementById('scanStatusText').textContent = 'READING';
   document.getElementById('scanSubText').textContent    = 'Parsing PDF document...';
 
-  const b64    = await fileToBase64(file);
-  const result = await callGemini(b64, 'application/pdf', 'pdf');
+  try {
+    const b64    = await fileToBase64(file);
+    const result = await callGemini(b64, 'application/pdf', 'pdf');
 
-  hideScanOverlay();
+    hideScanOverlay();
 
-  document.getElementById('pdfIcon').textContent  = '✅';
-  document.getElementById('pdfTitle').textContent = `${result.length} item(s) found`;
-  document.getElementById('pdfSub').textContent   = 'Review below and save to vault';
+    if (!result || result.length === 0) {
+      logError('pdf_scan_empty', 'No items returned from PDF', { file: file.name, size: file.size });
+      document.getElementById('pdfIcon').textContent  = '📄';
+      document.getElementById('pdfTitle').textContent = 'Nothing found in this document';
+      document.getElementById('pdfSub').innerHTML = `
+        <div style="margin-bottom:14px;font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;">
+          GuardNest couldn't extract items from this PDF. Here's what works best:
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;text-align:left;">
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+            <span style="font-size:16px;">🧾</span><span><strong style="color:#fff;">Grocery receipts emailed as PDF</strong> work best</span>
+          </div>
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+            <span style="font-size:16px;">🛡️</span><span><strong style="color:#fff;">Warranty PDFs</strong> — the certificate that came in the box</span>
+          </div>
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;gap:10px;align-items:center;">
+            <span style="font-size:16px;">📋</span><span><strong style="color:#fff;">Text-based PDFs only</strong> — scanned image PDFs won't work</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="document.getElementById('pdfFileInput').click()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;">
+            📄 Try another PDF
+          </button>
+          <button onclick="showManualEntry()" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;">
+            ✏️ Add manually
+          </button>
+        </div>`;
+      return;
+    }
 
-  pendingItems = result.map(i => ({ ...i, image_url: file.name }));
-  renderManifest(result, 'pdfManifestGrid', 'pdfResultsTitle');
-  document.getElementById('pdfResults').classList.remove('hidden');
+    document.getElementById('pdfIcon').textContent  = '✅';
+    document.getElementById('pdfTitle').textContent = `${result.length} item(s) found`;
+    document.getElementById('pdfSub').textContent   = 'Review below and save to vault';
+
+    pendingItems = result.map(i => ({ ...i, image_url: file.name }));
+    renderManifest(result, 'pdfManifestGrid', 'pdfResultsTitle');
+    document.getElementById('pdfResults').classList.remove('hidden');
+
+  } catch(err) {
+    hideScanOverlay();
+    logError('pdf_scan_exception', err.message, { file: file.name });
+    document.getElementById('pdfIcon').textContent  = '⚠️';
+    document.getElementById('pdfTitle').textContent = 'PDF scan failed';
+    document.getElementById('pdfSub').innerHTML = `<div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:12px;">Something went wrong reading this file. Try a different PDF or add items manually.</div>
+      <button onclick="showManualEntry()" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;">✏️ Add manually</button>`;
+  }
 }
 
 // ─── EMOJI SYSTEM ─────────────────────────────────────────────
