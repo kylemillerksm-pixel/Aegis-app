@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.0.9';
+  const APP_VERSION = '1.1.0';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -3081,9 +3081,9 @@ function logError(source, message, extra) {
 ═══════════════════════════════════════════ -->
 <script>
 // ─── CONFIG — REPLACE WITH YOUR KEYS ──────────────────────────
-const SUPABASE_URL     = 'https://eeizfajopbpmjsxykgmz.supabase.co';
+const SUPABASE_URL     = 'https://api.guardnest.app';
 const SUPABASE_ANON    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlaXpmYWpvcGJwbWpzeHlrZ216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzU0NzQsImV4cCI6MjA5MDIxMTQ3NH0.pxnBz7yFfw69l5qR9RoW8rDmvKAkXvs8for_XaS05N0';
-const SUPABASE_FUNCTION_URL = 'https://eeizfajopbpmjsxykgmz.supabase.co/functions/v1/gemini-proxy';
+const SUPABASE_FUNCTION_URL = 'https://api.guardnest.app/functions/v1/gemini-proxy';
 // ───────────────────────────────────────────────────────────────
 
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -6027,7 +6027,7 @@ async function startCheckout(plan) {
   showToast('Redirecting to checkout...', 'info');
 
   try {
-    const res = await fetch('https://eeizfajopbpmjsxykgmz.supabase.co/functions/v1/create-checkout-session', {
+    const res = await fetch('https://api.guardnest.app/functions/v1/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
