@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.1.1';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -2030,6 +2030,66 @@ function logError(source, message, extra) {
 </script>
 </head>
 <body>
+
+<!-- ── INSTANT ATTENTION HOOK — renders before JS, no wait ── -->
+<div id="instantHook" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#0a0f0a;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;box-sizing:border-box;">
+  <style>
+    @keyframes fadeSlideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes barGrow1 { 0%{width:100%} 100%{width:12%} }
+    @keyframes barGrow2 { 0%{width:100%} 100%{width:22%} }
+    @keyframes barGrow3 { 0%{width:100%} 100%{width:8%} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    #instantHook .ih-line1 { animation: fadeSlideUp .3s ease both; }
+    #instantHook .ih-line2 { animation: fadeSlideUp .3s .1s ease both; }
+    #instantHook .ih-line3 { animation: fadeSlideUp .3s .2s ease both; }
+    #instantHook .ih-bars  { animation: fadeSlideUp .3s .3s ease both; }
+    #instantHook .ih-cta   { animation: fadeSlideUp .3s .5s ease both; }
+    #instantHook .bar-fill-1 { animation: barGrow1 1.8s .6s ease forwards; width:100%; }
+    #instantHook .bar-fill-2 { animation: barGrow2 1.8s .8s ease forwards; width:100%; }
+    #instantHook .bar-fill-3 { animation: barGrow3 1.8s 1s ease forwards; width:100%; }
+    #instantHook .ih-cta-btn { animation: pulse 1.5s 1.2s ease infinite; }
+  </style>
+  <div style="max-width:360px;width:100%;text-align:center;">
+    <div class="ih-line1" style="font-size:13px;font-weight:700;color:#4CAF82;letter-spacing:.15em;margin-bottom:16px;">🌿 GUARDNEST</div>
+    <div class="ih-line2" style="font-size:28px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:8px;">What's actually<br>in your fridge?</div>
+    <div class="ih-line3" style="font-size:14px;color:rgba(255,255,255,.4);margin-bottom:28px;line-height:1.6;">Not what you think is in there.<br>What's actually going bad right now.</div>
+    <div class="ih-bars" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:24px;text-align:left;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <span style="font-size:20px;">🥬</span>
+        <div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div class="bar-fill-1" style="height:100%;background:#E05555;border-radius:3px;"></div></div>
+        <span style="font-size:11px;font-weight:700;color:#E05555;min-width:52px;text-align:right;">2 days left</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <span style="font-size:20px;">🍗</span>
+        <div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div class="bar-fill-2" style="height:100%;background:#D4A843;border-radius:3px;"></div></div>
+        <span style="font-size:11px;font-weight:700;color:#D4A843;min-width:52px;text-align:right;">3 days left</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:20px;">🍓</span>
+        <div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div class="bar-fill-3" style="height:100%;background:#E05555;border-radius:3px;"></div></div>
+        <span style="font-size:11px;font-weight:700;color:#E05555;min-width:52px;text-align:right;">1 day left</span>
+      </div>
+    </div>
+    <button class="ih-cta-btn" onclick="document.getElementById('instantHook').style.display='none';showSampleReport();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:18px;font-size:17px;font-weight:800;cursor:pointer;touch-action:manipulation;letter-spacing:.01em;">
+      Show me what's going bad →
+    </button>
+    <div style="font-size:11px;color:rgba(255,255,255,.2);margin-top:10px;">Free · No account · 30 seconds</div>
+  </div>
+</div>
+<script>
+// Hide instant hook after JS boots — let bootGuestMode handle the demo
+// For demo=true URLs remove hook immediately, demo will show
+// For organic users hook stays until they tap or JS shows the demo
+(function() {
+  const isDemoMode = new URLSearchParams(window.location.search).get('demo') === 'true';
+  if (isDemoMode) {
+    // Remove hook instantly for demo URLs — demo modal takes over
+    document.getElementById('instantHook').style.display = 'none';
+  }
+  // For organic — hook stays visible until user taps the CTA
+  // bootGuestMode will also call showSampleReport which is fine — hook hides on tap
+})();
+</script>
 
 <!-- ═══════════════════════════════════════════
      LOADING OVERLAY
@@ -7491,7 +7551,7 @@ function bootGuestMode() {
     const banner = document.getElementById('guestBanner');
     if (banner) banner.style.display = 'none';
     window.history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => showSampleReport(), 400);
+    showSampleReport();
   } else {
     // Show guest banner
     const banner = document.getElementById('guestBanner');
