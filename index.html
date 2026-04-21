@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.1.2';
+  const APP_VERSION = '1.1.4';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -1995,6 +1995,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 // ── ERROR MONITORING — catches all JS errors and sends to GA4 ──
 window.onerror = function(msg, url, line, col, error) {
   if (typeof gtag === 'undefined') return;
+  if (!msg || msg === 'Script error.' || msg.trim() === '') return; // skip empty/cross-origin noise
   gtag('event', 'js_error', {
     error_message: (msg || '').substring(0, 150),
     line_number: line || 0,
@@ -2202,7 +2203,12 @@ function logError(source, message, extra) {
       GuardNest
     </div>
     <div style="font-size:11px;color:var(--text3)" id="mobilePageTitle">DASHBOARD</div>
-    <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 14px;font-size:12px;min-height:36px">+ Scan</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="showFloatingFeedback()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:11px;color:rgba(255,255,255,.5);cursor:pointer;touch-action:manipulation;min-height:36px;">
+        💬
+      </button>
+      <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 14px;font-size:12px;min-height:36px">+ Scan</button>
+    </div>
   </div>
 
   <!-- MOBILE XP BAR -->
@@ -2731,6 +2737,29 @@ function logError(source, message, extra) {
             </div>
           </div>
 
+          <!-- Founder Direct Access -->
+          <div style="background:linear-gradient(135deg,rgba(76,175,130,.1),rgba(76,175,130,.04));border:1px solid rgba(76,175,130,.25);border-radius:14px;padding:20px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="width:40px;height:40px;border-radius:50%;background:rgba(76,175,130,.2);border:1.5px solid rgba(76,175,130,.4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👋</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--text);">Talk to the founder</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px;">Kyle built this — he reads every message</div>
+              </div>
+            </div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:14px;">
+              What's working? What's broken? What would make this genuinely useful for you? I want to know.
+            </div>
+            <div id="founderFeedbackForm">
+              <textarea id="founderFeedbackText" placeholder="What's on your mind..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px;font-size:14px;color:#fff;font-family:'Barlow',sans-serif;resize:none;outline:none;min-height:90px;margin-bottom:10px;"></textarea>
+              <button onclick="submitFounderFeedback()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;touch-action:manipulation;">
+                Send to Kyle →
+              </button>
+            </div>
+            <div id="founderFeedbackSuccess" style="display:none;text-align:center;padding:12px;font-size:13px;color:#4CAF82;">
+              ✓ Got it — I'll read this today.
+            </div>
+          </div>
+
           <!-- Account Actions -->
           <div class="panel" style="margin-bottom:16px;">
             <div class="panel-header"><div class="panel-title">⚙️ Account</div></div>
@@ -2740,7 +2769,7 @@ function logError(source, message, extra) {
                 Sign Out
               </button>
               <div style="padding:14px 16px;font-size:11px;color:var(--text3);text-align:center;">
-                GuardNest v1.0 · <a href="https://guardnest.app/privacy" style="color:var(--text3);">Privacy</a>
+                GuardNest v1.1 · <a href="https://guardnest.app/privacy" style="color:var(--text3);">Privacy</a>
               </div>
             </div>
           </div>
@@ -8017,6 +8046,11 @@ async function guestSignupWithEmail() {
 
 <script>
 function showCoachModal(type) {
+  // Skip coach modal for returning users — go straight to camera
+  const seenCoach = localStorage.getItem('guardnest_coach_seen');
+  if (seenCoach) { openCameraFromCoach(); return; }
+  localStorage.setItem('guardnest_coach_seen', 'true');
+
   const modal = document.getElementById('scanCoachModal');
   const emoji = document.getElementById('coachEmoji');
   const title = document.getElementById('coachTitle');
@@ -8031,7 +8065,6 @@ function showCoachModal(type) {
     sub.textContent   = 'Follow these tips for the best results';
   }
   modal.style.display = 'block';
-  
 }
 
 function dismissCoachModal() {
@@ -8186,6 +8219,96 @@ function saveManualItems() {
   gtag('event', 'results_viewed', { scan_type: 'manual', items_found: items.length });
   showToast(`${items.length} item${items.length !== 1 ? 's' : ''} added — save to keep them`, 'success');
   scheduleGuestSavePrompt('scanResults', 'manifestGrid');
+}
+
+// ── FOUNDER FEEDBACK ─────────────────────────────────────────
+async function submitFounderFeedback() {
+  const text = document.getElementById('founderFeedbackText')?.value?.trim();
+  if (!text) return;
+
+  const btn = document.querySelector('#founderFeedbackForm button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+  try {
+    const guestId = localStorage.getItem('guardnest_guest_id') || null;
+    const userId = currentUser?.id || null;
+    const email = currentUser?.email || localStorage.getItem('guardnest_lead_email') || null;
+
+    await supa.from('feedback').insert({
+      message: text,
+      guest_id: guestId,
+      user_id: userId,
+      email: email,
+      page: localStorage.getItem('guardnest_last_page') || 'account',
+      scan_count: localStorage.getItem('guardnest_scan_count') || 0,
+      created_at: new Date().toISOString(),
+    });
+  } catch(e) {
+    // Silent — don't block the success state on a DB error
+    logError('feedback_failed', e.message, {});
+  }
+
+  // Always show success regardless of DB result
+  document.getElementById('founderFeedbackForm').style.display = 'none';
+  document.getElementById('founderFeedbackSuccess').style.display = 'block';
+}
+
+// Floating feedback button — visible on every page
+function showFloatingFeedback() {
+  const existing = document.getElementById('floatingFeedbackModal');
+  if (existing) { existing.style.display = 'flex'; return; }
+
+  const modal = document.createElement('div');
+  modal.id = 'floatingFeedbackModal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:99990;display:flex;align-items:flex-end;justify-content:center;padding:0;';
+  modal.innerHTML = `
+    <div style="max-width:480px;width:100%;background:var(--dark2);border-radius:20px 20px 0 0;border:1px solid var(--border2);padding:24px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(76,175,130,.2);border:1.5px solid rgba(76,175,130,.4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👋</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">Talk to Kyle</div>
+          <div style="font-size:11px;color:var(--text3);">Founder — reads every message</div>
+        </div>
+        <button onclick="document.getElementById('floatingFeedbackModal').style.display='none'" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px;touch-action:manipulation;">✕</button>
+      </div>
+      <textarea id="floatingFeedbackText" placeholder="What's working? What's broken? What would make this actually useful for you?" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px;font-size:14px;color:#fff;font-family:'Barlow',sans-serif;resize:none;outline:none;min-height:100px;margin-bottom:12px;"></textarea>
+      <button onclick="submitFloatingFeedback()" style="width:100%;background:#4CAF82;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;touch-action:manipulation;">
+        Send message →
+      </button>
+    </div>`;
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+  document.body.appendChild(modal);
+}
+
+async function submitFloatingFeedback() {
+  const text = document.getElementById('floatingFeedbackText')?.value?.trim();
+  if (!text) return;
+
+  const btn = document.querySelector('#floatingFeedbackModal button:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+  try {
+    const guestId = localStorage.getItem('guardnest_guest_id') || null;
+    const userId = currentUser?.id || null;
+    const email = currentUser?.email || localStorage.getItem('guardnest_lead_email') || null;
+
+    await supa.from('feedback').insert({
+      message: text,
+      guest_id: guestId,
+      user_id: userId,
+      email: email,
+      page: window._currentPage || 'unknown',
+      scan_count: localStorage.getItem('guardnest_scan_count') || 0,
+      created_at: new Date().toISOString(),
+    });
+  } catch(e) {
+    logError('feedback_failed', e.message, {});
+  }
+
+  document.getElementById('floatingFeedbackModal').style.display = 'none';
+  showToast('Got it — Kyle will read this today 🌿', 'success');
 }
 
 async function guestSaveAnonymous() {
