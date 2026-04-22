@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.2.7';
+  const APP_VERSION = '1.2.8';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -4779,8 +4779,6 @@ function refreshVault() {
   document.getElementById('vValue').textContent    = '$' + rescuedVal.toFixed(0);
   document.getElementById('vWarranty').textContent = warranted;
 
-  const today = new Date(); today.setHours(0,0,0,0);
-
   // ── SMART ROW: Expiring This Week ──────────────────────────
   const expiringThisWeek = allItems.filter(item => {
     const warranty = item.warranty_days || 0;
@@ -4838,7 +4836,6 @@ function refreshVault() {
     : recent.map(item => renderVaultRow(item)).join('');
 
   // ── SMART ROW: Perishables ──────────────────────────────────
-  const today2 = new Date(); today2.setHours(0,0,0,0);
   const perishables = allItems
     .filter(i => (i.days_until_spoil||0) > 0)
     .map(i => {
@@ -4846,7 +4843,7 @@ function refreshVault() {
       if (i.purchase_date) {
         const exp = new Date(i.purchase_date);
         exp.setDate(exp.getDate() + i.days_until_spoil);
-        daysLeft = Math.round((exp - today2) / 86400000);
+        daysLeft = Math.round((exp - today) / 86400000);
       }
       return { ...i, _daysLeft: daysLeft };
     })
@@ -7051,10 +7048,10 @@ async function handleFridgePhoto(input, scanType) {
         return;
       }
 
-      const today = new Date().toISOString().split('T')[0];
+      const todayStr = new Date().toISOString().split('T')[0];
       pendingItems = items.map(item => ({
         item_name: item.item_name || item.name,
-        merchant: 'Home', price: 0, purchase_date: today,
+        merchant: 'Home', price: 0, purchase_date: todayStr,
         category: item.category || 'grocery', warranty_days: 0,
         days_until_spoil: item.days_until_spoil || 7,
       }));
@@ -7165,10 +7162,10 @@ async function handleFridgePhoto(input, scanType) {
       document.getElementById('scanTitle').textContent = `Found ${items.length} item${items.length !== 1 ? 's' : ''} — save to your fridge`;
       document.getElementById('scanSub').textContent   = `Review below and save to start tracking freshness`;
 
-      const today = new Date().toISOString().split('T')[0];
+      const todayStr = new Date().toISOString().split('T')[0];
       pendingItems = items.map(item => ({
         item_name: item.item_name || item.name,
-        merchant: 'Home', price: 0, purchase_date: today,
+        merchant: 'Home', price: 0, purchase_date: todayStr,
         category: item.category || 'grocery', warranty_days: 0,
         days_until_spoil: item.days_until_spoil || 7,
       }));
