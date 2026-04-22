@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.2.2';
+  const APP_VERSION = '1.2.3';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -126,7 +126,7 @@
   }
 
   /* ── APP LIGHT THEME BASE ── */
-  #screen-app {
+  #screen-app, #screen-app.visible {
     background: var(--app-bg) !important;
     color: var(--app-text) !important;
     font-family: var(--app-font) !important;
@@ -143,7 +143,11 @@
     pointer-events: none !important;
     z-index: 9999;
     touch-action: none;
+    transition: opacity 0.3s;
   }
+  /* Hide scanline overlay when light app is active */
+  body.app-active::before { opacity: 0; }
+  body.app-active { background: var(--app-bg) !important; }
 
   /* ─── UTILS ─────────────────────────── */
   .hidden { display: none !important; pointer-events: none !important; visibility: hidden !important; }
@@ -394,7 +398,7 @@
   .sidebar-footer { padding: 12px 14px; border-top: 1px solid var(--border); }
 
   /* MAIN */
-  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--app-bg); }
 
   .topbar {
     height: 56px; background: var(--dark); border-bottom: 1px solid var(--border);
@@ -413,10 +417,11 @@
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-  .content { flex: 1; padding: 24px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .content { flex: 1; padding: 24px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--app-bg); }
 
   /* PAGE SYSTEM */
-  .page { display: none; }
+  .page { display: none; background: var(--app-bg); }
+  .page.active { background: var(--app-bg); }
   .page.active { display: block; }
 
   /* STAT CARDS */
@@ -1704,7 +1709,7 @@
     .stat-row.cols4 { grid-template-columns: 1fr 1fr; }
     .stat-row.cols5 { grid-template-columns: 1fr 1fr; }
     .mc-name { font-size: 11px; }
-    .content { padding: 10px 10px 80px; }
+    .content { padding: 0 0 80px; background: var(--app-bg); }
     .panel-body { padding: 10px; }
     .auth-body { padding: 16px; }
   }
@@ -3736,6 +3741,7 @@ window.addEventListener('resize', applyMobileLayout);
 function showApp() {
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
+  document.body.classList.add('app-active');
   // Always hide guest banner when showing logged-in app
   const guestBanner = document.getElementById('guestBanner');
   if (guestBanner) guestBanner.style.display = 'none';
@@ -8037,6 +8043,7 @@ function bootGuestMode() {
   // Show the app directly in guest mode — no auth required
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
+  document.body.classList.add('app-active');
   applyMobileLayout();
   showPage('scanner');
 
