@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.2.3';
+  const APP_VERSION = '1.2.4';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -6742,6 +6742,15 @@ function triggerScan() {
 function dismissOnboarding() {
   document.getElementById('onboardingScreen').classList.add('hidden');
   localStorage.setItem('guardnest_onboarded', 'true');
+
+  // Restore app visibility — demo mode sets opacity:0 and pointerEvents:none
+  const appEl = document.getElementById('screen-app');
+  if (appEl) {
+    appEl.style.opacity = '1';
+    appEl.style.pointerEvents = '';
+  }
+  document.body.classList.add('app-active');
+
   // If guest has pending scan items, show them on dashboard without requiring save
   if (pendingItems && pendingItems.length > 0 && !currentUser) {
     const today = new Date().toISOString().split('T')[0];
@@ -6754,7 +6763,6 @@ function dismissOnboarding() {
       price: item.price || 0,
       _isPreview: true,
     }));
-    // Merge into allItems for display — will be cleared on real save or reload
     preview.forEach(p => { if (!allItems.find(i => i.item_name === p.item_name)) allItems.push(p); });
   }
   refreshDashboard();
