@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.2.5';
+  const APP_VERSION = '1.2.7';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -3981,6 +3981,9 @@ const PAGE_TITLES = {
 document.addEventListener('touchstart', function(){}, {passive: true});
 
 function showPage(id) {
+  // Remove post-demo guide overlay if present
+  const pdg = document.getElementById('postDemoGuide');
+  if (pdg) pdg.remove();
   applyMobileLayout();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -4286,8 +4289,8 @@ function refreshDashboard() {
   if (lifeEl)  lifeEl.textContent  = '$' + savedLifetime.toFixed(2);
 
   // Tier system
-  const streak = updateStreak();
-  const impactScore = getGnImpactScore(savedLifetime, scanCount, streak);
+  const streakWeeks = updateStreak();
+  const impactScore = getGnImpactScore(savedLifetime, scanCount, streakWeeks);
   const { tier, next, progress } = getGnTier(impactScore);
   const tierIcon = document.getElementById('dashTierIcon');
   const tierName = document.getElementById('dashTierName');
@@ -4309,7 +4312,7 @@ function refreshDashboard() {
   const mobileStreakNum = document.getElementById('mobileStreakNum');
   if (mobileTierIcon) mobileTierIcon.textContent = tier.icon;
   if (mobileTierName) { mobileTierName.textContent = tier.name; mobileTierName.style.color = tier.color; }
-  if (mobileStreakNum) mobileStreakNum.textContent = streak + 'w';
+  if (mobileStreakNum) mobileStreakNum.textContent = streakWeeks + 'w';
 
   // Update hidden fields (used by other functions)
   const dashTotal = document.getElementById('dashTotal');
@@ -7900,6 +7903,10 @@ function submitDemoReminder() { submitDemoReminderNew(); }
 function demoGoToRealScanner() {
   hideSampleReport();
   localStorage.setItem('guardnest_onboarded', 'true');
+  // Ensure app is fully visible
+  const appEl = document.getElementById('screen-app');
+  if (appEl) { appEl.style.opacity = '1'; appEl.style.pointerEvents = ''; }
+  document.body.classList.add('app-active');
   showPage('scanner');
 
   // Remove any existing post-demo guide
@@ -7911,6 +7918,7 @@ function demoGoToRealScanner() {
   const guide = document.createElement('div');
   guide.id = 'postDemoGuide';
   guide.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#0a0f0a;z-index:9990;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;';
+  guide.addEventListener('click', function(e) { if (e.target === guide) { guide.remove(); showPage('dashboard'); } });
   guide.innerHTML = `
     <div style="max-width:360px;width:100%;text-align:center;">
       <div style="font-size:42px;margin-bottom:16px;">📸</div>
@@ -7964,6 +7972,9 @@ function demoGoToRealScanner() {
       <div style="font-size:11px;color:rgba(255,255,255,.2);line-height:1.6;">
         GuardNest reads your photo and identifies every item automatically.<br>Nothing is saved until you say so.
       </div>
+      <button onclick="document.getElementById('postDemoGuide').remove();showPage('dashboard');" style="margin-top:20px;background:none;border:none;color:rgba(255,255,255,.2);font-size:12px;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif;touch-action:manipulation;">
+        Skip for now →
+      </button>
     </div>`;
 
   document.body.appendChild(guide);
