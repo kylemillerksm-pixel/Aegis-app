@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.2.8';
+  const APP_VERSION = '1.3.1';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -528,13 +528,14 @@
   /* MANIFEST GRID */
   .manifest-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 16px; }
   .manifest-card {
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 10px; padding: 14px; animation: fadeUp .3s ease both;
+    background: #fff; border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 16px; padding: 14px; animation: fadeUp .3s ease both;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   .mc-rarity { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; }
-  .mc-name   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .mc-meta   { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
+  .mc-name   { font-size: 13px; font-weight: 600; color: #1A1A1A; margin-bottom: 4px; }
+  .mc-meta   { font-size: 11px; color: rgba(26,26,26,0.4); margin-bottom: 2px; }
   .mc-badge  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; margin-top: 5px; }
   .mc-top-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
   .mc-sub     { font-size:11px; color:var(--text3); margin-bottom:10px; }
@@ -2039,6 +2040,7 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 // ── ERROR MONITORING — catches all JS errors and sends to GA4 ──
 window.onerror = function(msg, url, line, col, error) {
   if (typeof gtag === 'undefined') return;
+  if (!msg || msg === 'Script error.' || msg.trim() === '') return;
   gtag('event', 'js_error', {
     error_message: (msg || '').substring(0, 150),
     line_number: line || 0,
@@ -2498,106 +2500,119 @@ function logError(source, message, extra) {
       </div>
 
       <!-- ─── SCANNER ─── -->
-      <div class="page" id="page-scanner">
-        <div class="grid2 scanner-grid" style="margin-bottom:0">
-          <div>
-            <!-- Scan type selector -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
-              <button onclick="setScanType('receipt')" id="scanTypeReceipt" class="btn btn-gold" style="font-size:11px;padding:8px 4px;flex-direction:column;gap:3px;justify-content:center;">
-                🧾<br>Receipt
-              </button>
-              <button onclick="setScanType('fridge')" id="scanTypeFridge" class="btn btn-outline" style="font-size:11px;padding:8px 4px;flex-direction:column;gap:3px;justify-content:center;">
-                🧊<br>Fridge
-              </button>
-              <button onclick="setScanType('pantry')" id="scanTypePantry" class="btn btn-outline" style="font-size:11px;padding:8px 4px;flex-direction:column;gap:3px;justify-content:center;">
-                🗄️<br>Pantry
-              </button>
-            </div>
+      <div class="page" id="page-scanner" style="font-family:var(--app-font);background:var(--app-bg);min-height:100vh;">
 
-            <!-- File inputs outside scan-zone to prevent click bubbling back into triggerScan() -->
-            <input type="file" accept="image/*,application/pdf" id="scanFileInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
-            <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
+        <!-- Hidden file inputs — keep outside layout -->
+        <input type="file" accept="image/*,application/pdf" id="scanFileInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
+        <input type="file" accept="image/*" capture="environment" id="scanPhotoInput" style="position:absolute;width:0;height:0;opacity:0;overflow:hidden;">
 
-            <div class="scan-zone" id="scanZone" onclick="triggerScan()" style="cursor:pointer">
-              <span class="scan-icon" id="scanIcon">📷</span>
-              <div class="scan-title" id="scanTitle">What are we scanning?</div>
-              <div class="scan-sub" id="scanSub">Choose receipt, fridge, or pantry above — then tap to scan</div>
+        <!-- ── SCANNER IDLE STATE ── -->
+        <div id="scannerIdle" style="padding:20px 20px 0;">
+
+          <!-- Header -->
+          <div style="margin-bottom:22px;">
+            <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-green);font-weight:600;margin-bottom:3px;">New Scan</div>
+            <div style="font-size:22px;font-weight:700;letter-spacing:-0.02em;color:var(--app-text);">What are we scanning?</div>
+          </div>
+
+          <!-- AI Vision hero card -->
+          <button onclick="setScanType('fridge');triggerScan();" id="scanTypeAIVision" style="width:100%;background:#1A1A1A;border:none;border-radius:22px;padding:22px 20px;cursor:pointer;text-align:left;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.12);touch-action:manipulation;">
+            <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.14) 0%,transparent 70%);pointer-events:none;"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#5BAD8A;font-weight:700;">✨ AI Vision</div>
+              <div style="font-size:9px;font-weight:700;color:#5BAD8A;background:rgba(91,173,138,0.12);border:1px solid rgba(91,173,138,0.25);border-radius:99px;padding:3px 9px;letter-spacing:0.06em;">NEW</div>
             </div>
-            <div id="scanPhotoTip" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(76,175,130,.06);border:1px solid rgba(76,175,130,.15);border-radius:8px;font-size:11px;color:rgba(255,255,255,.45);text-align:center;line-height:1.5;">
-              📸 Best results: one shelf at a time · get close · good lighting
+            <div style="font-size:32px;margin-bottom:10px;">🧊</div>
+            <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:6px;">Fridge Vision Scan</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.65;margin-bottom:18px;">GuardNest overlays freshness data directly onto your photo. Sees what you miss — and gets smarter every scan.</div>
+            <div style="display:flex;gap:6px;">
+              <div style="font-size:10px;font-weight:600;color:#E8735A;background:rgba(232,115,90,0.15);border:1px solid rgba(232,115,90,0.3);border-radius:99px;padding:3px 9px;">🔴 Urgent</div>
+              <div style="font-size:10px;font-weight:600;color:#E8A44A;background:rgba(232,164,74,0.12);border:1px solid rgba(232,164,74,0.25);border-radius:99px;padding:3px 9px;">🟡 Soon</div>
+              <div style="font-size:10px;font-weight:600;color:#5BAD8A;background:rgba(91,173,138,0.1);border:1px solid rgba(91,173,138,0.2);border-radius:99px;padding:3px 9px;">🟢 Fresh</div>
             </div>
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <button class="btn btn-gold" style="flex:1;justify-content:center;position:relative;z-index:4" onclick="triggerScan()">
-                📷 <span id="scanBtnLabel">Select to Scan</span>
-              </button>
-              <button class="btn btn-outline" onclick="showPage('pdf')">📄 PDF</button>
+          </button>
+
+          <!-- Receipt card -->
+          <button onclick="setScanType('receipt');triggerScan();" id="scanTypeReceipt" style="width:100%;background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:10px;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,0.04);touch-action:manipulation;">
+            <div style="width:46px;height:46px;border-radius:14px;background:rgba(74,143,232,0.07);border:1px solid rgba(74,143,232,0.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🧾</div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;color:var(--app-text);">Scan a Receipt</div>
+              <div style="font-size:12px;color:var(--app-text2);margin-top:2px;">Tracks everything you bought</div>
+            </div>
+            <div style="font-size:16px;color:rgba(26,26,26,0.2);">→</div>
+          </button>
+
+          <!-- Pantry card -->
+          <button onclick="setScanType('pantry');triggerScan();" id="scanTypePantry" style="width:100%;background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:16px;padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:24px;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,0.04);touch-action:manipulation;">
+            <div style="width:46px;height:46px;border-radius:14px;background:rgba(155,127,232,0.07);border:1px solid rgba(155,127,232,0.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🗄️</div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;color:var(--app-text);">Photo My Pantry</div>
+              <div style="font-size:12px;color:var(--app-text2);margin-top:2px;">Cans, dry goods, snacks</div>
+            </div>
+            <div style="font-size:16px;color:rgba(26,26,26,0.2);">→</div>
+          </button>
+
+          <!-- Recent scans -->
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-text3);font-weight:600;margin-bottom:12px;">Recent Scans</div>
+          <div id="scannerRecent">
+            <div style="background:#fff;border:1px solid var(--app-border);border-radius:14px;padding:16px;text-align:center;color:var(--app-text3);font-size:12px;">
+              No scans yet — tap a card above to start 🌿
             </div>
           </div>
 
-          <div>
-            <div class="panel" style="margin-bottom:14px">
-              <div class="panel-header"><div class="panel-title">📊 Your Stats</div></div>
-              <div class="panel-body">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statTotalScans">0</div>
-                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Scans</div>
-                  </div>
-                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statTotalItems">0</div>
-                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Items</div>
-                  </div>
-                  <div style="background:var(--surface);border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="statCredits">0</div>
-                    <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Credits</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="panel">
-              <div class="panel-header"><div class="panel-title">🕐 Recent Scans</div></div>
-              <div class="panel-body" id="scannerRecent">
-                <div class="empty-state" style="padding:16px">
-                  <div class="empty-sub">No scans yet</div>
-                </div>
-              </div>
-            </div>
+          <!-- PDF option -->
+          <button onclick="showPage('pdf')" style="width:100%;background:transparent;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:12px;font-size:12px;font-weight:600;color:var(--app-text3);cursor:pointer;margin-top:10px;font-family:var(--app-font);touch-action:manipulation;">
+            📄 Import a PDF receipt instead
+          </button>
+
+          <!-- Hidden compat elements -->
+          <div style="display:none;">
+            <div class="scan-zone" id="scanZone"></div>
+            <span id="scanIcon">📷</span>
+            <span id="scanTitle"></span>
+            <span id="scanSub"></span>
+            <span id="scanBtnLabel"></span>
+            <div id="scanPhotoTip"></div>
+            <span id="statTotalScans">0</span>
+            <span id="statTotalItems">0</span>
+            <span id="statCredits">0</span>
           </div>
         </div>
 
-        <!-- SCAN RESULTS -->
-        <div id="scanResults" class="hidden" style="margin-top:18px">
-          <!-- Insight summary bar -->
-          <div id="scanCelebration" style="display:none;animation:fadeIn .4s ease;">
-            <div id="scanInsightBar" style="background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.25);border-radius:12px;padding:14px 16px;margin-bottom:4px;">
-              <div id="scanCelebTitle" style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.4;"></div>
-              <div id="scanCelebSub" style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;"></div>
+        <!-- SCAN RESULTS — shown after scan completes -->
+        <div id="scanResults" class="hidden" style="padding:20px;">
+
+          <!-- Insight bar -->
+          <div id="scanCelebration" style="display:none;">
+            <div id="scanInsightBar" style="background:linear-gradient(135deg,#0f1f17,#0a1510);border:1px solid rgba(91,173,138,0.25);border-radius:18px;padding:16px 18px;margin-bottom:14px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.15) 0%,transparent 70%);pointer-events:none;"></div>
+              <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#5BAD8A;font-weight:600;margin-bottom:5px;">GuardNest found</div>
+              <div id="scanCelebTitle" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-0.02em;line-height:1.2;"></div>
+              <div id="scanCelebSub" style="font-size:12px;color:rgba(255,255,255,0.4);line-height:1.5;"></div>
             </div>
           </div>
 
-          <div class="panel" style="margin-top:12px;">
-            <div class="panel-header">
-              <div class="panel-title" id="resultsTitle">📦 Your Fridge</div>
-              <button class="btn btn-gold" onclick="saveScanResults()" id="btnSave" style="padding:10px 16px;font-size:12px;display:none;">
-                ✅ Save
-              </button>
-            </div>
-            <div class="panel-body">
-              <div id="manifestGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
-            </div>
+          <!-- Results header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div id="resultsTitle" style="font-size:16px;font-weight:700;color:var(--app-text);letter-spacing:-0.01em;">Your Fridge</div>
+            <button onclick="saveScanResults()" id="btnSave" style="display:none;background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--app-font);touch-action:manipulation;">Save ✓</button>
           </div>
 
-          <!-- Persistent save banner — only shows after interaction -->
-          <div id="guestSaveBanner" style="display:none;position:sticky;bottom:70px;margin:12px 0;background:linear-gradient(135deg,#1a2e1a,#1e3a1e);border:1px solid rgba(76,175,130,.4);border-radius:14px;padding:14px 16px;align-items:center;justify-content:space-between;gap:12px;z-index:100;">
+          <!-- Manifest grid -->
+          <div id="manifestGrid" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+          <!-- Guest save banner -->
+          <div id="guestSaveBanner" style="display:none;position:sticky;bottom:76px;margin:14px 0 0;background:#1A1A1A;border:1px solid rgba(91,173,138,0.3);border-radius:18px;padding:16px 18px;align-items:center;justify-content:space-between;gap:12px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
             <div>
               <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">This disappears when you close.</div>
-              <div style="font-size:11px;color:rgba(255,255,255,.4);">Save free to keep tracking.</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.35);">Save free to keep tracking.</div>
             </div>
-            <button onclick="guestSaveAnonymous();" style="background:#4CAF82;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;color:#0e1117;cursor:pointer;white-space:nowrap;touch-action:manipulation;">
+            <button onclick="guestSaveAnonymous();" style="background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;touch-action:manipulation;font-family:var(--app-font);">
               Save free →
             </button>
           </div>
         </div>
+
       </div>
 
       <!-- ─── ALERTS ─── -->
@@ -3190,7 +3205,7 @@ function logError(source, message, extra) {
   <div id="ob-step3" style="display:none;width:100%;text-align:center;">
     <div style="font-size:48px;margin-bottom:16px;" id="obScanEmoji">📸</div>
     <div class="ob-title" style="margin-bottom:8px;" id="obScanTitle">READING YOUR FRIDGE</div>
-    <p class="ob-sub" id="fridgeScanStatus">Identifying everything inside...</p>
+    <p class="ob-sub" id="fridgeScanStatus">Reading freshness levels...</p>
     <div style="height:4px;background:var(--surface);border-radius:2px;overflow:hidden;margin:20px 0;">
       <div id="fridgeScanBar" style="height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s;"></div>
     </div>
@@ -4884,7 +4899,7 @@ async function handleImageScan(input) {
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   const file = input.files[0];
 
-  document.getElementById('scanResults').classList.add('hidden');
+  document.getElementById('scanResults').classList.add('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='block'; })();
 
   // Show preview in overlay
   const previewUrl = URL.createObjectURL(file);
@@ -4939,7 +4954,7 @@ async function handleImageScan(input) {
     logError('render_manifest_failed', renderErr.message, { scan_type: 'receipt', items: result.length });
     console.error('renderManifest crashed:', renderErr);
   }
-  document.getElementById('scanResults').classList.remove('hidden');
+  document.getElementById('scanResults').classList.remove('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
   if (!localStorage.getItem('guardnest_first_scan_completed')) {
     localStorage.setItem('guardnest_first_scan_completed', 'true');
   }
@@ -6908,7 +6923,7 @@ function startPhotoScan(type) {
   window._currentScanType = type;
   const emoji = type === 'pantry' ? '🗄️' : '🧊';
   const title = type === 'pantry' ? 'READING YOUR PANTRY' : 'READING YOUR FRIDGE';
-  const status = type === 'pantry' ? 'Identifying pantry items...' : 'Identifying everything inside...';
+  const status = type === 'pantry' ? 'Reading freshness levels...' : 'Reading freshness levels...';
   const el = document.getElementById('obScanEmoji');
   const titleEl = document.getElementById('obScanTitle');
   const statusEl = document.getElementById('fridgeScanStatus');
@@ -7012,15 +7027,15 @@ async function handleFridgePhoto(input, scanType) {
 
     const bar    = document.getElementById('fridgeScanBar');
     const status = document.getElementById('fridgeScanStatus');
-    status.textContent = `Reading your ${typeLabel}...`;
+    status.textContent = `Mapping your ${typeLabel}...`;
 
     let progress = 0;
     const interval = setInterval(() => {
       progress = Math.min(progress + 3, 92);
       bar.style.width = progress + '%';
-      if (progress > 30 && progress < 50) status.textContent = 'Identifying items...';
+      if (progress > 30 && progress < 50) status.textContent = 'Reading freshness levels...';
       if (progress > 50 && progress < 70) status.textContent = 'Almost done...';
-      if (progress > 70) status.textContent = 'Finishing up...';
+      if (progress > 70) status.textContent = 'Almost done...';
     }, 600);
 
     try {
@@ -7086,7 +7101,7 @@ async function handleFridgePhoto(input, scanType) {
 
   } else {
     // ── MAIN SCANNER PAGE PATH ─────────────────────────────────
-    document.getElementById('scanResults').classList.add('hidden');
+    document.getElementById('scanResults').classList.add('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='block'; })();
 
     const previewUrl = URL.createObjectURL(file);
     // Patch overlay step labels for fridge/pantry context
@@ -7176,7 +7191,7 @@ async function handleFridgePhoto(input, scanType) {
         logError('render_manifest_failed', renderErr.message, { scan_type: type, items: items.length });
         console.error('renderManifest crashed:', renderErr);
       }
-      document.getElementById('scanResults').classList.remove('hidden');
+      document.getElementById('scanResults').classList.remove('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
       if (!localStorage.getItem('guardnest_first_scan_completed')) {
         localStorage.setItem('guardnest_first_scan_completed', 'true');
       }
@@ -7191,7 +7206,7 @@ async function handleFridgePhoto(input, scanType) {
         // Explicitly show results and scroll to them — fixes Android not routing back
         const scanResults = document.getElementById('scanResults');
         if (scanResults) {
-          scanResults.classList.remove('hidden');
+          scanResults.classList.remove('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
           setTimeout(() => {
             scanResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 200);
@@ -8595,7 +8610,7 @@ function showManualEntry() {
 
   const scanResults = document.getElementById('scanResults');
   if (scanResults) {
-    scanResults.classList.remove('hidden');
+    scanResults.classList.remove('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
     const manifestGrid = document.getElementById('manifestGrid');
     if (manifestGrid) manifestGrid.parentNode.insertBefore(panel, manifestGrid);
   } else {
@@ -8646,7 +8661,7 @@ function saveManualItems() {
   const panel = document.getElementById('manualEntryPanel');
   if (panel) panel.style.display = 'none';
   renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
-  document.getElementById('scanResults').classList.remove('hidden');
+  document.getElementById('scanResults').classList.remove('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
   gtag('event', 'results_viewed', { scan_type: 'manual', items_found: items.length });
   showToast(`${items.length} item${items.length !== 1 ? 's' : ''} added — save to keep them`, 'success');
   scheduleGuestSavePrompt('scanResults', 'manifestGrid');
