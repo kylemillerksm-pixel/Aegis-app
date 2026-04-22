@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.1.4';
+  const APP_VERSION = '1.2.1';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -59,7 +59,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://js.stripe.com">
 <!-- Fonts load async — don't block render -->
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
 <!-- Critical scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Stripe loads async — only needed at checkout -->
@@ -73,6 +73,7 @@
   .demo-item-selected { background:rgba(76,175,130,.2) !important; border-color:rgba(76,175,130,.6) !important; transform:scale(1.05) !important; }
 
   :root {
+    /* ── DARK THEME (onboarding / guest) ── */
     --black:    #0E1117;
     --dark:     #141920;
     --dark2:    #1A2028;
@@ -92,6 +93,27 @@
     --text:     #EEF0F4;
     --text2:    #8A9AAC;
     --text3:    #4A5668;
+
+    /* ── LIGHT THEME (app) ── */
+    --app-bg:        #F5F3EF;
+    --app-surface:   #FFFFFF;
+    --app-border:    rgba(0,0,0,0.06);
+    --app-border2:   rgba(0,0,0,0.1);
+    --app-text:      #1A1A1A;
+    --app-text2:     rgba(26,26,26,0.5);
+    --app-text3:     rgba(26,26,26,0.3);
+    --app-green:     #5BAD8A;
+    --app-green2:    #3D8F6E;
+    --app-green-bg:  rgba(91,173,138,0.08);
+    --app-green-bdr: rgba(91,173,138,0.2);
+    --app-red:       #E8735A;
+    --app-amber:     #E8A44A;
+    --app-shadow:    0 1px 4px rgba(0,0,0,0.06);
+    --app-shadow2:   0 4px 16px rgba(0,0,0,0.08);
+    --app-radius:    16px;
+    --app-radius-sm: 12px;
+    --app-radius-lg: 20px;
+    --app-font:      'DM Sans', 'Helvetica Neue', sans-serif;
   }
 
   html, body {
@@ -101,6 +123,13 @@
     font-size: 15px;
     min-height: 100vh;
     overflow-x: hidden;
+  }
+
+  /* ── APP LIGHT THEME BASE ── */
+  #screen-app {
+    background: var(--app-bg) !important;
+    color: var(--app-text) !important;
+    font-family: var(--app-font) !important;
   }
 
   body::before {
@@ -1511,53 +1540,63 @@
     background: linear-gradient(90deg, var(--gold2), var(--gold3));
     border-radius: 2px; transition: width .6s ease;
   }
+  /* ── NEW BOTTOM NAV ── */
   .bottom-nav {
     display: none;
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--dark);
-    border-top: 1px solid var(--border);
+    background: rgba(245,243,239,0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(0,0,0,0.07);
     z-index: 1000;
-    padding: 0 0 env(safe-area-inset-bottom, 0);
+    padding: 0 0 env(safe-area-inset-bottom, 12px);
   }
   .bottom-nav-inner {
-    display: flex; align-items: stretch;
-    height: 60px;
+    display: flex; align-items: center; justify-content: space-around;
+    height: 64px; padding: 0 16px;
+    max-width: 480px; margin: 0 auto;
   }
   .bottom-nav-item {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 3px; cursor: pointer;
-    color: var(--text3); transition: color .15s;
+    gap: 4px; cursor: pointer;
+    color: var(--app-text3);
     border: none; background: transparent;
-    padding: 0; position: relative;
+    padding: 4px 0; position: relative;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     min-height: 44px;
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none; -webkit-user-select: none;
+    font-family: var(--app-font);
+    transition: color .2s;
   }
-  .bottom-nav-item.active { color: var(--gold); }
-  .bottom-nav-item.active .bn-icon { opacity: 1; }
-  .bottom-nav-item svg { width: 22px; height: 22px; opacity: .5; transition: opacity .15s; }
-  .bottom-nav-item.active svg { opacity: 1; }
+  .bottom-nav-item.active { color: var(--app-green); }
+  .bottom-nav-item svg { width: 20px; height: 20px; transition: all .2s; }
+  .bn-icon-wrap {
+    width: 38px; height: 38px; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  .bottom-nav-item.active .bn-icon-wrap { background: rgba(91,173,138,0.1); }
   .bn-label {
     font-size: 9px; font-weight: 600;
-    letter-spacing: .06em; text-transform: uppercase;
+    letter-spacing: .07em; text-transform: uppercase;
+    font-family: var(--app-font);
   }
   .bn-scan {
-    width: 52px; height: 52px;
-    background: var(--gold); border-radius: 50%;
+    width: 52px; height: 52px; border-radius: 17px;
+    background: #1A1A1A;
     display: flex; align-items: center; justify-content: center;
-    margin-top: -16px;
-    box-shadow: 0 4px 20px rgba(245,200,66,.4);
-    transition: transform .15s;
+    margin-top: -18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    transition: all .2s cubic-bezier(0.16,1,0.3,1);
   }
-  .bn-scan:active { transform: scale(.94); }
-  .bn-scan svg { width: 24px; height: 24px; color: var(--black); opacity: 1 !important; }
-  .bottom-nav-item.scan-btn { flex: 1.2; }
+  .bn-scan:active { transform: scale(.93); }
+  .bn-scan svg { width: 22px; height: 22px; stroke: #fff; opacity: 1 !important; }
+  .bottom-nav-item.scan-btn { flex: 1; }
   .bn-badge {
-    position: absolute; top: 6px; right: calc(50% - 18px);
-    background: var(--red); color: #fff;
+    position: absolute; top: 2px; right: calc(50% - 22px);
+    background: var(--app-red); color: #fff;
     font-size: 8px; font-weight: 700;
     padding: 1px 4px; border-radius: 8px;
     min-width: 14px; text-align: center;
@@ -1995,7 +2034,6 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 // ── ERROR MONITORING — catches all JS errors and sends to GA4 ──
 window.onerror = function(msg, url, line, col, error) {
   if (typeof gtag === 'undefined') return;
-  if (!msg || msg === 'Script error.' || msg.trim() === '') return; // skip empty/cross-origin noise
   gtag('event', 'js_error', {
     error_message: (msg || '').substring(0, 150),
     line_number: line || 0,
@@ -2196,30 +2234,36 @@ function logError(source, message, extra) {
     </button>
   </div>
 
-  <!-- MOBILE HEADER -->
-  <div class="mobile-header" id="mobileHeader">
-    <div class="mobile-header-logo">
-      <div class="mobile-header-shield"></div>
-      GuardNest
-    </div>
-    <div style="font-size:11px;color:var(--text3)" id="mobilePageTitle">DASHBOARD</div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button onclick="showFloatingFeedback()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:11px;color:rgba(255,255,255,.5);cursor:pointer;touch-action:manipulation;min-height:36px;">
-        💬
-      </button>
-      <button class="btn btn-gold" onclick="showPage('scanner')" style="padding:8px 14px;font-size:12px;min-height:36px">+ Scan</button>
+  <!-- APP LIGHT THEME HEADER -->
+  <div id="mobileHeader" style="display:none;position:sticky;top:0;z-index:200;background:rgba(245,243,239,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,0.06);padding:14px 20px 10px;font-family:var(--app-font);">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-green);font-weight:600;margin-bottom:2px;">Good morning</div>
+        <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;color:var(--app-text);line-height:1;" id="mobilePageTitle">Kyle 👋</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <!-- Tier chip -->
+        <div id="mobileTierChip" style="display:flex;align-items:center;gap:5px;background:rgba(91,173,138,0.1);border:1px solid rgba(91,173,138,0.2);border-radius:99px;padding:5px 10px;">
+          <span id="mobileTierIcon" style="font-size:12px;">🛡️</span>
+          <span id="mobileTierName" style="font-size:10px;font-weight:700;color:var(--app-green);letter-spacing:0.02em;white-space:nowrap;">The Protector</span>
+        </div>
+        <!-- Streak -->
+        <div id="mobileStreakChip" style="display:flex;align-items:center;gap:4px;background:rgba(232,163,74,0.1);border:1px solid rgba(232,163,74,0.2);border-radius:99px;padding:5px 10px;">
+          <span style="font-size:12px;">🔥</span>
+          <span id="mobileStreakNum" style="font-size:10px;font-weight:700;color:#C4821A;">0w</span>
+        </div>
+        <button onclick="showFloatingFeedback()" style="width:34px;height:34px;background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.08);border-radius:10px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;">💬</button>
+      </div>
     </div>
   </div>
 
-  <!-- MOBILE XP BAR -->
-  <div class="mobile-xp-bar" id="mobileXpBar">
+  <!-- Hidden XP bar — kept for JS compatibility, not shown -->
+  <div id="mobileXpBar" style="display:none">
     <div class="mobile-xp-row">
-      <div class="mobile-level" id="mobileLevelText">Lvl 1 — First Scan</div>
+      <div class="mobile-level" id="mobileLevelText">Lvl 1</div>
       <div class="mobile-credits">⚡ <span id="mobileCredits">0</span> XP</div>
     </div>
-    <div class="mobile-xp-track">
-      <div class="mobile-xp-fill" id="mobileXpFill"></div>
-    </div>
+    <div class="mobile-xp-track"><div class="mobile-xp-fill" id="mobileXpFill"></div></div>
   </div>
 
   <!-- SIDEBAR -->
@@ -2314,78 +2358,133 @@ function logError(source, message, extra) {
 
     <div class="content">
 
-      <!-- ─── DASHBOARD: DAILY BRIEF ─── -->
-      <div class="page active" id="page-dashboard">
+      <!-- ─── DASHBOARD: HOME ─── -->
+      <div class="page active" id="page-dashboard" style="font-family:var(--app-font);background:var(--app-bg);min-height:100vh;padding:20px 20px 20px;">
 
-        <!-- STREAK WARNING BANNER -->
-        <div class="streak-warning hidden" id="streakWarning">
-          <div class="streak-warning-icon">⚠️</div>
-          <div class="streak-warning-text">
-            <strong>Keep your streak going.</strong><br>
-            Scan a receipt this week to stay on track — <span id="swStreakNum">0</span> weeks and counting.
-          </div>
-          <div class="streak-warning-dismiss" onclick="dismissStreakWarning()" ontouchend="this.onclick()">✕</div>
-        </div>
-
-        <!-- DAILY BRIEF CARD -->
-        <div class="brief-section-label">👀 What Needs Attention</div>
-        <div id="briefCardWrap">
-          <div class="brief-card clear brief-card-enter" id="briefCard">
-            <div class="brief-card-body" id="briefCardBody">
-              <div class="empty-state" style="padding:28px;text-align:center">
-                <span class="empty-icon">✅</span>
-                <div class="empty-title">All Clear</div>
-                <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
-              </div>
+        <!-- AT RISK BANNER -->
+        <div id="dashAtRiskBanner" style="display:none;background:linear-gradient(135deg,#fff8f0,#fff4ea);border:1px solid rgba(232,115,90,0.2);border-radius:18px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(232,115,90,0.08);margin-bottom:14px;cursor:pointer;" onclick="showPage('vault')">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(232,115,90,0.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">⚠️</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#1A1A1A;letter-spacing:-0.01em;"><span id="dashRisk">$0</span> at risk this week</div>
+              <div style="font-size:11px;color:rgba(26,26,26,0.45);margin-top:2px;"><span id="dashAlertCount">0</span> items expiring soon</div>
             </div>
           </div>
-          <div class="brief-dots" id="briefDots"></div>
+          <div style="font-size:11px;font-weight:700;color:#E8735A;letter-spacing:0.06em;text-transform:uppercase;">View →</div>
         </div>
 
-        <!-- STREAK + VAULT SUMMARY -->
-        <div class="brief-section-label">This Week</div>
-        <div class="brief-streak-row">
-          <div class="brief-streak-box">
-            <div class="brief-streak-fire" id="bsf">🔥</div>
-            <div class="brief-streak-num" id="bsn">0</div>
-            <div class="brief-streak-info-label">week streak</div>
+        <!-- USE IT TODAY CARD -->
+        <div id="dashTodayCard" style="display:none;background:linear-gradient(135deg,#1A1A1A,#2a2a2a);border-radius:18px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,0.12);margin-bottom:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.15) 0%,transparent 70%);pointer-events:none;"></div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div id="dashTodayEmoji" style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🍗</div>
+            <div>
+              <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-green);font-weight:600;margin-bottom:3px;">Use it today</div>
+              <div id="dashTodayName" style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;">—</div>
+              <div id="dashTodaySub" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">Expires tomorrow</div>
+            </div>
           </div>
-          <div class="brief-vault-box">
-            <div class="brief-vault-num" id="bvn">0</div>
-            <div class="brief-vault-label">Items Tracked</div>
-            <div class="brief-vault-sub" id="bvv">$0 value</div>
+          <button onclick="markTodayItemUsed()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);font-family:var(--app-font);flex-shrink:0;" id="dashTodayBtn">Mark used</button>
+        </div>
+
+        <!-- SAVINGS CARD -->
+        <div style="background:linear-gradient(135deg,#5BAD8A,#3d8f6e);border-radius:22px;padding:22px 24px;position:relative;overflow:hidden;box-shadow:0 12px 40px rgba(91,173,138,0.25);margin-bottom:14px;">
+          <div style="position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.08);pointer-events:none;"></div>
+          <div style="position:absolute;bottom:-30px;right:20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.05);pointer-events:none;"></div>
+
+          <!-- Savings numbers -->
+          <div style="display:flex;gap:24px;margin-bottom:20px;">
+            <div>
+              <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.6);font-weight:600;margin-bottom:4px;">This month</div>
+              <div style="font-size:32px;font-weight:800;letter-spacing:-0.04em;color:#fff;line-height:1;" id="dashMonthlySaved">$0</div>
+            </div>
+            <div style="width:1px;background:rgba(255,255,255,0.15);align-self:stretch;"></div>
+            <div>
+              <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.6);font-weight:600;margin-bottom:4px;">All time</div>
+              <div style="font-size:32px;font-weight:800;letter-spacing:-0.04em;color:rgba(255,255,255,0.75);line-height:1;" id="dashLifetimeSaved">$0</div>
+            </div>
+          </div>
+
+          <!-- Tier progress -->
+          <div style="border-top:1px solid rgba(255,255,255,0.15);padding-top:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:7px;">
+                <span id="dashTierIcon" style="font-size:15px;">🛡️</span>
+                <span id="dashTierName" style="font-size:12px;font-weight:700;color:#fff;font-family:var(--app-font);">The Protector</span>
+              </div>
+              <div id="dashNextTier" style="font-size:10px;color:rgba(255,255,255,0.4);font-family:var(--app-font);">500 pts to next tier</div>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:99px;overflow:hidden;">
+              <div id="dashTierBar" style="height:100%;width:0%;background:rgba(255,255,255,0.85);border-radius:99px;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:5px;">
+              <span style="font-size:10px;color:rgba(255,255,255,0.35);font-family:var(--app-font);">Impact score: <span id="dashImpactScore">0</span></span>
+              <span id="dashNextThreshold" style="font-size:10px;color:rgba(255,255,255,0.35);font-family:var(--app-font);"></span>
+            </div>
           </div>
         </div>
 
-        <!-- MISSIONS COMPACT -->
-        <div class="brief-section-label">🎯 Today's Actions</div>
-        <div class="panel" style="margin-bottom:0">
-          <div class="panel-header">
-            <div class="panel-title">This Week</div>
-            <div class="panel-action" id="missionXpPool"></div>
+        <!-- SCAN BUTTON -->
+        <button onclick="showPage('scanner')" style="width:100%;background:#1A1A1A;border:none;border-radius:18px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,0.1);margin-bottom:14px;font-family:var(--app-font);touch-action:manipulation;">
+          <div style="text-align:left;">
+            <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;">Scan Your Fridge</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">Point · Identify · Track</div>
           </div>
-          <div id="missionsList" class="panel-body" style="padding:0"></div>
+          <div style="width:44px;height:44px;border-radius:13px;background:var(--app-green);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(91,173,138,0.4);">📷</div>
+        </button>
+
+        <!-- FRIDGE ITEMS -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-text3);font-weight:600;font-family:var(--app-font);">In Your Fridge</div>
+            <div style="font-size:11px;color:var(--app-green);font-weight:700;font-family:var(--app-font);"><span id="dashTotal">0</span> items</div>
+          </div>
+          <div id="dashFridgeItems" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:#fff;border:1px solid var(--app-border);border-radius:16px;padding:20px;text-align:center;color:var(--app-text3);font-size:13px;font-family:var(--app-font);">
+              Scan your fridge to see what's inside 🌿
+            </div>
+          </div>
         </div>
 
-        <!-- hidden elements still needed by other functions -->
+        <!-- STATS ROW -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div style="background:#fff;border:1px solid var(--app-border);border-radius:16px;padding:18px 16px;box-shadow:var(--app-shadow);">
+            <div style="font-size:20px;margin-bottom:10px;">♻️</div>
+            <div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:var(--app-text);font-family:var(--app-font);" id="dashProtected">0</div>
+            <div style="font-size:11px;color:var(--app-green);font-weight:600;margin-top:3px;font-family:var(--app-font);">Items rescued</div>
+            <div style="font-size:10px;color:var(--app-text3);margin-top:2px;font-family:var(--app-font);">from waste</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--app-border);border-radius:16px;padding:18px 16px;box-shadow:var(--app-shadow);">
+            <div style="font-size:20px;margin-bottom:10px;">📷</div>
+            <div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:var(--app-text);font-family:var(--app-font);" id="dashCredits">0</div>
+            <div style="font-size:11px;color:var(--app-green);font-weight:600;margin-top:3px;font-family:var(--app-font);">Scans done</div>
+            <div style="font-size:10px;color:var(--app-text3);margin-top:2px;font-family:var(--app-font);">this month</div>
+          </div>
+        </div>
+
+        <!-- hidden elements kept for JS compatibility -->
         <div style="display:none">
-          <span id="dashTotal">0</span>
-          <span id="dashRisk">$0</span>
-          <span id="dashProtected">$0</span>
-          <span id="dashCredits">0</span>
+          <span id="dashRiskHidden">$0</span>
           <span id="msTotal">0</span>
           <span id="msProtected">$0</span>
           <span id="msAlerts">0</span>
           <span id="msCredits">0</span>
-          <span id="missionStreak" class="mission-streak"></span>
+          <span id="missionStreak"></span>
           <span id="streakNum">0</span>
           <span id="missionLevelTitle"></span>
           <span id="missionXpFill"></span>
           <span id="missionXpLabel"></span>
+          <span id="missionXpPool"></span>
           <span id="urgentContent"></span>
           <div id="dashAlerts"></div>
           <div id="dashRecent"></div>
           <div id="dashTopAssets"></div>
+          <div id="briefCardWrap"><div id="briefCard"><div id="briefCardBody"></div></div><div id="briefDots"></div></div>
+          <div id="streakWarning"></div>
+          <span id="swStreakNum">0</span>
+          <div class="brief-streak-box"><span id="bsf">🔥</span><span id="bsn">0</span></div>
+          <div class="brief-vault-box"><span id="bvn">0</span><span id="bvv">$0</span><span id="bvl"></span></div>
+          <div id="missionsList"></div>
         </div>
 
       </div>
@@ -2515,92 +2614,103 @@ function logError(source, message, extra) {
       </div>
 
       <!-- ─── VAULT ─── -->
-      <div class="page" id="page-vault">
-        <div class="stat-row cols3" style="margin-bottom:20px">
-          <div class="stat-card c-gold"><div class="sc-label">Items Tracked</div><div class="sc-num" id="vTotal">0</div></div>
-          <div class="stat-card c-green"><div class="sc-label">Total Value</div><div class="sc-num" id="vValue">$0</div></div>
-          <div class="stat-card c-blue"><div class="sc-label">With Warranty</div><div class="sc-num" id="vWarranty">0</div></div>
+      <div class="page" id="page-vault" style="font-family:var(--app-font);background:var(--app-bg);min-height:100vh;padding:20px 20px 20px;">
+
+        <!-- HEADER -->
+        <div style="margin-bottom:20px;">
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-green);font-weight:600;margin-bottom:3px;">Your Fridge</div>
+          <div style="font-size:22px;font-weight:700;letter-spacing:-0.02em;color:var(--app-text);margin-bottom:2px;">Vault</div>
+          <div style="font-size:12px;color:var(--app-text2);">GuardNest is watching over <span id="vTotal">0</span> items</div>
         </div>
 
-        <!-- SMART ROW: Expiring This Week -->
-        <div class="panel" style="margin-bottom:18px" id="rowExpiring">
-          <div class="panel-header">
-            <div class="panel-title">⏰ Use This Week</div>
-            <div class="panel-action" onclick="showPage('alerts')">View Alerts →</div>
+        <!-- SUMMARY STRIP -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div style="background:#fff;border:1px solid var(--app-border);border-radius:14px;padding:14px 12px;box-shadow:var(--app-shadow);text-align:center;">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--app-green);line-height:1;" id="vTotalDisplay">0</div>
+            <div style="font-size:10px;font-weight:600;color:var(--app-text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">Tracked</div>
           </div>
-          <div id="rowExpiringBody">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">✅</span>
-              <div class="empty-sub">Nothing expiring this week</div>
+          <div style="background:#fff;border:1px solid var(--app-border);border-radius:14px;padding:14px 12px;box-shadow:var(--app-shadow);text-align:center;">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:#E8735A;line-height:1;" id="vAtRiskDisplay">$0</div>
+            <div style="font-size:10px;font-weight:600;color:var(--app-text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">At Risk</div>
+          </div>
+          <div style="background:#fff;border:1px solid var(--app-border);border-radius:14px;padding:14px 12px;box-shadow:var(--app-shadow);text-align:center;">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--app-green);line-height:1;" id="vValue">$0</div>
+            <div style="font-size:10px;font-weight:600;color:var(--app-text3);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">Rescued</div>
+          </div>
+        </div>
+
+        <!-- AUTO-TRACKING NOTICE -->
+        <div style="background:var(--app-green-bg);border:1px solid var(--app-green-bdr);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span style="font-size:18px;">🤖</span>
+          <div style="font-size:12px;color:rgba(26,26,26,0.6);line-height:1.5;font-family:var(--app-font);">
+            <span style="font-weight:700;color:var(--app-green2);">Auto-tracking is on.</span> Items move to rescued automatically when their window closes.
+          </div>
+        </div>
+
+        <!-- FILTER PILLS -->
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;-webkit-overflow-scrolling:touch;" id="vaultFilterRow">
+          <button onclick="setVaultFilter('all')" id="vf-all" style="background:#1A1A1A;border:1px solid #1A1A1A;border-radius:99px;padding:7px 16px;cursor:pointer;flex-shrink:0;font-size:12px;font-weight:600;color:#fff;font-family:var(--app-font);transition:all 0.18s;">All</button>
+          <button onclick="setVaultFilter('urgent')" id="vf-urgent" style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:99px;padding:7px 16px;cursor:pointer;flex-shrink:0;font-size:12px;font-weight:600;color:#E8735A;font-family:var(--app-font);transition:all 0.18s;display:flex;align-items:center;gap:5px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:#E8735A;flex-shrink:0;"></span>Urgent <span id="vaultUrgentCount" style="background:rgba(232,115,90,0.12);border-radius:99px;padding:1px 6px;font-size:10px;font-weight:700;color:#E8735A;"></span>
+          </button>
+          <button onclick="setVaultFilter('produce')" id="vf-produce" style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:99px;padding:7px 16px;cursor:pointer;flex-shrink:0;font-size:12px;font-weight:600;color:rgba(26,26,26,0.6);font-family:var(--app-font);">Produce</button>
+          <button onclick="setVaultFilter('dairy')" id="vf-dairy" style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:99px;padding:7px 16px;cursor:pointer;flex-shrink:0;font-size:12px;font-weight:600;color:rgba(26,26,26,0.6);font-family:var(--app-font);">Dairy</button>
+          <button onclick="setVaultFilter('protein')" id="vf-protein" style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:99px;padding:7px 16px;cursor:pointer;flex-shrink:0;font-size:12px;font-weight:600;color:rgba(26,26,26,0.6);font-family:var(--app-font);">Protein</button>
+        </div>
+
+        <!-- ACTIVE ITEMS LIST -->
+        <div style="margin-bottom:6px;">
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-text3);font-weight:600;margin-bottom:12px;font-family:var(--app-font);">Active · <span id="vaultActiveCount">0</span> items</div>
+          <div id="vaultActiveList" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:#fff;border:1px solid var(--app-border);border-radius:16px;padding:20px;text-align:center;color:var(--app-text3);font-size:13px;font-family:var(--app-font);">
+              Scan your fridge to start tracking 🌿
             </div>
           </div>
         </div>
 
-        <!-- SMART ROW: High Value Assets -->
-        <div class="panel" style="margin-bottom:18px">
-          <div class="panel-header">
-            <div class="panel-title">💎 High Value Items</div>
-            <div class="panel-action" id="highValueCount"></div>
-          </div>
-          <div class="vault-header">
-            <div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
-          </div>
-          <div id="rowHighValue">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">🛡️</span>
-              <div class="empty-sub">No high value items yet</div>
-            </div>
+        <!-- RESCUED DIVIDER -->
+        <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px;">
+          <div style="flex:1;height:1px;background:rgba(0,0,0,0.08);"></div>
+          <div style="font-size:11px;color:var(--app-text3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;font-family:var(--app-font);">Rescued 🌿</div>
+          <div style="flex:1;height:1px;background:rgba(0,0,0,0.08);"></div>
+        </div>
+
+        <div style="font-size:12px;color:var(--app-text2);line-height:1.6;text-align:center;margin-bottom:14px;font-family:var(--app-font);">
+          Items used before they expired.<br><span style="color:var(--app-green);font-weight:600;" id="vaultRescuedValue">$0 rescued from waste.</span>
+        </div>
+
+        <!-- RESCUED ITEMS LIST -->
+        <div id="vaultRescuedList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <div style="background:#fff;border:1px solid var(--app-border);border-radius:16px;padding:16px;text-align:center;color:var(--app-text3);font-size:12px;font-family:var(--app-font);">
+            Items you use will appear here automatically 🌿
           </div>
         </div>
 
-        <!-- SMART ROW: Recently Added -->
-        <div class="panel" style="margin-bottom:18px">
-          <div class="panel-header">
-            <div class="panel-title">⚡ Recently Added</div>
-            <div class="panel-action" id="recentCount"></div>
-          </div>
-          <div class="vault-header">
-            <div>Item</div><div>Rarity</div><div>Price</div><div>Warranty</div><div>Status</div>
-          </div>
-          <div id="rowRecent">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">📦</span>
-              <div class="empty-sub">No items yet — scan a receipt to get started</div>
-            </div>
-          </div>
+        <!-- WEEKLY CHECK-IN -->
+        <div style="background:linear-gradient(135deg,#1A1A1A,#2a2a2a);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.1);margin-bottom:20px;">
+          <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.12) 0%,transparent 70%);pointer-events:none;"></div>
+          <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-green);font-weight:600;margin-bottom:6px;font-family:var(--app-font);">Weekly check-in</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;font-family:var(--app-font);">Anything else you used this week?</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:16px;font-family:var(--app-font);">Takes 10 seconds. Keeps your savings accurate.</div>
+          <button onclick="showVaultQuickReview()" style="background:var(--app-green);border:none;border-radius:10px;padding:10px 18px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:0.02em;font-family:var(--app-font);touch-action:manipulation;">
+            Quick Review →
+          </button>
         </div>
 
-        <!-- SMART ROW: Perishables -->
-        <div class="panel" style="margin-bottom:18px" id="rowPerishables">
-          <div class="panel-header">
-            <div class="panel-title">🥗 Fresh Items</div>
-            <div class="panel-action" id="perishableCount"></div>
-          </div>
-          <div id="rowPerishablesBody">
-            <div class="empty-state" style="padding:20px">
-              <span class="empty-icon" style="font-size:24px">🥬</span>
-              <div class="empty-sub">No perishables tracked yet</div>
-            </div>
-          </div>
+        <!-- hidden compat IDs -->
+        <div style="display:none;">
+          <div id="rowExpiringBody"></div>
+          <div id="rowHighValue"></div>
+          <div id="rowRecent"></div>
+          <div id="rowPerishablesBody"></div>
+          <div id="vaultList"></div>
+          <span id="highValueCount"></span>
+          <span id="recentCount"></span>
+          <span id="perishableCount"></span>
+          <span id="fullRegistryCount"></span>
+          <span id="vWarranty">0</span>
         </div>
 
-        <!-- FULL REGISTRY -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">🛒 Everything You Have</div>
-            <div id="fullRegistryCount" class="panel-action"></div>
-          </div>
-          <div class="vault-header" style="grid-template-columns:40px 2fr 1.2fr 1.2fr 32px">
-            <div></div><div>Item</div><div>Price</div><div>Status</div><div></div>
-          </div>
-          <div id="vaultList">
-            <div class="empty-state">
-              <span class="empty-icon">🗄️</span>
-              <div class="empty-title">Nothing here yet</div>
-              <div class="empty-sub">Scan a receipt and GuardNest will remember everything you bought</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- ─── RECEIPTS / HISTORY ─── -->
@@ -2786,41 +2896,46 @@ function logError(source, message, extra) {
   <div class="bottom-nav-inner">
 
     <button class="bottom-nav-item active" id="bn-dashboard" onclick="showPage('dashboard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
-        <path d="M9 21V12h6v9"/>
-      </svg>
+      <div class="bn-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+          <path d="M9 21V12h6v9"/>
+        </svg>
+      </div>
       <span class="bn-label">Home</span>
       <span class="bn-badge hidden" id="bnAlertBadge">0</span>
     </button>
 
     <button class="bottom-nav-item scan-btn" onclick="showPage('scanner')">
       <div class="bn-scan">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
-          <line x1="8" y1="12" x2="16" y2="12"/>
-          <line x1="12" y1="8" x2="12" y2="16"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1" stroke="white"/>
+          <rect x="14" y="3" width="7" height="7" rx="1" stroke="white"/>
+          <rect x="3" y="14" width="7" height="7" rx="1" stroke="white"/>
+          <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h3M21 18v3" stroke="white"/>
         </svg>
       </div>
-      <span class="bn-label" style="margin-top:4px">Scan</span>
+      <span class="bn-label" style="margin-top:2px">Scan</span>
     </button>
 
     <button class="bottom-nav-item" id="bn-vault" onclick="showPage('vault')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="3" y="11" width="18" height="11" rx="2"/>
-        <path d="M7 11V7a5 5 0 0110 0v4"/>
-        <circle cx="12" cy="16" r="1"/>
-      </svg>
+      <div class="bn-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 9v6M9 12h6"/>
+        </svg>
+      </div>
       <span class="bn-label">Vault</span>
     </button>
 
     <button class="bottom-nav-item" id="bn-account" onclick="showPage('account')">
-      <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <div class="bn-icon-wrap" style="position:relative;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="4"/>
           <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
         </svg>
-        <span id="bn-pro-dot" style="display:none;position:absolute;top:-2px;right:-4px;width:8px;height:8px;background:var(--gold);border-radius:50%;border:1.5px solid var(--dark);"></span>
+        <span id="bn-pro-dot" style="display:none;position:absolute;top:4px;right:4px;width:7px;height:7px;background:var(--app-green);border-radius:50%;border:1.5px solid var(--app-bg);"></span>
       </div>
       <span class="bn-label">Account</span>
     </button>
@@ -3580,23 +3695,37 @@ function isMobile() {
 function applyMobileLayout() {
   const sidebar = document.querySelector('.sidebar');
   const mobileHeader = document.getElementById('mobileHeader');
-  const mobileXpBar = document.getElementById('mobileXpBar');
   const bottomNav = document.getElementById('bottomNav');
   const topbar = document.querySelector('.topbar');
 
   if (isMobile()) {
     if (sidebar)      sidebar.style.display = 'none';
     if (mobileHeader) mobileHeader.style.display = 'flex';
-    if (mobileXpBar)  mobileXpBar.style.display = 'block';
     if (bottomNav)    bottomNav.style.display = 'block';
     if (topbar)       topbar.style.display = 'none';
   } else {
     if (sidebar)      sidebar.style.display = '';
     if (mobileHeader) mobileHeader.style.display = 'none';
-    if (mobileXpBar)  mobileXpBar.style.display = 'none';
     if (bottomNav)    bottomNav.style.display = 'none';
     if (topbar)       topbar.style.display = '';
   }
+}
+
+function markTodayItemUsed() {
+  window._todayItemUsed = true;
+  const btn = document.getElementById('dashTodayBtn');
+  if (btn) { btn.textContent = '✓ Used'; btn.style.color = '#5BAD8A'; btn.style.borderColor = 'rgba(91,173,138,0.4)'; btn.style.background = 'rgba(91,173,138,0.15)'; }
+  const todayCard = document.getElementById('dashTodayCard');
+  // Track saved amount
+  const item = allItems.find(i => i.id === window._todayItemId);
+  if (item) {
+    const amt = parseFloat(item.price || 0);
+    const monthly = parseFloat(localStorage.getItem('gn_monthly_saved') || '0') + amt;
+    const lifetime = parseFloat(localStorage.getItem('gn_lifetime_saved') || '0') + amt;
+    localStorage.setItem('gn_monthly_saved', monthly.toFixed(2));
+    localStorage.setItem('gn_lifetime_saved', lifetime.toFixed(2));
+  }
+  setTimeout(() => { if (todayCard) todayCard.style.display = 'none'; }, 1200);
 }
 
 window.addEventListener('resize', applyMobileLayout);
@@ -4045,6 +4174,39 @@ function completeMission(missionId, xp) {
   }
 }
 
+// ── TIER SYSTEM ──────────────────────────────────────────────────────
+const GN_TIERS = [
+  { name: "The Unaware",    icon: "👁️",  threshold: 0,    color: "#9AA5B4" },
+  { name: "The Noticer",    icon: "🔍",  threshold: 75,   color: "#7CB8E0" },
+  { name: "The Tracker",    icon: "📊",  threshold: 200,  color: "#6ABFA0" },
+  { name: "The Protector",  icon: "🛡️",  threshold: 400,  color: "#5BAD8A" },
+  { name: "The Optimizer",  icon: "⚙️",  threshold: 700,  color: "#4A9E7A" },
+  { name: "The Strategist", icon: "🧠",  threshold: 1100, color: "#E8A44A" },
+  { name: "The Guardian",   icon: "🌿",  threshold: 1600, color: "#E07D35" },
+  { name: "Elite Nest",     icon: "🏆",  threshold: 2500, color: "#C4821A" },
+];
+
+function getGnImpactScore(savedAmt, scans, streakWeeks) {
+  return Math.floor((savedAmt || 0) + (scans || 0) * 10 + (streakWeeks || 0) * 25);
+}
+
+function getGnTier(score) {
+  let tier = GN_TIERS[0], idx = 0;
+  for (let i = GN_TIERS.length - 1; i >= 0; i--) {
+    if (score >= GN_TIERS[i].threshold) { tier = GN_TIERS[i]; idx = i; break; }
+  }
+  const next = GN_TIERS[idx + 1] || null;
+  const progress = next ? ((score - tier.threshold) / (next.threshold - tier.threshold)) * 100 : 100;
+  return { tier, next, progress: Math.min(progress, 100), idx };
+}
+
+function getItemEmojiFresh(name) {
+  const n = (name || '').toLowerCase();
+  const map = { spinach:'🥬', chicken:'🍗', beef:'🥩', milk:'🥛', egg:'🥚', yogurt:'🫙', berry:'🫐', blueberr:'🫐', strawberr:'🍓', cheese:'🧀', broccoli:'🥦', carrot:'🥕', apple:'🍎', bread:'🍞', butter:'🧈', rice:'🍚', pasta:'🍝', tomato:'🍅', onion:'🧅', pepper:'🫑', fish:'🐟', shrimp:'🍤', bacon:'🥓', ham:'🍖', lemon:'🍋', orange:'🍊', banana:'🍌', avocado:'🥑', lettuce:'🥗', cucumber:'🥒', mushroom:'🍄' };
+  for (const [k,v] of Object.entries(map)) { if (n.includes(k)) return v; }
+  return '🥡';
+}
+
 function refreshDashboard() {
   const alerts = buildAlerts();
   const total = allItems.length;
@@ -4052,15 +4214,101 @@ function refreshDashboard() {
   const protectedVal = allItems.filter(i => (i.warranty_days||0) > 0).reduce((s,i) => s + (i.price||0), 0);
   const atRisk = alerts.reduce((s,a) => s + (a.price||0), 0);
 
+  // ── NEW DASHBOARD UI ──────────────────────────────────────────────
+  // At risk banner
+  const atRiskBanner = document.getElementById('dashAtRiskBanner');
+  const dashRiskEl = document.getElementById('dashRisk');
+  const dashAlertCount = document.getElementById('dashAlertCount');
+  if (dashRiskEl) dashRiskEl.textContent = '$' + atRisk.toFixed(2);
+  if (dashAlertCount) dashAlertCount.textContent = alerts.length;
+  if (atRiskBanner) atRiskBanner.style.display = atRisk > 0 ? 'flex' : 'none';
+
+  // Fridge items list
+  const fridgeItems = allItems.filter(i => i.days_until_spoil > 0 || i.expiry_date).sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99));
+  const fridgeEl = document.getElementById('dashFridgeItems');
+  if (fridgeEl) {
+    if (fridgeItems.length === 0) {
+      fridgeEl.innerHTML = '<div style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:16px;padding:20px;text-align:center;color:rgba(26,26,26,0.35);font-size:13px;font-family:'DM Sans',sans-serif;">Scan your fridge to see what's inside 🌿</div>';
+    } else {
+      fridgeEl.innerHTML = fridgeItems.slice(0, 6).map(item => {
+        const days = item.days_until_spoil || 0;
+        const pct = Math.min((days / 14) * 100, 100);
+        const col = days <= 2 ? '#E8735A' : days <= 4 ? '#E8A44A' : '#5BAD8A';
+        const emoji = getItemEmojiFresh(item.item_name);
+        return `<div style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+          <div style="width:42px;height:42px;border-radius:13px;background:#F5F3EF;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;">${emoji}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="font-size:14px;font-weight:600;color:#1A1A1A;font-family:'DM Sans',sans-serif;">${item.item_name||'Unknown'}</div>
+              <div style="font-size:11px;font-weight:700;color:${col};flex-shrink:0;margin-left:8px;font-family:'DM Sans',sans-serif;">${days}d left</div>
+            </div>
+            <div style="height:3px;background:rgba(0,0,0,0.06);border-radius:99px;overflow:hidden;margin-top:7px;"><div style="height:100%;width:${pct}%;background:${col};border-radius:99px;"></div></div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Today card — most urgent item
+  const todayCard = document.getElementById('dashTodayCard');
+  const urgentItems = allItems.filter(i => (i.days_until_spoil || 0) <= 2 && (i.days_until_spoil || 0) >= 0);
+  if (todayCard) {
+    if (urgentItems.length > 0 && !window._todayItemUsed) {
+      const item = urgentItems[0];
+      todayCard.style.display = 'flex';
+      const emojiEl = document.getElementById('dashTodayEmoji');
+      const nameEl = document.getElementById('dashTodayName');
+      const subEl = document.getElementById('dashTodaySub');
+      if (emojiEl) emojiEl.textContent = getItemEmojiFresh(item.item_name);
+      if (nameEl) nameEl.textContent = item.item_name || 'Unknown';
+      if (subEl) subEl.textContent = item.days_until_spoil <= 0 ? 'Expired — use or remove' : item.days_until_spoil === 1 ? 'Expires tomorrow · $' + (item.price||0).toFixed(2) + ' saved' : `${item.days_until_spoil} days left · $${(item.price||0).toFixed(2)} saved`;
+      window._todayItemId = item.id;
+    } else {
+      todayCard.style.display = 'none';
+    }
+  }
+
+  // Savings numbers
+  const savedThisMonth = parseFloat(localStorage.getItem('gn_monthly_saved') || '0');
+  const savedLifetime  = parseFloat(localStorage.getItem('gn_lifetime_saved') || '0');
+  const monthEl = document.getElementById('dashMonthlySaved');
+  const lifeEl  = document.getElementById('dashLifetimeSaved');
+  if (monthEl) monthEl.textContent = '$' + savedThisMonth.toFixed(2);
+  if (lifeEl)  lifeEl.textContent  = '$' + savedLifetime.toFixed(2);
+
+  // Tier system
+  const streak = updateStreak();
+  const impactScore = getGnImpactScore(savedLifetime, scanCount, streak);
+  const { tier, next, progress } = getGnTier(impactScore);
+  const tierIcon = document.getElementById('dashTierIcon');
+  const tierName = document.getElementById('dashTierName');
+  const tierBar  = document.getElementById('dashTierBar');
+  const nextTier = document.getElementById('dashNextTier');
+  const scoreEl  = document.getElementById('dashImpactScore');
+  const nextThreshold = document.getElementById('dashNextThreshold');
+  if (tierIcon) tierIcon.textContent = tier.icon;
+  if (tierName) tierName.textContent = tier.name;
+  if (tierBar)  setTimeout(() => { tierBar.style.width = progress.toFixed(1) + '%'; }, 300);
+  if (nextTier && next) nextTier.textContent = next.icon + ' ' + next.name + ' — ' + (next.threshold - impactScore) + ' pts away';
+  if (nextTier && !next) nextTier.textContent = '🏆 Max tier reached';
+  if (scoreEl) scoreEl.textContent = impactScore;
+  if (nextThreshold && next) nextThreshold.textContent = next.threshold + ' to unlock';
+
+  // Mobile header tier chip
+  const mobileTierIcon = document.getElementById('mobileTierIcon');
+  const mobileTierName = document.getElementById('mobileTierName');
+  const mobileStreakNum = document.getElementById('mobileStreakNum');
+  if (mobileTierIcon) mobileTierIcon.textContent = tier.icon;
+  if (mobileTierName) { mobileTierName.textContent = tier.name; mobileTierName.style.color = tier.color; }
+  if (mobileStreakNum) mobileStreakNum.textContent = streak + 'w';
+
   // Update hidden fields (used by other functions)
   const dashTotal = document.getElementById('dashTotal');
-  const dashProtected = document.getElementById('dashProtected');
-  const dashRisk = document.getElementById('dashRisk');
-  const dashCredits = document.getElementById('dashCredits');
+  const dashProtectedEl = document.getElementById('dashProtected');
+  const dashCreditsEl = document.getElementById('dashCredits');
   if (dashTotal) dashTotal.textContent = total;
-  if (dashProtected) dashProtected.textContent = '$' + protectedVal.toFixed(0);
-  if (dashRisk) dashRisk.textContent = '$' + atRisk.toFixed(0);
-  if (dashCredits) dashCredits.textContent = totalCredits.toLocaleString();
+  if (dashProtectedEl) dashProtectedEl.textContent = allItems.filter(i => (i.days_until_spoil||0) > 0).length;
+  if (dashCreditsEl) dashCreditsEl.textContent = scanCount || 0;
 
   // Update scanner stats (only if elements exist)
   const stScans = document.getElementById('statTotalScans');
@@ -4366,13 +4614,157 @@ function filterVault(filter, btn) {
   refreshVault();
 }
 
+// ── VAULT FILTER STATE ──────────────────────────────────────────────
+window._vaultFilter = window._vaultFilter || 'all';
+
+function setVaultFilter(f) {
+  window._vaultFilter = f;
+  const filters = ['all','urgent','produce','dairy','protein'];
+  filters.forEach(id => {
+    const btn = document.getElementById('vf-' + id);
+    if (!btn) return;
+    const isActive = id === f;
+    btn.style.background = isActive ? '#1A1A1A' : '#fff';
+    btn.style.borderColor = isActive ? '#1A1A1A' : 'rgba(0,0,0,0.1)';
+    btn.style.color = isActive ? '#fff' : (id === 'urgent' ? '#E8735A' : 'rgba(26,26,26,0.6)');
+  });
+  refreshVault();
+}
+
+function showVaultQuickReview() {
+  showToast('Quick review coming soon 🌿', 'info');
+}
+
+function renderVaultItemNew(item, daysLeft) {
+  const emoji = getItemEmojiFresh(item.item_name);
+  const pct = Math.min(((daysLeft||0) / 14) * 100, 100);
+  const col = (daysLeft||0) <= 2 ? '#E8735A' : (daysLeft||0) <= 4 ? '#E8A44A' : '#5BAD8A';
+  const urgentBg = (daysLeft||0) <= 2 ? 'rgba(232,115,90,0.06)' : (daysLeft||0) <= 4 ? 'rgba(232,164,74,0.06)' : 'transparent';
+  const urgentBorder = (daysLeft||0) <= 2 ? 'rgba(232,115,90,0.15)' : (daysLeft||0) <= 4 ? 'rgba(232,164,74,0.12)' : 'rgba(0,0,0,0.06)';
+  return `<div style="background:${urgentBg || '#fff'};border:1px solid ${urgentBorder};border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+    <div style="width:42px;height:42px;border-radius:13px;background:#F5F3EF;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;">${emoji}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div style="font-size:14px;font-weight:600;color:#1A1A1A;font-family:'DM Sans',sans-serif;">${item.item_name||'Unknown'}</div>
+        <div style="font-size:11px;font-weight:700;color:${col};flex-shrink:0;margin-left:8px;font-family:'DM Sans',sans-serif;">${daysLeft != null ? daysLeft + 'd left' : ''}</div>
+      </div>
+      <div style="font-size:11px;color:rgba(26,26,26,0.4);margin-top:2px;font-family:'DM Sans',sans-serif;">${item.category || ''}</div>
+      ${daysLeft != null ? `<div style="height:3px;background:rgba(0,0,0,0.06);border-radius:99px;overflow:hidden;margin-top:6px;"><div style="height:100%;width:${pct}%;background:${col};border-radius:99px;"></div></div>` : ''}
+    </div>
+    <button onclick="markVaultItemUsed('${item.id}')" style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:11px;font-weight:700;color:rgba(26,26,26,0.45);font-family:'DM Sans',sans-serif;flex-shrink:0;white-space:nowrap;touch-action:manipulation;">Used it</button>
+  </div>`;
+}
+
+function markVaultItemUsed(id) {
+  const item = allItems.find(i => String(i.id) === String(id));
+  if (item) {
+    const amt = parseFloat(item.price || 0);
+    const monthly = parseFloat(localStorage.getItem('gn_monthly_saved') || '0') + amt;
+    const lifetime = parseFloat(localStorage.getItem('gn_lifetime_saved') || '0') + amt;
+    localStorage.setItem('gn_monthly_saved', monthly.toFixed(2));
+    localStorage.setItem('gn_lifetime_saved', lifetime.toFixed(2));
+    // Move to rescued
+    if (!window._vaultRescued) window._vaultRescued = [];
+    window._vaultRescued.unshift({ ...item, _rescuedAt: Date.now() });
+    // Remove from allItems display
+    allItems = allItems.filter(i => String(i.id) !== String(id));
+  }
+  refreshVault();
+  showToast('Marked as used 🌿 +$' + parseFloat(item?.price||0).toFixed(2) + ' saved', 'success');
+}
+
 function refreshVault() {
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Compute days left for perishables
+  const itemsWithDays = allItems.map(i => {
+    let daysLeft = null;
+    if ((i.days_until_spoil||0) > 0) {
+      if (i.purchase_date) {
+        const exp = new Date(i.purchase_date);
+        exp.setDate(exp.getDate() + i.days_until_spoil);
+        daysLeft = Math.round((exp - today) / 86400000);
+      } else {
+        daysLeft = i.days_until_spoil;
+      }
+    }
+    return { ...i, _daysLeft: daysLeft };
+  });
+
   const total    = allItems.length;
   const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
-  const warranted= allItems.filter(i => (i.warranty_days||0) > 0).length;
+  const atRisk   = itemsWithDays.filter(i => i._daysLeft != null && i._daysLeft <= 4 && i._daysLeft >= 0).reduce((s,i) => s + (i.price||0), 0);
+  const rescued  = window._vaultRescued || [];
+  const rescuedVal = rescued.reduce((s,i) => s + (i.price||0), 0);
 
-  document.getElementById('vTotal').textContent    = total;
-  document.getElementById('vValue').textContent    = '$' + totalVal.toFixed(0);
+  // Summary strip
+  const vTotalEl = document.getElementById('vTotal');
+  const vTotalDisplay = document.getElementById('vTotalDisplay');
+  const vValueEl = document.getElementById('vValue');
+  const vAtRisk  = document.getElementById('vAtRiskDisplay');
+  const vRescued = document.getElementById('vaultRescuedValue');
+  if (vTotalEl) vTotalEl.textContent = total;
+  if (vTotalDisplay) vTotalDisplay.textContent = total;
+  if (vValueEl) vValueEl.textContent = '$' + rescuedVal.toFixed(0);
+  if (vAtRisk)  vAtRisk.textContent  = '$' + atRisk.toFixed(2);
+  if (vRescued) vRescued.textContent = '$' + rescuedVal.toFixed(2) + ' rescued from waste.';
+
+  // Urgent count badge
+  const urgentItems = itemsWithDays.filter(i => i._daysLeft != null && i._daysLeft <= 4 && i._daysLeft >= 0);
+  const urgentCountEl = document.getElementById('vaultUrgentCount');
+  if (urgentCountEl) urgentCountEl.textContent = urgentItems.length > 0 ? urgentItems.length : '';
+
+  // Apply filter
+  const filter = window._vaultFilter || 'all';
+  let filtered = itemsWithDays;
+  if (filter === 'urgent')  filtered = itemsWithDays.filter(i => i._daysLeft != null && i._daysLeft <= 4);
+  if (filter === 'produce') filtered = itemsWithDays.filter(i => (i.category||'').toLowerCase().includes('produce') || (i.category||'').toLowerCase().includes('vegetable') || (i.category||'').toLowerCase().includes('fruit'));
+  if (filter === 'dairy')   filtered = itemsWithDays.filter(i => (i.category||'').toLowerCase().includes('dairy'));
+  if (filter === 'protein') filtered = itemsWithDays.filter(i => (i.category||'').toLowerCase().includes('protein') || (i.category||'').toLowerCase().includes('meat') || (i.category||'').toLowerCase().includes('poultry'));
+
+  // Sort by urgency
+  filtered = filtered.sort((a,b) => {
+    if (a._daysLeft == null && b._daysLeft == null) return 0;
+    if (a._daysLeft == null) return 1;
+    if (b._daysLeft == null) return -1;
+    return a._daysLeft - b._daysLeft;
+  });
+
+  const activeEl = document.getElementById('vaultActiveList');
+  const activeCount = document.getElementById('vaultActiveCount');
+  if (activeCount) activeCount.textContent = filtered.length;
+  if (activeEl) {
+    if (filtered.length === 0) {
+      activeEl.innerHTML = '<div style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:16px;padding:20px;text-align:center;color:rgba(26,26,26,0.35);font-size:13px;font-family:'DM Sans',sans-serif;">No items match this filter 🌿</div>';
+    } else {
+      activeEl.innerHTML = filtered.map(i => renderVaultItemNew(i, i._daysLeft)).join('');
+    }
+  }
+
+  // Rescued list
+  const rescuedEl = document.getElementById('vaultRescuedList');
+  if (rescuedEl) {
+    if (rescued.length === 0) {
+      rescuedEl.innerHTML = '<div style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:16px;padding:16px;text-align:center;color:rgba(26,26,26,0.35);font-size:12px;font-family:'DM Sans',sans-serif;">Items you use will appear here automatically 🌿</div>';
+    } else {
+      rescuedEl.innerHTML = rescued.slice(0, 8).map(item => `
+        <div style="background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+          <div style="width:38px;height:38px;border-radius:12px;background:rgba(91,173,138,0.08);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">${getItemEmojiFresh(item.item_name)}</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:#1A1A1A;font-family:'DM Sans',sans-serif;">${item.item_name||'Unknown'}</div>
+            <div style="font-size:11px;color:rgba(26,26,26,0.4);margin-top:1px;font-family:'DM Sans',sans-serif;">🤖 Auto-rescued · $${(item.price||0).toFixed(2)}</div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:#5BAD8A;font-family:'DM Sans',sans-serif;">+$${(item.price||0).toFixed(2)}</div>
+        </div>`).join('');
+    }
+  }
+
+  const total2    = allItems.length;
+  const totalVal2 = allItems.reduce((s,i) => s + (i.price||0), 0);
+  const warranted = allItems.filter(i => (i.warranty_days||0) > 0).length;
+
+  document.getElementById('vTotal').textContent    = total2;
+  document.getElementById('vValue').textContent    = '$' + rescuedVal.toFixed(0);
   document.getElementById('vWarranty').textContent = warranted;
 
   const today = new Date(); today.setHours(0,0,0,0);
@@ -8046,11 +8438,6 @@ async function guestSignupWithEmail() {
 
 <script>
 function showCoachModal(type) {
-  // Skip coach modal for returning users — go straight to camera
-  const seenCoach = localStorage.getItem('guardnest_coach_seen');
-  if (seenCoach) { openCameraFromCoach(); return; }
-  localStorage.setItem('guardnest_coach_seen', 'true');
-
   const modal = document.getElementById('scanCoachModal');
   const emoji = document.getElementById('coachEmoji');
   const title = document.getElementById('coachTitle');
@@ -8065,6 +8452,7 @@ function showCoachModal(type) {
     sub.textContent   = 'Follow these tips for the best results';
   }
   modal.style.display = 'block';
+  
 }
 
 function dismissCoachModal() {
