@@ -87,7 +87,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.3.6';
+  const APP_VERSION = '1.4.0';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -583,6 +583,8 @@
   }
   @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   @keyframes heroReveal { from { opacity:0; transform:translateY(20px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+  @keyframes softPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+  @keyframes sonarPulse { 0%{opacity:0.6;transform:scale(1)} 100%{opacity:0;transform:scale(1.8)} }
   .mc-rarity { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; }
   .mc-name   { font-size: 13px; font-weight: 600; color: #1A1A1A; margin-bottom: 4px; }
   .mc-meta   { font-size: 11px; color: rgba(26,26,26,0.4); margin-bottom: 2px; }
@@ -2557,7 +2559,7 @@ function logError(source, message, extra) {
           </div>
 
           <!-- AI Vision hero card -->
-          <button onclick="setScanType('fridge');triggerScan();" id="scanTypeAIVision" style="width:100%;background:#1A1A1A;border:none;border-radius:22px;padding:22px 20px;cursor:pointer;text-align:left;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.12);touch-action:manipulation;">
+          <button onclick="startLiveDetection();" id="scanTypeAIVision" style="width:100%;background:#1A1A1A;border:none;border-radius:22px;padding:22px 20px;cursor:pointer;text-align:left;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.12);touch-action:manipulation;">
             <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.14) 0%,transparent 70%);pointer-events:none;"></div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
               <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#5BAD8A;font-weight:700;">✨ AI Vision</div>
@@ -2643,7 +2645,7 @@ function logError(source, message, extra) {
           <div id="manifestGrid" style="display:flex;flex-direction:column;gap:8px;"></div>
 
           <!-- Guest save banner -->
-          <div id="guestSaveBanner" style="display:none;position:sticky;bottom:76px;margin:14px 0 0;background:#1A1A1A;border:1px solid rgba(91,173,138,0.3);border-radius:18px;padding:16px 18px;align-items:center;justify-content:space-between;gap:12px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+          <div id="guestSaveBanner" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:358px;background:#1A1A1A;border:1px solid rgba(91,173,138,0.3);border-radius:18px;padding:16px 18px;align-items:center;justify-content:space-between;gap:12px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
             <div>
               <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">This disappears when you close.</div>
               <div style="font-size:11px;color:rgba(255,255,255,0.35);">Save free to keep tracking.</div>
@@ -3342,6 +3344,89 @@ function logError(source, message, extra) {
   </div>
 </div>
 
+<!-- ── LIVE DETECTION OVERLAY ─────────────────────────────────── -->
+<div id="liveDetectionOverlay" style="display:none;position:fixed;inset:0;z-index:7000;font-family:'DM Sans','Helvetica Neue',sans-serif;">
+
+  <!-- Video viewport -->
+  <div style="position:relative;width:100%;height:100%;background:#060a06;overflow:hidden;">
+    <video id="liveVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;opacity:0.85;"></video>
+    <canvas id="liveCanvas" style="display:none;"></canvas>
+
+    <!-- Ambient glow overlay -->
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 40%,rgba(91,173,138,0.06) 0%,transparent 70%);pointer-events:none;"></div>
+
+    <!-- Detected item overlays container -->
+    <div id="liveOverlaysContainer" style="position:absolute;inset:0;pointer-events:none;"></div>
+
+    <!-- Top HUD -->
+    <div style="position:absolute;top:0;left:0;right:0;padding:52px 16px 16px;background:linear-gradient(180deg,rgba(6,10,6,0.85) 0%,transparent 100%);pointer-events:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <!-- Status pill -->
+        <div id="liveStatusPill" style="background:rgba(6,10,6,0.8);backdrop-filter:blur(10px);border-radius:99px;padding:6px 14px;display:flex;align-items:center;gap:7px;border:1px solid rgba(91,173,138,0.2);">
+          <div id="liveStatusDot" style="width:6px;height:6px;border-radius:50%;background:#E8A44A;box-shadow:0 0 8px rgba(232,164,74,0.8);animation:softPulse 1.5s ease-in-out infinite;"></div>
+          <div id="liveStatusText" style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.02em;">GuardNest is looking...</div>
+        </div>
+        <!-- Item counter -->
+        <div id="liveItemCounter" style="display:none;background:rgba(6,10,6,0.8);backdrop-filter:blur(10px);border-radius:12px;padding:6px 12px;border:1px solid rgba(255,255,255,0.07);">
+          <div id="liveItemCount" style="font-size:16px;font-weight:800;color:#fff;line-height:1;text-align:center;">0</div>
+          <div style="font-size:8px;color:rgba(255,255,255,0.35);text-align:center;letter-spacing:0.06em;text-transform:uppercase;">found</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom HUD -->
+    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(6,10,6,0.95) 0%,rgba(6,10,6,0.7) 60%,transparent 100%);padding:40px 18px 100px;">
+      <!-- Initial prompt -->
+      <div id="liveInitialPrompt" style="text-align:center;">
+        <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.55);margin-bottom:4px;">Point at your fridge</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.25);">Items appear as GuardNest finds them</div>
+      </div>
+
+      <!-- Live stats — shown once items detected -->
+      <div id="liveStats" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:9px 8px;text-align:center;border:1px solid rgba(232,115,90,0.2);">
+            <div id="liveUrgentCount" style="font-size:20px;font-weight:800;color:#E8735A;line-height:1;">0</div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.35);margin-top:3px;letter-spacing:0.04em;">Use today</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:9px 8px;text-align:center;border:1px solid rgba(232,164,74,0.2);">
+            <div id="liveSoonCount" style="font-size:20px;font-weight:800;color:#E8A44A;line-height:1;">0</div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.35);margin-top:3px;letter-spacing:0.04em;">Use soon</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:9px 8px;text-align:center;border:1px solid rgba(91,173,138,0.2);">
+            <div id="liveFreshCount" style="font-size:20px;font-weight:800;color:#5BAD8A;line-height:1;">0</div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.35);margin-top:3px;letter-spacing:0.04em;">Fresh</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div id="liveLastFound" style="font-size:11px;color:rgba(255,255,255,0.3);"></div>
+          <div id="liveTotalValue" style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:600;"></div>
+        </div>
+      </div>
+
+      <div id="liveTapHint" style="display:none;text-align:center;font-size:10px;color:rgba(255,255,255,0.18);margin-top:8px;letter-spacing:0.04em;">Tap any item for details</div>
+    </div>
+
+    <!-- Stop button -->
+    <div style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:calc(100% - 40px);max-width:350px;">
+      <button onclick="stopLiveDetection()" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:14px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);cursor:pointer;font-family:'DM Sans',sans-serif;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <div style="width:10px;height:10px;border-radius:3px;background:rgba(255,255,255,0.4);"></div>
+        Stop Scanning
+      </button>
+    </div>
+
+    <!-- Item detail panel -->
+    <div id="liveDetailPanel" style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:20;background:rgba(8,14,8,0.97);backdrop-filter:blur(24px);border-radius:22px 22px 0 0;padding:16px 20px 100px;border-top:1px solid rgba(91,173,138,0.15);">
+      <div style="width:36px;height:3px;background:rgba(255,255,255,0.1);border-radius:99px;margin:0 auto 18px;"></div>
+      <div id="liveDetailContent"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button onclick="markLiveItemUsed()" id="liveDetailUsedBtn" style="flex:1;background:#5BAD8A;border:none;border-radius:13px;padding:13px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">✓ Mark as Used</button>
+        <button onclick="closeLiveDetail()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:13px;padding:13px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.45);cursor:pointer;font-family:'DM Sans',sans-serif;">Got it</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -3755,6 +3840,343 @@ function showAuth() {
 
 function isMobile() {
   return window.innerWidth <= 768;
+}
+
+
+// ── LIVE DETECTION ENGINE ──────────────────────────────────────────────
+const _live = {
+  stream:        null,
+  captureTimer:  null,
+  sweepTimer:    null,
+  detectedItems: [],
+  usedItems:     [],
+  activeItemId:  null,
+  totalValue:    0,
+  isCapturing:   false,
+  captureInterval: 3000, // ms between Gemini calls
+};
+
+async function startLiveDetection() {
+  // Reset state
+  _live.detectedItems = [];
+  _live.usedItems     = [];
+  _live.activeItemId  = null;
+  _live.totalValue    = 0;
+  _live.isCapturing   = false;
+
+  // Show overlay immediately
+  const overlay = document.getElementById('liveDetectionOverlay');
+  if (overlay) overlay.style.display = 'block';
+  document.body.classList.add('app-active');
+
+  // Reset UI
+  _liveUpdateStatus('GuardNest is looking...', '#E8A44A', true);
+  document.getElementById('liveItemCounter').style.display = 'none';
+  document.getElementById('liveInitialPrompt').style.display = 'block';
+  document.getElementById('liveStats').style.display = 'none';
+  document.getElementById('liveTapHint').style.display = 'none';
+  document.getElementById('liveOverlaysContainer').innerHTML = '';
+  document.getElementById('liveDetailPanel').style.display = 'none';
+
+  gtag('event', 'live_detection_started', { utm_source: (window._gnUtm && window._gnUtm.source) || 'direct' });
+
+  try {
+    // Request camera — rear-facing preferred
+    _live.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false,
+    });
+
+    const video = document.getElementById('liveVideo');
+    video.srcObject = _live.stream;
+    await video.play();
+
+    // Start capturing frames
+    _liveUpdateStatus('Reading freshness levels...', '#E8A44A', true);
+    _live.captureTimer = setTimeout(_liveCaptureFrame, 1500); // first capture after 1.5s
+  } catch(err) {
+    // Camera permission denied or not available — fall back to photo
+    console.log('Live detection unavailable:', err.message);
+    _liveCleanup();
+    showToast('Camera not available — using photo mode instead', 'info');
+    setScanType('fridge');
+    triggerScan();
+  }
+}
+
+async function _liveCaptureFrame() {
+  if (!_live.stream || _live.isCapturing) return;
+  _live.isCapturing = true;
+
+  try {
+    const video  = document.getElementById('liveVideo');
+    const canvas = document.getElementById('liveCanvas');
+    if (!video || !canvas || video.readyState < 2) {
+      _live.isCapturing = false;
+      _live.captureTimer = setTimeout(_liveCaptureFrame, _live.captureInterval);
+      return;
+    }
+
+    // Capture current frame
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Compress and convert to base64
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+    const b64 = dataUrl.split(',')[1];
+    if (!b64 || b64.length < 100) {
+      _live.isCapturing = false;
+      _live.captureTimer = setTimeout(_liveCaptureFrame, _live.captureInterval);
+      return;
+    }
+
+    // Send to Gemini
+    const response = await fetch(SUPABASE_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'apikey': SUPABASE_ANON,
+      },
+      body: JSON.stringify({ imageData: b64, mimeType: 'image/jpeg', sourceType: 'fridge' }),
+    });
+
+    if (response.ok) {
+      const json  = await response.json();
+      const items = json.items || [];
+      if (items.length > 0) {
+        _liveMergeItems(items);
+      }
+    }
+  } catch(e) {
+    logError('live_detection_frame_failed', e.message, {});
+  }
+
+  _live.isCapturing = false;
+  // Schedule next capture if still scanning
+  if (_live.stream) {
+    _live.captureTimer = setTimeout(_liveCaptureFrame, _live.captureInterval);
+  }
+}
+
+function _liveMergeItems(newItems) {
+  let changed = false;
+  newItems.forEach(item => {
+    const name = (item.item_name || '').toLowerCase().trim();
+    if (!name) return;
+    const existing = _live.detectedItems.find(i => i.item_name.toLowerCase().trim() === name);
+    if (!existing) {
+      const id = 'live_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+      const enriched = { ...item, _liveId: id, _zone: _liveAssignZone(_live.detectedItems.length) };
+      _live.detectedItems.push(enriched);
+      _live.totalValue += parseFloat(item.price || 3.50);
+      _liveRenderOverlay(enriched);
+      changed = true;
+    }
+  });
+  if (changed) _liveUpdateHUD();
+}
+
+function _liveAssignZone(index) {
+  // 9-zone grid — distributes items across fridge photo
+  const zones = [
+    { x:12, y:15 }, { x:55, y:12 }, { x:72, y:45 },
+    { x:10, y:52 }, { x:38, y:48 }, { x:62, y:66 },
+    { x:25, y:72 }, { x:50, y:70 }, { x:75, y:22 },
+  ];
+  return zones[index % zones.length];
+}
+
+function _liveRenderOverlay(item) {
+  const container = document.getElementById('liveOverlaysContainer');
+  if (!container) return;
+
+  const days = item.days_until_spoil || 0;
+  const col  = days <= 2 ? '#E8735A' : days <= 5 ? '#E8A44A' : '#5BAD8A';
+  const glow = days <= 2 ? 'rgba(232,115,90,0.6)' : days <= 5 ? 'rgba(232,164,74,0.6)' : 'rgba(91,173,138,0.6)';
+  const zone = item._zone || { x: 40, y: 40 };
+  const [emoji] = getItemEmoji(item.item_name, item.category);
+
+  const el = document.createElement('div');
+  el.id = 'liveItem_' + item._liveId;
+  el.style.cssText = `position:absolute;left:${zone.x}%;top:${zone.y}%;width:22%;height:18%;cursor:pointer;opacity:0;transform:scale(0.85);transition:all 0.45s cubic-bezier(0.16,1,0.3,1);pointer-events:all;`;
+  el.innerHTML = `
+    <div style="position:absolute;inset:0;border:1.5px solid ${col};border-radius:12px;background:rgba(0,0,0,0.12);box-shadow:0 0 0 1px ${glow},0 4px 20px ${glow};"></div>
+    <div style="position:absolute;top:-1px;left:-1px;width:10px;height:10px;border-top:2px solid ${col};border-left:2px solid ${col};"></div>
+    <div style="position:absolute;top:-1px;right:-1px;width:10px;height:10px;border-top:2px solid ${col};border-right:2px solid ${col};"></div>
+    <div style="position:absolute;bottom:-1px;left:-1px;width:10px;height:10px;border-bottom:2px solid ${col};border-left:2px solid ${col};"></div>
+    <div style="position:absolute;bottom:-1px;right:-1px;width:10px;height:10px;border-bottom:2px solid ${col};border-right:2px solid ${col};"></div>
+    <div style="position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);background:rgba(8,14,8,0.88);backdrop-filter:blur(10px);border:1px solid ${col}40;border-radius:99px;padding:2px 8px;white-space:nowrap;display:flex;align-items:center;gap:4px;">
+      <span style="font-size:10px;">${emoji}</span>
+      <span style="font-size:9px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">${item.item_name}</span>
+      <span style="font-size:8px;font-weight:600;color:${col};font-family:'DM Sans',sans-serif;">${days > 0 ? days + 'd' : ''}</span>
+    </div>
+    <div style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:${col};border:2px solid rgba(8,14,8,0.8);box-shadow:0 0 8px ${glow};${days<=2?'animation:softPulse 1s ease-in-out infinite;':''}"></div>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5.5vw;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));pointer-events:none;">${emoji}</div>`;
+
+  el.addEventListener('click', () => _liveShowDetail(item._liveId));
+  container.appendChild(el);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'scale(1)';
+  });
+
+  // Sonar pulses for urgent items
+  if (days <= 2) {
+    let pulseCount = 0;
+    const pulse = () => {
+      if (pulseCount++ > 3) return;
+      const ring = document.createElement('div');
+      ring.style.cssText = `position:absolute;inset:-8px;border-radius:14px;border:1px solid ${col};opacity:0.6;animation:sonarPulse 1s ease-out forwards;pointer-events:none;`;
+      el.appendChild(ring);
+      setTimeout(() => ring.remove(), 1000);
+    };
+    setTimeout(pulse, 600);
+    setTimeout(pulse, 1000);
+  }
+}
+
+function _liveUpdateHUD() {
+  const items = _live.detectedItems.filter(i => !_live.usedItems.includes(i._liveId));
+  const urgent = items.filter(i => (i.days_until_spoil||0) <= 2).length;
+  const soon   = items.filter(i => (i.days_until_spoil||0) > 2 && (i.days_until_spoil||0) <= 5).length;
+  const fresh  = items.filter(i => (i.days_until_spoil||0) > 5).length;
+  const last   = items[items.length - 1];
+
+  document.getElementById('liveItemCounter').style.display = 'block';
+  document.getElementById('liveItemCount').textContent = items.length;
+  document.getElementById('liveInitialPrompt').style.display = 'none';
+  document.getElementById('liveStats').style.display = 'block';
+  document.getElementById('liveTapHint').style.display = 'block';
+  document.getElementById('liveUrgentCount').textContent = urgent;
+  document.getElementById('liveSoonCount').textContent   = soon;
+  document.getElementById('liveFreshCount').textContent  = fresh;
+  document.getElementById('liveTotalValue').textContent  = '$' + _live.totalValue.toFixed(2) + ' mapped';
+
+  if (last) {
+    const [emoji] = getItemEmoji(last.item_name, last.category);
+    const col = last.days_until_spoil <= 2 ? '#E8735A' : last.days_until_spoil <= 5 ? '#E8A44A' : '#5BAD8A';
+    document.getElementById('liveLastFound').innerHTML = `Just found: <span style="color:${col};font-weight:600;">${emoji} ${last.item_name}</span>`;
+  }
+
+  _liveUpdateStatus('Seeing what you miss...', '#5BAD8A', true);
+}
+
+function _liveUpdateStatus(text, dotColor, pulse) {
+  const dot  = document.getElementById('liveStatusDot');
+  const txt  = document.getElementById('liveStatusText');
+  if (dot) { dot.style.background = dotColor; dot.style.boxShadow = '0 0 8px ' + dotColor.replace(')', ',0.8)').replace('rgb','rgba'); dot.style.animation = pulse ? 'softPulse 1.5s ease-in-out infinite' : 'none'; }
+  if (txt) txt.textContent = text;
+}
+
+function _liveShowDetail(liveId) {
+  const item = _live.detectedItems.find(i => i._liveId === liveId);
+  if (!item) return;
+  _live.activeItemId = liveId;
+
+  const days = item.days_until_spoil || 0;
+  const col  = days <= 2 ? '#E8735A' : days <= 5 ? '#E8A44A' : '#5BAD8A';
+  const label= days <= 2 ? 'Use today' : days <= 5 ? 'Use soon' : 'Fresh';
+  const msg  = days <= 1 ? 'Use tonight — expires tomorrow.'
+    : days <= 3 ? `Use within ${days} days — don't let it slip.`
+    : days <= 7 ? `${days} days left — GuardNest is watching.`
+    : `Looking good — ${days} days of freshness left.`;
+  const [emoji] = getItemEmoji(item.item_name, item.category);
+  const used = _live.usedItems.includes(liveId);
+
+  document.getElementById('liveDetailContent').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+      <div style="width:50px;height:50px;border-radius:15px;background:${col}15;border:1px solid ${col}30;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${emoji}</div>
+      <div style="flex:1;">
+        <div style="font-size:16px;font-weight:700;color:#fff;letter-spacing:-0.01em;font-family:'DM Sans',sans-serif;">${item.item_name}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+          <div style="width:5px;height:5px;border-radius:50%;background:${col};"></div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Sans',sans-serif;">${label} · ${days > 0 ? days + ' days left' : 'shelf stable'}</div>
+        </div>
+      </div>
+      <div style="font-size:24px;font-weight:800;color:${col};line-height:1;font-family:'DM Sans',sans-serif;">${days > 0 ? days + 'd' : '∞'}</div>
+    </div>
+    <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;margin-bottom:12px;">
+      <div style="height:100%;width:${Math.min((days/14)*100,100)}%;background:linear-gradient(90deg,${col}80,${col});border-radius:99px;"></div>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.65;font-family:'DM Sans',sans-serif;font-style:italic;">"${msg}"</div>`;
+
+  const usedBtn = document.getElementById('liveDetailUsedBtn');
+  if (usedBtn) {
+    usedBtn.style.background = used ? 'rgba(91,173,138,0.2)' : col;
+    usedBtn.textContent = used ? '✓ Marked as Used' : '✓ Mark as Used';
+  }
+  document.getElementById('liveDetailPanel').style.display = 'block';
+}
+
+function closeLiveDetail() {
+  document.getElementById('liveDetailPanel').style.display = 'none';
+  _live.activeItemId = null;
+}
+
+function markLiveItemUsed() {
+  if (!_live.activeItemId) return;
+  _live.usedItems.push(_live.activeItemId);
+  const el = document.getElementById('liveItem_' + _live.activeItemId);
+  if (el) el.style.opacity = '0.2';
+  closeLiveDetail();
+  _liveUpdateHUD();
+}
+
+function stopLiveDetection() {
+  // Clear timers
+  if (_live.captureTimer) clearTimeout(_live.captureTimer);
+  _live.captureTimer = null;
+
+  // Snapshot current items as pendingItems for save flow
+  pendingItems = _live.detectedItems.map(item => ({
+    item_name:        item.item_name || 'Unknown',
+    merchant:         'Home',
+    price:            parseFloat(item.price || 0),
+    purchase_date:    new Date().toISOString().split('T')[0],
+    category:         item.category || 'grocery',
+    warranty_days:    0,
+    days_until_spoil: parseInt(item.days_until_spoil || 7),
+    status:           'active',
+  }));
+
+  _liveCleanup();
+
+  if (pendingItems.length > 0) {
+    // Show hero moment then results
+    showScanHeroMoment(pendingItems, 'fridge');
+    gtag('event', 'live_detection_completed', { items_found: pendingItems.length, utm_source: (window._gnUtm && window._gnUtm.source) || 'direct' });
+    gtag('event', 'scan_completed', { scan_type: 'live_fridge', items_found: pendingItems.length, utm_source: (window._gnUtm && window._gnUtm.source) || 'direct' });
+    gtag('event', 'items_rendered_on_screen', { count: pendingItems.length, scan_type: 'live_fridge' });
+    // Show results after hero is dismissed
+    showPage('scanner');
+    setTimeout(() => {
+      renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
+      document.getElementById('scanResults').classList.remove('hidden');
+      (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
+      scheduleGuestSavePrompt('scanResults', 'manifestGrid');
+    }, 200);
+  } else {
+    showToast('Nothing detected — try moving closer or improving lighting', 'info');
+    showPage('scanner');
+  }
+}
+
+function _liveCleanup() {
+  // Stop video stream
+  if (_live.stream) {
+    _live.stream.getTracks().forEach(t => t.stop());
+    _live.stream = null;
+  }
+  // Hide overlay
+  const overlay = document.getElementById('liveDetectionOverlay');
+  if (overlay) overlay.style.display = 'none';
+  const video = document.getElementById('liveVideo');
+  if (video) { video.srcObject = null; }
 }
 
 function applyMobileLayout() {
