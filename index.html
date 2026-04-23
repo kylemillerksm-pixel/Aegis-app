@@ -36,9 +36,58 @@
   gtag('config', 'G-87DCQ5CB9M');
 </script>
 <script>
+// ── UTM + TRAFFIC SOURCE CAPTURE ─────────────────────────────────────
+(function() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const utm = {
+      source:   params.get('utm_source')   || '',
+      medium:   params.get('utm_medium')   || '',
+      campaign: params.get('utm_campaign') || '',
+      content:  params.get('utm_content')  || '',
+      term:     params.get('utm_term')     || '',
+      fbclid:   params.get('fbclid')       || '',
+    };
+
+    // Persist to sessionStorage — survives page navigations within session
+    if (utm.source || utm.fbclid) {
+      sessionStorage.setItem('gn_utm', JSON.stringify(utm));
+    }
+
+    // Restore from sessionStorage if no UTM in URL (user navigated internally)
+    const stored = sessionStorage.getItem('gn_utm');
+    const active = (utm.source || utm.fbclid) ? utm : (stored ? JSON.parse(stored) : null);
+
+    if (active && typeof gtag !== 'undefined') {
+      // Set as GA4 user properties — every event will carry these
+      gtag('set', 'user_properties', {
+        traffic_source:   active.source   || (active.fbclid ? 'facebook' : 'direct'),
+        traffic_medium:   active.medium   || (active.fbclid ? 'paid_social' : 'none'),
+        traffic_campaign: active.campaign || 'none',
+        traffic_content:  active.content  || 'none',
+      });
+
+      // Fire landing event with full attribution
+      gtag('event', 'page_landed', {
+        utm_source:   active.source   || (active.fbclid ? 'facebook' : 'direct'),
+        utm_medium:   active.medium   || (active.fbclid ? 'paid_social' : 'none'),
+        utm_campaign: active.campaign || 'none',
+        utm_content:  active.content  || 'none',
+        has_fbclid:   !!active.fbclid,
+      });
+    }
+
+    // Expose for use elsewhere in the app
+    window._gnUtm = active;
+  } catch(e) {
+    console.log('UTM capture error:', e.message);
+  }
+})();
+</script>
+<script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.3.4';
+  const APP_VERSION = '1.3.6';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -533,6 +582,7 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
   @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes heroReveal { from { opacity:0; transform:translateY(20px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
   .mc-rarity { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; }
   .mc-name   { font-size: 13px; font-weight: 600; color: #1A1A1A; margin-bottom: 4px; }
   .mc-meta   { font-size: 11px; color: rgba(26,26,26,0.4); margin-bottom: 2px; }
@@ -4952,7 +5002,7 @@ async function handleImageScan(input) {
   if (!localStorage.getItem('guardnest_first_scan_completed')) {
     localStorage.setItem('guardnest_first_scan_completed', 'true');
   }
-  gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length });
+  gtag('event', 'scan_completed', { scan_type: 'receipt', items_found: result.length, utm_source: (window._gnUtm && window._gnUtm.source) || 'direct', utm_campaign: (window._gnUtm && window._gnUtm.campaign) || 'none' });
   gtag('event', 'results_viewed', { scan_type: 'receipt', items_found: result.length });
   if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: 'receipt' });
   incrementScanCount();
@@ -5326,49 +5376,95 @@ function showScanHeroMoment(items, scanType) {
   // Find most urgent perishable
   const perishables = items.filter(i => (i.days_until_spoil || 0) > 0)
     .sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99));
-  if (perishables.length === 0) return;
 
-  const hero = perishables[0];
-  const days = hero.days_until_spoil || 0;
+  const hero = perishables.length > 0 ? perishables[0] : null;
+  const days = hero ? (hero.days_until_spoil || 0) : 0;
   const col  = days <= 2 ? '#E8735A' : days <= 5 ? '#E8A44A' : '#5BAD8A';
-  const msg  = days <= 1 ? 'Use tonight — expires tomorrow.'
-    : days <= 3 ? `Use within ${days} days — don't let it slip.`
-    : days <= 7 ? `${days} days left — GuardNest is watching.`
-    : `Looking good — ${days} days of freshness left.`;
+  const urgGlow = days <= 2 ? 'rgba(232,115,90,0.4)' : days <= 5 ? 'rgba(232,164,74,0.4)' : 'rgba(91,173,138,0.4)';
 
-  const [emoji] = getItemEmoji(hero.item_name, hero.category);
+  const heroLine = hero
+    ? (days <= 1 ? `${hero.item_name} expires tomorrow. Use it tonight.`
+      : days <= 3 ? `${hero.item_name} expires in ${days} days. Don't let it slip.`
+      : days <= 7 ? `${hero.item_name} needs attention this week.`
+      : `${hero.item_name} is fresh — ${days} days left.`)
+    : `${items.length} items mapped. Nothing urgent this week.`;
+
+  const [emoji] = hero ? getItemEmoji(hero.item_name, hero.category) : ['🌿', ''];
   const totalVal = items.reduce((s,i) => s + parseFloat(i.price || 3.50), 0);
+  const isFirstScan = !localStorage.getItem('guardnest_streak') || parseInt(localStorage.getItem('guardnest_streak') || '0') <= 1;
 
-  // Remove any existing hero
-  const existing = document.getElementById('scanHeroMoment');
+  // Remove any existing overlay
+  const existing = document.getElementById('scanHeroOverlay');
   if (existing) existing.remove();
 
-  const hero_el = document.createElement('div');
-  hero_el.id = 'scanHeroMoment';
-  hero_el.style.cssText = 'position:sticky;top:0;z-index:50;margin:0 0 16px;animation:fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both;';
-  hero_el.innerHTML = `
-    <div style="background:linear-gradient(135deg,#1A1A1A,#2a2a2a);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.12);">
-      <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.12) 0%,transparent 70%);pointer-events:none;"></div>
-      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#5BAD8A;font-weight:700;margin-bottom:8px;font-family:'DM Sans',sans-serif;">GuardNest sees</div>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
-        <div style="width:46px;height:46px;border-radius:14px;background:${col}18;border:1px solid ${col}35;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${emoji}</div>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;font-family:'DM Sans',sans-serif;">${hero.item_name || 'Unknown'}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:'DM Sans',sans-serif;">${msg}</div>
-        </div>
-        <div style="font-size:22px;font-weight:800;color:${col};letter-spacing:-0.03em;line-height:1;flex-shrink:0;font-family:'DM Sans',sans-serif;">${days}d</div>
+  // Build full-screen hero overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'scanHeroOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:8000;background:#060a06;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;font-family:"DM Sans","Helvetica Neue",sans-serif;';
+
+  overlay.innerHTML = `
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(91,173,138,0.08) 0%,transparent 70%);pointer-events:none;"></div>
+
+    <!-- Fade-in content -->
+    <div style="position:relative;z-index:1;width:100%;max-width:360px;text-align:center;animation:heroReveal 0.6s cubic-bezier(0.16,1,0.3,1) both;">
+
+      <!-- Scan complete label -->
+      <div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:600;margin-bottom:32px;">Scan complete · ${items.length} items found</div>
+
+      ${hero ? `
+      <!-- Hero item -->
+      <div style="margin-bottom:28px;">
+        <div style="width:88px;height:88px;border-radius:24px;background:${col}18;border:1.5px solid ${col}40;display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto 20px;box-shadow:0 0 40px ${urgGlow};">${emoji}</div>
+        <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.03em;line-height:1.2;margin-bottom:12px;">${heroLine}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.35);line-height:1.6;">GuardNest is watching so you don't have to.</div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07);">
-        <div style="font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Sans',sans-serif;">${items.length} items · $${totalVal.toFixed(2)} mapped</div>
-        <div style="font-size:11px;color:#5BAD8A;font-weight:600;font-family:'DM Sans',sans-serif;">${perishables.filter(i=>i.days_until_spoil<=7).length} expire this week</div>
+
+      <!-- Freshness bar -->
+      <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;margin-bottom:32px;width:200px;margin-left:auto;margin-right:auto;">
+        <div style="height:100%;width:${Math.min((days/14)*100,100)}%;background:linear-gradient(90deg,${col}80,${col});border-radius:99px;transition:width 1s cubic-bezier(0.16,1,0.3,1) 0.3s;"></div>
+      </div>` : `
+      <!-- No urgent items -->
+      <div style="margin-bottom:28px;">
+        <div style="font-size:64px;margin-bottom:20px;">🌿</div>
+        <div style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-0.03em;line-height:1.2;margin-bottom:12px;">Your fridge is in good shape.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.35);">Nothing urgent this week. GuardNest is watching.</div>
       </div>
+      <div style="height:32px;"></div>`}
+
+      <!-- Primary CTA -->
+      <button onclick="dismissScanHero()" style="width:100%;background:${hero ? col : '#5BAD8A'};border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:12px;box-shadow:0 8px 24px ${urgGlow};touch-action:manipulation;">
+        Got it — I'll use it ✓
+      </button>
+
+      <!-- Secondary -->
+      <button onclick="dismissScanHero()" style="background:transparent;border:none;color:rgba(255,255,255,0.3);font-size:13px;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif;touch-action:manipulation;">
+        See everything →
+      </button>
+
+      ${isFirstScan ? `
+      <!-- Streak hook — first scan only -->
+      <div style="margin-top:28px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.2);line-height:1.7;">Your fridge is mapped. Come back tomorrow<br>and GuardNest will tell you what changed.</div>
+      </div>` : ''}
+
     </div>`;
 
-  // Insert before manifestGrid
-  const grid = document.getElementById('manifestGrid');
-  if (grid && grid.parentNode) {
-    grid.parentNode.insertBefore(hero_el, grid);
-  }
+  document.body.appendChild(overlay);
+
+  // Track hero shown
+  if (typeof gtag !== 'undefined') gtag('event', 'scan_hero_shown', { has_urgent: !!hero, days_left: days });
+}
+
+function dismissScanHero() {
+  const overlay = document.getElementById('scanHeroOverlay');
+  if (!overlay) return;
+  overlay.style.transition = 'opacity 0.3s ease';
+  overlay.style.opacity = '0';
+  setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 320);
+  // Scroll scan results to top
+  const content = document.querySelector('.content');
+  if (content) content.scrollTo(0, 0);
+  window.scrollTo(0, 0);
 }
 
 function renderManifest(items, gridId, titleId) {
@@ -7243,7 +7339,7 @@ async function handleFridgePhoto(input, scanType) {
       if (!localStorage.getItem('guardnest_first_scan_completed')) {
         localStorage.setItem('guardnest_first_scan_completed', 'true');
       }
-      gtag('event', 'scan_completed', { scan_type: type, items_found: items.length });
+      gtag('event', 'scan_completed', { scan_type: type, items_found: items.length, utm_source: (window._gnUtm && window._gnUtm.source) || 'direct', utm_campaign: (window._gnUtm && window._gnUtm.campaign) || 'none' });
       if(typeof fbq !== 'undefined') fbq('track', 'Lead', { content_name: 'scan_completed', content_category: type });
       incrementScanCount();
 
