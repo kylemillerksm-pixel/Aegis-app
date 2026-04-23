@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.3.3';
+  const APP_VERSION = '1.3.4';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -1716,87 +1716,80 @@
   }
 
   /* SCAN ANIMATION */
+  /* ── NEW WARM SCAN OVERLAY ── */
   .scan-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(8,10,15,.92);
+    background: #060a06;
     z-index: 5000;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 0; padding: 24px;
+    padding: 32px;
   }
-  .scan-shield {
-    width: 64px; height: 64px;
-    background: var(--gold);
-    clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
-    margin-bottom: 24px;
-    animation: shieldPulse 1.5s ease-in-out infinite;
-    position: relative;
+  .scan-overlay::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 40%, rgba(91,173,138,0.1) 0%, transparent 70%);
+    pointer-events: none;
   }
-  .scan-shield::after {
-    content: '🛡️';
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-  }
-  @keyframes shieldPulse {
-    0%,100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.08); opacity: .85; }
-  }
+  .scan-shield { display: none; }
   .scan-status {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px; letter-spacing: .2em;
-    color: var(--gold); margin-bottom: 8px;
+    font-family: var(--app-font);
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #fff; margin-bottom: 6px;
     text-align: center;
   }
   .scan-substatus {
-    font-size: 12px; color: var(--text3);
-    letter-spacing: .1em; margin-bottom: 24px;
+    font-size: 12px; color: rgba(255,255,255,0.28);
+    margin-bottom: 28px;
     text-align: center; min-height: 18px;
+    font-family: var(--app-font);
+    letter-spacing: 0.01em;
   }
   .scan-progress-track {
-    width: 280px; height: 3px;
-    background: var(--surface2);
-    border-radius: 2px; overflow: hidden;
-    margin-bottom: 32px;
+    width: 200px; height: 3px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px; overflow: hidden;
+    margin-bottom: 0;
   }
   .scan-progress-fill {
     height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--gold2), var(--gold3));
-    border-radius: 2px;
-    transition: width .6s ease;
+    background: linear-gradient(90deg, #3d8f6e, #5BAD8A);
+    border-radius: 99px;
+    transition: width 0.4s ease;
   }
-  .scan-steps {
-    display: flex; flex-direction: column;
-    gap: 10px; width: 280px;
+  .scan-steps { display: none; }
+  .scan-step { display: none; }
+  .scan-step-icon { display: none; }
+  .scan-frame {
+    position: relative; width: 200px; height: 200px;
+    margin-bottom: 32px; flex-shrink: 0;
   }
-  .scan-step {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 12px; color: var(--text3);
-    transition: color .3s;
+  .scan-frame-corner {
+    position: absolute; width: 24px; height: 24px;
   }
-  .scan-step.active { color: var(--text); }
-  .scan-step.done   { color: var(--green); }
-  .scan-step-icon {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    border: 1px solid var(--border2);
+  .scan-frame-corner-tl { top: 0; left: 0; border-top: 2px solid #5BAD8A; border-left: 2px solid #5BAD8A; }
+  .scan-frame-corner-tr { top: 0; right: 0; border-top: 2px solid #5BAD8A; border-right: 2px solid #5BAD8A; }
+  .scan-frame-corner-bl { bottom: 0; left: 0; border-bottom: 2px solid #5BAD8A; border-left: 2px solid #5BAD8A; }
+  .scan-frame-corner-br { bottom: 0; right: 0; border-bottom: 2px solid #5BAD8A; border-right: 2px solid #5BAD8A; }
+  .scan-frame-emoji {
+    position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 10px; flex-shrink: 0;
-    transition: all .3s;
+    font-size: 72px; opacity: 0.45;
   }
-  .scan-step.active .scan-step-icon {
-    border-color: var(--gold);
-    background: rgba(245,200,66,.15);
-    animation: spin .8s linear infinite;
+  .scan-sweep {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #5BAD8A, transparent);
+    box-shadow: 0 0 16px rgba(91,173,138,0.8);
+    transition: top 0.13s linear;
+    top: 0%;
   }
-  .scan-step.done .scan-step-icon {
-    border-color: var(--green);
-    background: rgba(68,204,136,.15);
-    color: var(--green);
+  .scan-dot {
+    position: absolute; width: 9px; height: 9px;
+    border-radius: 50%;
+    display: none;
   }
+  .scan-dot.visible { display: block; animation: scanDotPulse 1s ease-in-out infinite; }
   .scan-receipt-preview {
     width: 120px; height: 80px;
     background: var(--surface);
@@ -1814,13 +1807,11 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    background: linear-gradient(90deg, transparent, #5BAD8A, transparent);
     animation: scanLineAnim 1.5s linear infinite;
   }
-  @keyframes scanLineAnim {
-    from { top: 0; }
-    to   { top: 100%; }
-  }
+  @keyframes scanLineAnim { from { top: 0; } to { top: 100%; } }
+  @keyframes scanDotPulse { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.5);opacity:1} }
 
   /* ══════════════════════════════════════════
      DAILY BRIEF — Home Screen Redesign
@@ -3266,36 +3257,37 @@ function logError(source, message, extra) {
 
 <!-- SCAN OVERLAY -->
 <div class="scan-overlay hidden" id="scanOverlay">
-  <div class="scan-receipt-preview" id="scanPreview">
+  <!-- Fridge/Pantry camera frame -->
+  <div class="scan-frame" id="scanFrame" style="display:none;">
+    <div class="scan-frame-corner scan-frame-corner-tl"></div>
+    <div class="scan-frame-corner scan-frame-corner-tr"></div>
+    <div class="scan-frame-corner scan-frame-corner-bl"></div>
+    <div class="scan-frame-corner scan-frame-corner-br"></div>
+    <div class="scan-frame-emoji" id="scanFrameEmoji">🧊</div>
+    <div class="scan-sweep" id="scanSweep"></div>
+    <div class="scan-dot" id="scanDot1" style="top:22%;left:18%;background:#E8735A;box-shadow:0 0 14px rgba(232,115,90,0.9);"></div>
+    <div class="scan-dot" id="scanDot2" style="top:52%;left:64%;background:#E8A44A;box-shadow:0 0 14px rgba(232,164,74,0.9);"></div>
+    <div class="scan-dot" id="scanDot3" style="top:70%;left:28%;background:#5BAD8A;box-shadow:0 0 14px rgba(91,173,138,0.9);"></div>
+  </div>
+  <!-- Receipt preview -->
+  <div class="scan-receipt-preview" id="scanPreview" style="display:none;">
     <img id="scanPreviewImg" src="" alt="">
     <div class="scan-line"></div>
   </div>
   <div class="scan-shield"></div>
-  <div class="scan-status" id="scanStatusText">SCANNING</div>
-  <div class="scan-substatus" id="scanSubText">Preparing analysis...</div>
-  <div class="scan-progress-track">
+  <div class="scan-status" id="scanStatusText">Mapping your fridge...</div>
+  <div class="scan-substatus" id="scanSubText">GuardNest gets more accurate every time you scan</div>
+  <div class="scan-progress-track" style="margin-top:0;">
     <div class="scan-progress-fill" id="scanProgressFill"></div>
   </div>
-  <div class="scan-steps">
-    <div class="scan-step" id="step1">
-      <div class="scan-step-icon">⟳</div>
-      <span>Reading receipt image</span>
-    </div>
-    <div class="scan-step" id="step2">
-      <div class="scan-step-icon">⟳</div>
-      <span>Identifying items and prices</span>
-    </div>
-    <div class="scan-step" id="step3">
-      <div class="scan-step-icon">⟳</div>
-      <span>Cross-referencing 547 products</span>
-    </div>
-    <div class="scan-step" id="step4">
-      <div class="scan-step-icon">⟳</div>
-      <span>Calculating when each item expires</span>
-    </div>
-    <div class="scan-step" id="step5">
-      <div class="scan-step-icon">⟳</div>
-      <span>Building your grocery picture</span>
+  <!-- Hidden compat elements -->
+  <div style="display:none;">
+    <div class="scan-steps">
+      <div class="scan-step" id="step1"><div class="scan-step-icon">⟳</div><span>Reading</span></div>
+      <div class="scan-step" id="step2"><div class="scan-step-icon">⟳</div><span>Identifying</span></div>
+      <div class="scan-step" id="step3"><div class="scan-step-icon">⟳</div><span>Cross-referencing</span></div>
+      <div class="scan-step" id="step4"><div class="scan-step-icon">⟳</div><span>Calculating</span></div>
+      <div class="scan-step" id="step5"><div class="scan-step-icon">⟳</div><span>Building</span></div>
     </div>
   </div>
 </div>
@@ -4951,6 +4943,7 @@ async function handleImageScan(input) {
   try {
     renderManifest(result, 'manifestGrid', 'resultsTitle');
     gtag('event', 'items_rendered_on_screen', { count: result.length, scan_type: 'receipt' });
+    showScanHeroMoment(result, 'receipt');
   } catch(renderErr) {
     logError('render_manifest_failed', renderErr.message, { scan_type: 'receipt', items: result.length });
     console.error('renderManifest crashed:', renderErr);
@@ -5325,6 +5318,57 @@ function purchaseText(dateStr) {
   if (diff === 1) return '📅 Purchased yesterday';
   if (diff < 7)   return '📅 Purchased ' + diff + ' days ago';
   return '📅 ' + d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+
+// ── SCAN HERO MOMENT — most urgent item spotlight after scan ──────────
+function showScanHeroMoment(items, scanType) {
+  // Find most urgent perishable
+  const perishables = items.filter(i => (i.days_until_spoil || 0) > 0)
+    .sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99));
+  if (perishables.length === 0) return;
+
+  const hero = perishables[0];
+  const days = hero.days_until_spoil || 0;
+  const col  = days <= 2 ? '#E8735A' : days <= 5 ? '#E8A44A' : '#5BAD8A';
+  const msg  = days <= 1 ? 'Use tonight — expires tomorrow.'
+    : days <= 3 ? `Use within ${days} days — don't let it slip.`
+    : days <= 7 ? `${days} days left — GuardNest is watching.`
+    : `Looking good — ${days} days of freshness left.`;
+
+  const [emoji] = getItemEmoji(hero.item_name, hero.category);
+  const totalVal = items.reduce((s,i) => s + parseFloat(i.price || 3.50), 0);
+
+  // Remove any existing hero
+  const existing = document.getElementById('scanHeroMoment');
+  if (existing) existing.remove();
+
+  const hero_el = document.createElement('div');
+  hero_el.id = 'scanHeroMoment';
+  hero_el.style.cssText = 'position:sticky;top:0;z-index:50;margin:0 0 16px;animation:fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both;';
+  hero_el.innerHTML = `
+    <div style="background:linear-gradient(135deg,#1A1A1A,#2a2a2a);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.12);">
+      <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.12) 0%,transparent 70%);pointer-events:none;"></div>
+      <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#5BAD8A;font-weight:700;margin-bottom:8px;font-family:'DM Sans',sans-serif;">GuardNest sees</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+        <div style="width:46px;height:46px;border-radius:14px;background:${col}18;border:1px solid ${col}35;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${emoji}</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em;font-family:'DM Sans',sans-serif;">${hero.item_name || 'Unknown'}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:'DM Sans',sans-serif;">${msg}</div>
+        </div>
+        <div style="font-size:22px;font-weight:800;color:${col};letter-spacing:-0.03em;line-height:1;flex-shrink:0;font-family:'DM Sans',sans-serif;">${days}d</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Sans',sans-serif;">${items.length} items · $${totalVal.toFixed(2)} mapped</div>
+        <div style="font-size:11px;color:#5BAD8A;font-weight:600;font-family:'DM Sans',sans-serif;">${perishables.filter(i=>i.days_until_spoil<=7).length} expire this week</div>
+      </div>
+    </div>`;
+
+  // Insert before manifestGrid
+  const grid = document.getElementById('manifestGrid');
+  if (grid && grid.parentNode) {
+    grid.parentNode.insertBefore(hero_el, grid);
+  }
 }
 
 function renderManifest(items, gridId, titleId) {
@@ -7189,6 +7233,8 @@ async function handleFridgePhoto(input, scanType) {
       try {
         renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
           gtag('event', 'items_rendered_on_screen', { count: pendingItems.length, scan_type: type });
+          // Show hero moment — most urgent item
+          showScanHeroMoment(pendingItems, type);
       } catch(renderErr) {
         logError('render_manifest_failed', renderErr.message, { scan_type: type, items: items.length });
         console.error('renderManifest crashed:', renderErr);
@@ -7324,62 +7370,91 @@ function dismissCelebration() {
 let scanTimer = null;
 
 function showScanOverlay(imageDataUrl) {
-  const overlay = document.getElementById('scanOverlay');
-  const img     = document.getElementById('scanPreviewImg');
-  if (imageDataUrl) img.src = imageDataUrl;
+  const overlay  = document.getElementById('scanOverlay');
+  const img      = document.getElementById('scanPreviewImg');
+  const scanType = window._scanPageType || 'receipt';
+  const isPhoto  = (scanType === 'fridge' || scanType === 'pantry');
+
+  // Show correct preview mode
+  const frame   = document.getElementById('scanFrame');
+  const preview = document.getElementById('scanPreview');
+  if (frame)   frame.style.display   = isPhoto  ? 'block' : 'none';
+  if (preview) preview.style.display = !isPhoto ? 'block' : 'none';
+  if (img && imageDataUrl) img.src = imageDataUrl;
+
+  // Set frame emoji
+  const frameEmoji = document.getElementById('scanFrameEmoji');
+  if (frameEmoji) frameEmoji.textContent = scanType === 'pantry' ? '🗄️' : '🧊';
+
   overlay.classList.remove('hidden');
-
-  // Reset all steps
-  [1,2,3,4,5].forEach(i => {
-    const step = document.getElementById(`step${i}`);
-    step.className = 'scan-step';
-    step.querySelector('.scan-step-icon').textContent = '⟳';
-  });
-
   document.getElementById('scanProgressFill').style.width = '0%';
 
-  // Animate through steps
-  const steps = [
-    { id: 1, status: 'SCANNING',      sub: 'Reading receipt image...', progress: '15%', delay: 0 },
-    { id: 2, status: 'IDENTIFYING',   sub: 'Identifying items and prices...', progress: '35%', delay: 1800 },
-    { id: 3, status: 'CROSS-REF',     sub: 'Cross-referencing 547 known products...', progress: '55%', delay: 3500 },
-    { id: 4, status: 'CALCULATING',   sub: 'Calculating warranty and expiry dates...', progress: '75%', delay: 5200 },
-    { id: 5, status: 'BUILDING',      sub: 'Building your inventory manifest...', progress: '90%', delay: 6800 },
+  // Warm status messages
+  const isReceipt = scanType === 'receipt';
+  const messages = isReceipt ? [
+    { status: 'Reading your receipt...', sub: 'GuardNest gets more accurate every time you scan', progress: '15%', delay: 0 },
+    { status: 'Identifying items...', sub: 'Matching against thousands of grocery products', progress: '40%', delay: 1800 },
+    { status: 'Reading freshness levels...', sub: 'Calculating when each item expires', progress: '65%', delay: 3400 },
+    { status: 'Almost done...', sub: 'Building your grocery picture', progress: '88%', delay: 5000 },
+  ] : [
+    { status: 'Mapping your fridge...', sub: 'GuardNest gets more accurate every time you scan', progress: '20%', delay: 0 },
+    { status: 'Reading freshness levels...', sub: 'Identifying everything inside', progress: '50%', delay: 1400 },
+    { status: 'Seeing what you miss...', sub: 'Almost done', progress: '80%', delay: 2800 },
   ];
 
-  steps.forEach(({ id, status, sub, progress, delay }) => {
-    setTimeout(() => {
-      // Mark previous step done
-      if (id > 1) {
-        const prev = document.getElementById(`step${id-1}`);
-        prev.className = 'scan-step done';
-        prev.querySelector('.scan-step-icon').textContent = '✓';
-      }
-      // Activate current step
-      const current = document.getElementById(`step${id}`);
-      current.className = 'scan-step active';
+  // Animate sweep line for photo scans
+  if (isPhoto) {
+    let pct = 0;
+    const sweep = document.getElementById('scanSweep');
+    window._sweepInterval = setInterval(() => {
+      pct = (pct + 1.2) % 100;
+      if (sweep) sweep.style.top = pct + '%';
+    }, 40);
+    // Show dots progressively
+    setTimeout(() => { const d=document.getElementById('scanDot1'); if(d) d.classList.add('visible'); }, 1200);
+    setTimeout(() => { const d=document.getElementById('scanDot2'); if(d) d.classList.add('visible'); }, 2400);
+    setTimeout(() => { const d=document.getElementById('scanDot3'); if(d) d.classList.add('visible'); }, 3600);
+  }
 
+  messages.forEach(({ status, sub, progress, delay }) => {
+    setTimeout(() => {
       document.getElementById('scanStatusText').textContent  = status;
       document.getElementById('scanSubText').textContent     = sub;
       document.getElementById('scanProgressFill').style.width = progress;
     }, delay);
   });
+
+  // Keep compat step elements updated silently
+  [1,2,3,4,5].forEach(i => {
+    const step = document.getElementById(`step${i}`);
+    if (step) { step.className = 'scan-step'; step.querySelector('.scan-step-icon').textContent = '⟳'; }
+  });
 }
 
 function hideScanOverlay() {
-  // Complete all steps
+  // Stop sweep animation
+  if (window._sweepInterval) { clearInterval(window._sweepInterval); window._sweepInterval = null; }
+
+  // Complete progress
+  document.getElementById('scanProgressFill').style.width = '100%';
+  document.getElementById('scanStatusText').textContent   = 'Nothing slips past 🌿';
+  document.getElementById('scanSubText').textContent      = 'Reading complete';
+
+  // Reset dots
+  ['scanDot1','scanDot2','scanDot3'].forEach(id => {
+    const d = document.getElementById(id);
+    if (d) d.classList.remove('visible');
+  });
+
+  // Update compat steps silently
   [1,2,3,4,5].forEach(i => {
     const step = document.getElementById(`step${i}`);
-    step.className = 'scan-step done';
-    step.querySelector('.scan-step-icon').textContent = '✓';
+    if (step) { step.className = 'scan-step done'; step.querySelector('.scan-step-icon').textContent = '✓'; }
   });
-  document.getElementById('scanProgressFill').style.width = '100%';
-  document.getElementById('scanStatusText').textContent   = 'COMPLETE';
-  document.getElementById('scanSubText').textContent      = 'Assets cataloged successfully';
 
   setTimeout(() => {
     document.getElementById('scanOverlay').classList.add('hidden');
-  }, 800);
+  }, 700);
 }
 
 // ─── PDF SAVE BUTTON ID FIX ───────────────────────────────────
@@ -8499,6 +8574,11 @@ async function guestSignupWithEmail() {
 
 <script>
 function showCoachModal(type) {
+  // Skip coach modal for returning users — go straight to camera
+  const seenCoach = localStorage.getItem('guardnest_coach_seen');
+  if (seenCoach) { openCameraFromCoach(); return; }
+  localStorage.setItem('guardnest_coach_seen', 'true');
+
   const modal = document.getElementById('scanCoachModal');
   const emoji = document.getElementById('coachEmoji');
   const title = document.getElementById('coachTitle');
@@ -8513,7 +8593,6 @@ function showCoachModal(type) {
     sub.textContent   = 'Follow these tips for the best results';
   }
   modal.style.display = 'block';
-  
 }
 
 function dismissCoachModal() {
