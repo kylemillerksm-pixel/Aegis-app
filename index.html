@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.3.2';
+  const APP_VERSION = '1.3.3';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -541,7 +541,7 @@
   .mc-sub     { font-size:11px; color:var(--text3); margin-bottom:10px; }
   .mc-info-list { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
   .mc-info-row  { font-size:12px; color:var(--text2); line-height:1.5; }
-  .mc-footer  { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid var(--border); }
+  .mc-footer  { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid rgba(0,0,0,0.06); }
   .mc-thumbsdown {
     background: transparent; border: none;
     font-size: 11px; color: var(--text3);
@@ -4950,6 +4950,7 @@ async function handleImageScan(input) {
   pendingItems = result.map(i => ({ ...i, image_url: file.name }));
   try {
     renderManifest(result, 'manifestGrid', 'resultsTitle');
+    gtag('event', 'items_rendered_on_screen', { count: result.length, scan_type: 'receipt' });
   } catch(renderErr) {
     logError('render_manifest_failed', renderErr.message, { scan_type: 'receipt', items: result.length });
     console.error('renderManifest crashed:', renderErr);
@@ -5425,13 +5426,13 @@ function renderManifest(items, gridId, titleId) {
 
     const card = document.createElement('div');
     card.id = `mc-${i}`;
-    card.style.cssText = `background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px;opacity:0;transform:translateY(8px);transition:all .3s ease;cursor:pointer;`;
+    card.style.cssText = `background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:16px;padding:14px 16px;opacity:0;transform:translateY(8px);transition:all .3s ease;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.04);`;
     card.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px;">
         <span style="font-size:28px;flex-shrink:0;">${emoji}</span>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.item_name || 'Unknown'}</div>
-          <div style="height:4px;background:var(--dark2);border-radius:2px;overflow:hidden;margin-bottom:4px;">
+          <div style="font-size:14px;font-weight:600;color:#1A1A1A;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.item_name || 'Unknown'}</div>
+          <div style="height:4px;background:rgba(0,0,0,0.06);border-radius:2px;overflow:hidden;margin-bottom:4px;">
             <div style="height:100%;width:${barWidth}%;background:${urgColor};border-radius:2px;transition:width .6s ease;"></div>
           </div>
           <div style="font-size:11px;font-weight:600;color:${urgColor};">${urgLabel}</div>
@@ -5441,7 +5442,7 @@ function renderManifest(items, gridId, titleId) {
         </div>
       </div>
       <div id="mc-detail-${i}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-        <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">${suggested}</div>
+        <div style="font-size:12px;color:rgba(26,26,26,0.5);margin-bottom:8px;">${suggested}</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <button onclick="guestMarkUsed(${i}, event)" style="background:rgba(76,175,130,.12);border:1px solid rgba(76,175,130,.3);color:#4CAF82;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">
             ✓ Mark as used
@@ -7187,6 +7188,7 @@ async function handleFridgePhoto(input, scanType) {
 
       try {
         renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
+          gtag('event', 'items_rendered_on_screen', { count: pendingItems.length, scan_type: type });
       } catch(renderErr) {
         logError('render_manifest_failed', renderErr.message, { scan_type: type, items: items.length });
         console.error('renderManifest crashed:', renderErr);
