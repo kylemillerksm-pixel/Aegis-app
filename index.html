@@ -38,7 +38,7 @@
 <script>
 // ── VERSION CHECK — forces cache refresh on deploy ──
 (function() {
-  const APP_VERSION = '1.3.1';
+  const APP_VERSION = '1.3.2';
   const stored = localStorage.getItem('gn_version');
   if (!stored) {
     // First time visitor — just set version, no reload needed
@@ -5736,7 +5736,7 @@ async function saveItems(btnId, resultsId) {
     // Track first save
     if (!localStorage.getItem('guardnest_first_save_done')) {
       localStorage.setItem('guardnest_first_save_done', 'true');
-      
+      gtag('event', 'first_save_completed', { method: 'authenticated' });
     }
     pendingItems = [];
     document.getElementById(resultsId)?.classList.add('hidden');
@@ -8015,8 +8015,9 @@ async function demoSaveAndClose() {
   }];
 
   hideSampleReport();
+  window._isDemoSave = true;
   await guestSaveAnonymous();
-  
+  window._isDemoSave = false;
 }
 </script>
 
@@ -8812,9 +8813,9 @@ async function guestSaveAnonymous() {
         });
         console.log('guest_items insert error:', insertError);
         // Still fire saved event — data is in localStorage
-        gtag('event', 'guest_items_saved', { count: rows.length, status: 'localstorage_fallback' });
+        gtag('event', 'guest_items_saved', { count: rows.length, status: 'localstorage_fallback', source: window._isDemoSave ? 'demo' : 'real' }); if (!window._isDemoSave && !localStorage.getItem('guardnest_first_save_done')) { localStorage.setItem('guardnest_first_save_done', 'true'); gtag('event', 'first_save_completed', { method: 'guest' }); }
       } else {
-        gtag('event', 'guest_items_saved', { count: rows.length, status: 'success' });
+        gtag('event', 'guest_items_saved', { count: rows.length, status: 'success', source: window._isDemoSave ? 'demo' : 'real' }); if (!window._isDemoSave && !localStorage.getItem('guardnest_first_save_done')) { localStorage.setItem('guardnest_first_save_done', 'true'); gtag('event', 'first_save_completed', { method: 'guest' }); }
         // Clear localStorage once confirmed in Supabase
         localStorage.removeItem('guardnest_saved_items');
       }
@@ -8822,7 +8823,7 @@ async function guestSaveAnonymous() {
       logError('supabase_blocked', e.message, { source: 'guest_items_insert' });
       console.log('guest_items insert blocked — localStorage fallback active:', e.message);
       // Still fire saved event — data is in localStorage
-      gtag('event', 'guest_items_saved', { count: rows.length, status: 'localstorage_fallback' });
+      gtag('event', 'guest_items_saved', { count: rows.length, status: 'localstorage_fallback', source: window._isDemoSave ? 'demo' : 'real' }); if (!window._isDemoSave && !localStorage.getItem('guardnest_first_save_done')) { localStorage.setItem('guardnest_first_save_done', 'true'); gtag('event', 'first_save_completed', { method: 'guest' }); }
     }
   }
 
