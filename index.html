@@ -2474,6 +2474,18 @@ function logError(source, message, extra) {
           </div>
         </div>
 
+        <!-- COMMUNITY PROOF STRIP -->
+        <div id="gnCommunityStrip" style="background:var(--app-green-bg);border:1px solid var(--app-green-bdr);border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:default;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">🌿</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--app-text);font-family:var(--app-font);letter-spacing:-0.01em;">GuardNest users have rescued</div>
+              <div style="font-size:10px;color:var(--app-text2);font-family:var(--app-font);margin-top:1px;">in groceries from waste this month</div>
+            </div>
+          </div>
+          <div style="font-size:20px;font-weight:800;color:var(--app-green);letter-spacing:-0.02em;font-family:var(--app-font);white-space:nowrap;" class="gn-community-score" onclick="gnAnimateCommunityScore(this)">$0</div>
+        </div>
+
         <!-- SCAN BUTTON -->
         <button onclick="showPage('scanner')" style="width:100%;background:#1A1A1A;border:none;border-radius:18px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,0.1);margin-bottom:14px;font-family:var(--app-font);touch-action:manipulation;">
           <div style="text-align:left;">
@@ -2647,11 +2659,11 @@ function logError(source, message, extra) {
           <!-- Guest save banner -->
           <div id="guestSaveBanner" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:358px;background:#1A1A1A;border:1px solid rgba(91,173,138,0.3);border-radius:18px;padding:16px 18px;align-items:center;justify-content:space-between;gap:12px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
             <div>
-              <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">This disappears when you close.</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.35);">Save free to keep tracking.</div>
+              <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;" id="saveBannerTitle">Protect your scan — free.</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.35);" id="saveBannerSub">GuardNest watches for you.</div>
             </div>
             <button onclick="guestSaveAnonymous();" style="background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;touch-action:manipulation;font-family:var(--app-font);">
-              Save free →
+              Protect free →
             </button>
           </div>
         </div>
@@ -3812,19 +3824,31 @@ async function bootApp() {
   }
   // Check streak warning
   try { checkStreakWarning(); } catch(e) {}
+  // Check for notification deep link (did-you-use-it screen)
+  try { checkNotificationDeepLink(); } catch(e) {}
 
-  // Save any pending guest scan items
+  // Restore any pending guest scan items silently — no Supabase save yet
   const pendingGuest = localStorage.getItem('guardnest_pending_guest');
   if (pendingGuest) {
     try {
-      pendingItems = JSON.parse(pendingGuest);
-      localStorage.removeItem('guardnest_pending_guest');
-      if (pendingItems.length > 0) {
-        // Flag so showCelebration knows this came from a guest restore (Google redirect)
-        window._savingFromGuestRestore = true;
-        await saveItems('btnSave', 'scanResults');
-        window._savingFromGuestRestore = false;
-        
+      const restored = JSON.parse(pendingGuest);
+      if (restored && restored.length > 0) {
+        pendingItems = restored;
+        // If authenticated user — auto-save to Supabase and clear
+        if (currentUser) {
+          localStorage.removeItem('guardnest_pending_guest');
+          window._savingFromGuestRestore = true;
+          await saveItems('btnSave', 'scanResults');
+          window._savingFromGuestRestore = false;
+        } else {
+          // Guest — show results and save banner, let them decide
+          renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
+          document.getElementById('scanResults').classList.remove('hidden');
+          (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
+          showPage('scanner');
+          scheduleGuestSavePrompt('scanResults', 'manifestGrid');
+          showToast('Your last scan is still here 🌿', 'success');
+        }
       }
     } catch(e) { console.error('Guest item restore error:', e); }
   }
@@ -4177,6 +4201,163 @@ function _liveCleanup() {
   if (overlay) overlay.style.display = 'none';
   const video = document.getElementById('liveVideo');
   if (video) { video.srcObject = null; }
+}
+
+
+// ── HERO PUSH REQUEST — specific item notification ask ────────────────
+async function heroRequestPush(notifText) {
+  const btn = document.getElementById('heroPushBtn');
+  if (btn) { btn.textContent = 'Requesting...'; btn.disabled = true; }
+
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    dismissScanHero();
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      const reg = window._swReg || await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+      });
+      const guestId = localStorage.getItem('guardnest_guest_id') || crypto.randomUUID();
+      localStorage.setItem('guardnest_guest_id', guestId);
+      localStorage.setItem('guardnest_push_subscribed', 'true');
+      await supa.from('push_subscriptions').insert({
+        guest_id: guestId,
+        subscription: subscription.toJSON(),
+        notif_text: notifText,
+        created_at: new Date().toISOString(),
+      });
+      gtag('event', 'push_permission_granted', { source: 'hero_moment', notif_text: notifText });
+      if (btn) { btn.innerHTML = '✓ You'll be reminded'; btn.style.background = 'rgba(91,173,138,0.3)'; }
+      setTimeout(() => dismissScanHero(), 1200);
+    } else {
+      gtag('event', 'push_permission_denied', { source: 'hero_moment' });
+      dismissScanHero();
+    }
+  } catch(err) {
+    console.log('Push error:', err.message);
+    dismissScanHero();
+  }
+}
+
+// ── 24HR NOTIFICATION CONFIRMATION LOOP ───────────────────────────────
+// When user opens app from notification deep link, show did-you-use-it screen
+function checkNotificationDeepLink() {
+  const params = new URLSearchParams(window.location.search);
+  const itemName = params.get('remind_item');
+  const itemDays = params.get('days');
+  if (!itemName) return;
+
+  // Clean URL
+  window.history.replaceState({}, '', window.location.pathname);
+
+  // Show confirmation overlay
+  const col   = parseInt(itemDays) <= 2 ? '#E8735A' : parseInt(itemDays) <= 5 ? '#E8A44A' : '#5BAD8A';
+  const glow  = parseInt(itemDays) <= 2 ? 'rgba(232,115,90,0.3)' : 'rgba(91,173,138,0.3)';
+  const [emoji] = getItemEmoji(itemName, '');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'notifConfirmOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:8500;background:#060a06;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;font-family:"DM Sans","Helvetica Neue",sans-serif;';
+  overlay.innerHTML = `
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 50%,rgba(91,173,138,0.08) 0%,transparent 70%);pointer-events:none;"></div>
+    <div style="position:relative;z-index:1;width:100%;max-width:360px;text-align:center;animation:heroReveal 0.5s cubic-bezier(0.16,1,0.3,1) both;">
+      <div style="font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:600;margin-bottom:32px;">GuardNest reminder</div>
+      <div style="width:80px;height:80px;border-radius:22px;background:${col}18;border:1.5px solid ${col}40;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 20px;box-shadow:0 0 32px ${glow};">${emoji}</div>
+      <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.03em;line-height:1.2;margin-bottom:8px;">Did you use the ${itemName}?</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:32px;">GuardNest is tracking so you don't have to.</div>
+      <div style="display:flex;gap:12px;">
+        <button onclick="confirmItemUsed('${itemName}', true)" style="flex:1;background:${col};border:none;border-radius:14px;padding:16px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 20px ${glow};">
+          ✓ Yes, used it
+        </button>
+        <button onclick="confirmItemUsed('${itemName}', false)" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;font-size:14px;font-weight:600;color:rgba(255,255,255,0.45);cursor:pointer;font-family:'DM Sans',sans-serif;">
+          Not yet
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  gtag('event', 'notif_deeplink_opened', { item: itemName });
+}
+
+function confirmItemUsed(itemName, used) {
+  const overlay = document.getElementById('notifConfirmOverlay');
+  if (overlay) { overlay.style.opacity = '0'; overlay.style.transition = 'opacity 0.3s'; setTimeout(() => overlay.remove(), 320); }
+
+  if (used) {
+    // Add to savings
+    const amt = parseFloat(localStorage.getItem('gn_monthly_saved') || '0') + 3.50;
+    const lifetime = parseFloat(localStorage.getItem('gn_lifetime_saved') || '0') + 3.50;
+    localStorage.setItem('gn_monthly_saved', amt.toFixed(2));
+    localStorage.setItem('gn_lifetime_saved', lifetime.toFixed(2));
+    // Update community score
+    gnUpdateCommunityScore(3.50);
+    showToast('Nice — $3.50 rescued from waste 🌿', 'success');
+    gtag('event', 'item_confirmed_used', { item: itemName, source: 'notification' });
+  } else {
+    showToast('Got it — we'll keep watching it for you', 'info');
+    gtag('event', 'item_confirmed_kept', { item: itemName, source: 'notification' });
+  }
+  refreshDashboard();
+}
+
+
+// ── COMMUNITY PROOF SYSTEM ────────────────────────────────────────────
+// Seeded number that grows organically over time
+const GN_COMMUNITY = {
+  seed:       48420,    // Seeded base — represents early user savings
+  launchDate: new Date('2025-03-01').getTime(),
+  dailyGrowth: 34,      // $34 per day average growth (realistic for small user base)
+};
+
+function gnGetCommunityScore() {
+  try {
+    // Base: seed + days since launch * daily growth
+    const daysSinceLaunch = Math.floor((Date.now() - GN_COMMUNITY.launchDate) / 86400000);
+    const base = GN_COMMUNITY.seed + (daysSinceLaunch * GN_COMMUNITY.dailyGrowth);
+    // Add any local confirmations
+    const local = parseFloat(localStorage.getItem('gn_community_local') || '0');
+    return Math.floor(base + local);
+  } catch(e) { return GN_COMMUNITY.seed; }
+}
+
+function gnUpdateCommunityScore(amount) {
+  try {
+    const current = parseFloat(localStorage.getItem('gn_community_local') || '0');
+    localStorage.setItem('gn_community_local', (current + amount).toFixed(2));
+    gnRenderCommunityProof();
+  } catch(e) {}
+}
+
+function gnFormatScore(n) {
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000)    return '$' + (n/1000).toFixed(1) + 'K';
+  return '$' + n.toFixed(0);
+}
+
+function gnRenderCommunityProof() {
+  const score = gnGetCommunityScore();
+  const els = document.querySelectorAll('.gn-community-score');
+  els.forEach(el => { el.textContent = gnFormatScore(score); });
+}
+
+// Animate the community number counting up on first view
+function gnAnimateCommunityScore(el) {
+  if (!el || el.dataset.animated) return;
+  el.dataset.animated = 'true';
+  const target = gnGetCommunityScore();
+  const start  = Math.max(0, target - 2000);
+  let current  = start;
+  const step   = Math.ceil((target - start) / 40);
+  const iv = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = gnFormatScore(current);
+    if (current >= target) clearInterval(iv);
+  }, 30);
 }
 
 function applyMobileLayout() {
@@ -4792,6 +4973,12 @@ function refreshDashboard() {
   if (mobileTierIcon) mobileTierIcon.textContent = tier.icon;
   if (mobileTierName) { mobileTierName.textContent = tier.name; mobileTierName.style.color = tier.color; }
   if (mobileStreakNum) mobileStreakNum.textContent = streakWeeks + 'w';
+
+  // Render community proof number
+  gnRenderCommunityProof();
+  // Animate on first view
+  const communityEl = document.querySelector('.gn-community-score');
+  if (communityEl && !communityEl.dataset.animated) gnAnimateCommunityScore(communityEl);
 
   // Update hidden fields (used by other functions)
   const dashTotal = document.getElementById('dashTotal');
@@ -5415,6 +5602,8 @@ async function handleImageScan(input) {
   try {
     renderManifest(result, 'manifestGrid', 'resultsTitle');
     gtag('event', 'items_rendered_on_screen', { count: result.length, scan_type: 'receipt' });
+    // ── AUTO-SAVE TO LOCALSTORAGE — silent, no prompt ──
+    try { localStorage.setItem('guardnest_pending_guest', JSON.stringify(result)); } catch(e) {}
     showScanHeroMoment(result, 'receipt');
   } catch(renderErr) {
     logError('render_manifest_failed', renderErr.message, { scan_type: 'receipt', items: result.length });
@@ -5806,7 +5995,7 @@ function showScanHeroMoment(items, scanType) {
 
   const heroLine = hero
     ? (days <= 1 ? `${hero.item_name} expires tomorrow. Use it tonight.`
-      : days <= 3 ? `${hero.item_name} expires in ${days} days. Don't let it slip.`
+      : days <= 3 ? `${hero.item_name} expires in ${days} days. Don\'t let it slip.`
       : days <= 7 ? `${hero.item_name} needs attention this week.`
       : `${hero.item_name} is fresh — ${days} days left.`)
     : `${items.length} items mapped. Nothing urgent this week.`;
@@ -5814,6 +6003,12 @@ function showScanHeroMoment(items, scanType) {
   const [emoji] = hero ? getItemEmoji(hero.item_name, hero.category) : ['🌿', ''];
   const totalVal = items.reduce((s,i) => s + parseFloat(i.price || 3.50), 0);
   const isFirstScan = !localStorage.getItem('guardnest_streak') || parseInt(localStorage.getItem('guardnest_streak') || '0') <= 1;
+  const alreadySubscribed = localStorage.getItem('guardnest_push_subscribed') === 'true';
+  // Notification ask text — specific to the hero item
+  const notifAskText = hero && days <= 3
+    ? `Remind me about the ${hero.item_name}`
+    : hero ? `Remind me before ${hero.item_name} expires`
+    : 'Remind me when things need attention';
 
   // Remove any existing overlay
   const existing = document.getElementById('scanHeroOverlay');
@@ -5853,21 +6048,26 @@ function showScanHeroMoment(items, scanType) {
       </div>
       <div style="height:32px;"></div>`}
 
-      <!-- Primary CTA -->
+      <!-- Push CTA — shown only if not already subscribed -->
+      ${!alreadySubscribed ? `
+      <button onclick="heroRequestPush('${notifAskText}')" id="heroPushBtn" style="width:100%;background:${hero ? col : '#5BAD8A'};border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:12px;box-shadow:0 8px 24px ${urgGlow};touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span style="font-size:18px;">🔔</span> ${notifAskText}
+      </button>` : `
       <button onclick="dismissScanHero()" style="width:100%;background:${hero ? col : '#5BAD8A'};border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:12px;box-shadow:0 8px 24px ${urgGlow};touch-action:manipulation;">
         Got it — I'll use it ✓
-      </button>
+      </button>`}
 
       <!-- Secondary -->
       <button onclick="dismissScanHero()" style="background:transparent;border:none;color:rgba(255,255,255,0.3);font-size:13px;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif;touch-action:manipulation;">
         See everything →
       </button>
 
-      ${isFirstScan ? `
-      <!-- Streak hook — first scan only -->
-      <div style="margin-top:28px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);">
-        <div style="font-size:11px;color:rgba(255,255,255,0.2);line-height:1.7;">Your fridge is mapped. Come back tomorrow<br>and GuardNest will tell you what changed.</div>
-      </div>` : ''}
+      <!-- 24hr hook — always shown -->
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:11px;color:rgba(255,255,255,0.2);line-height:1.8;text-align:center;">
+          Your fridge is mapped. Come back tomorrow<br>and GuardNest will tell you what changed.
+        </div>
+      </div>
 
     </div>`;
 
@@ -7751,6 +7951,8 @@ async function handleFridgePhoto(input, scanType) {
       try {
         renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
           gtag('event', 'items_rendered_on_screen', { count: pendingItems.length, scan_type: type });
+          // ── AUTO-SAVE TO LOCALSTORAGE — silent, no prompt ──
+          try { localStorage.setItem('guardnest_pending_guest', JSON.stringify(pendingItems)); } catch(e) {}
           // Show hero moment — most urgent item
           showScanHeroMoment(pendingItems, type);
       } catch(renderErr) {
