@@ -3826,6 +3826,8 @@ async function bootApp() {
   try { checkStreakWarning(); } catch(e) {}
   // Check for notification deep link (did-you-use-it screen)
   try { checkNotificationDeepLink(); } catch(e) {}
+  // Retry any items that failed to reach Supabase previously
+  try { retrySupabaseSync(); } catch(e) {}
 
   // Restore any pending guest scan items silently — no Supabase save yet
   const pendingGuest = localStorage.getItem('guardnest_pending_guest');
@@ -4203,6 +4205,33 @@ function _liveCleanup() {
   if (video) { video.srcObject = null; }
 }
 
+
+// ── SUPABASE RETRY — sync localStorage items that missed Supabase ────────
+async function retrySupabaseSync() {
+  try {
+    const saved = localStorage.getItem('guardnest_saved_items');
+    if (!saved) return;
+    const items = JSON.parse(saved);
+    if (!items || items.length === 0) return;
+
+    // Only retry if we have a guest_id
+    const guestId = localStorage.getItem('guardnest_guest_id');
+    if (!guestId) return;
+
+    // Attempt insert
+    const { error } = await supa.from('guest_items').insert(items);
+    if (!error) {
+      // Success — clear localStorage copy
+      localStorage.removeItem('guardnest_saved_items');
+      console.log('Supabase sync retry: success', items.length, 'items');
+      gtag('event', 'supabase_retry_success', { count: items.length });
+    } else {
+      console.log('Supabase sync retry failed:', error.message);
+    }
+  } catch(e) {
+    console.log('Supabase sync retry error:', e.message);
+  }
+}
 
 // ── HERO PUSH REQUEST — specific item notification ask ────────────────
 async function heroRequestPush(notifText) {
