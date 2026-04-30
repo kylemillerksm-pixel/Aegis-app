@@ -4108,7 +4108,7 @@ function _liveShowDetail(liveId) {
   const col  = days <= 2 ? '#E8735A' : days <= 5 ? '#E8A44A' : '#5BAD8A';
   const label= days <= 2 ? 'Use today' : days <= 5 ? 'Use soon' : 'Fresh';
   const msg  = days <= 1 ? 'Use tonight — expires tomorrow.'
-    : days <= 3 ? `Use within ${days} days — don't let it slip.`
+    : days <= 3 ? `Use within ${days} days. Don\'t let it slip.`
     : days <= 7 ? `${days} days left — GuardNest is watching.`
     : `Looking good — ${days} days of freshness left.`;
   const [emoji] = getItemEmoji(item.item_name, item.category);
@@ -4261,7 +4261,7 @@ async function heroRequestPush(notifText) {
         created_at: new Date().toISOString(),
       });
       gtag('event', 'push_permission_granted', { source: 'hero_moment', notif_text: notifText });
-      if (btn) { btn.innerHTML = '✓ You'll be reminded'; btn.style.background = 'rgba(91,173,138,0.3)'; }
+      if (btn) { btn.innerHTML = "✓ You'll be reminded"; btn.style.background = "rgba(91,173,138,0.3)"; }
       setTimeout(() => dismissScanHero(), 1200);
     } else {
       gtag('event', 'push_permission_denied', { source: 'hero_moment' });
@@ -4328,7 +4328,7 @@ function confirmItemUsed(itemName, used) {
     showToast('Nice — $3.50 rescued from waste 🌿', 'success');
     gtag('event', 'item_confirmed_used', { item: itemName, source: 'notification' });
   } else {
-    showToast('Got it — we'll keep watching it for you', 'info');
+    showToast("Got it — we'll keep watching it for you", "info");
     gtag('event', 'item_confirmed_kept', { item: itemName, source: 'notification' });
   }
   refreshDashboard();
@@ -6083,7 +6083,7 @@ function showScanHeroMoment(items, scanType) {
         <span style="font-size:18px;">🔔</span> ${notifAskText}
       </button>` : `
       <button onclick="dismissScanHero()" style="width:100%;background:${hero ? col : '#5BAD8A'};border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:12px;box-shadow:0 8px 24px ${urgGlow};touch-action:manipulation;">
-        Got it — I'll use it ✓
+        Got it ✓
       </button>`}
 
       <!-- Secondary -->
@@ -6838,7 +6838,7 @@ async function flagBadScan(btn, itemName, event) {
   btn.textContent = '✓ Flagged — thanks';
   btn.classList.add('flagged');
   btn.disabled = true;
-  showToast(`Thanks — we'll improve scanning for "${itemName}"`, 'info');
+  showToast(`Thanks — we'll improve scanning for "${itemName}"`, "info");
 
   // Log to Supabase for model improvement
   if (currentUser) {
