@@ -2650,7 +2650,7 @@ function logError(source, message, extra) {
           <!-- Results header -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
             <div id="resultsTitle" style="font-size:16px;font-weight:700;color:var(--app-text);letter-spacing:-0.01em;">Your Fridge</div>
-            <button onclick="saveScanResults()" id="btnSave" style="display:none;background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--app-font);touch-action:manipulation;">Save ✓</button>
+            <button onclick="if(typeof gtag!=='undefined')gtag('event','save_button_tapped',{source:'auth_save'});saveScanResults();" id="btnSave" style="display:none;background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--app-font);touch-action:manipulation;">Save ✓</button>
           </div>
 
           <!-- Manifest grid -->
@@ -2662,7 +2662,7 @@ function logError(source, message, extra) {
               <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;" id="saveBannerTitle">Protect your scan — free.</div>
               <div style="font-size:11px;color:rgba(255,255,255,0.35);" id="saveBannerSub">GuardNest watches for you.</div>
             </div>
-            <button onclick="guestSaveAnonymous();" style="background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;touch-action:manipulation;font-family:var(--app-font);">
+            <button onclick="if(typeof gtag!=='undefined')gtag('event','save_button_tapped',{source:'protect_banner'});guestSaveAnonymous();" style="background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;touch-action:manipulation;font-family:var(--app-font);">
               Protect free →
             </button>
           </div>
@@ -8884,7 +8884,7 @@ async function demoSaveAndClose() {
     <!-- CTA section -->
     <div style="padding:20px;">
       <div id="saveModalCta" style="font-size:13px;color:rgba(255,255,255,.55);margin-bottom:16px;line-height:1.7;text-align:center;"></div>
-      <button onclick="guestSaveAnonymous()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
+      <button onclick="if(typeof gtag!=='undefined')gtag('event','save_button_tapped',{source:'push_modal'});guestSaveAnonymous();" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
         Save my results →
       </button>
       <button onclick="hideGuestSaveModal()" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:8px;width:100%;text-align:center;">
