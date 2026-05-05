@@ -15496,7 +15496,7 @@ function openCameraFromCoach() {
 <!-- ═══════════════════════════════════════
      GDPR CONSENT BANNER
 ═══════════════════════════════════════ -->
-<div id="gnConsentBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99998;padding:16px;background:#f7f5f0;border-top:0.5px solid #e0ddd6;box-shadow:0 -4px 24px rgba(0,0,0,0.08);">
+<div id="gnConsentBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99998;pointer-events:auto;padding:16px;background:#f7f5f0;border-top:0.5px solid #e0ddd6;box-shadow:0 -4px 24px rgba(0,0,0,0.08);">
   <div style="max-width:480px;margin:0 auto;">
     <div style="font-family:'Lora',Georgia,serif;font-size:15px;color:#1a1a1a;margin-bottom:6px;line-height:1.3;">GuardNest uses cookies</div>
     <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:14px;font-family:'DM Sans',sans-serif;">We use analytics to understand how the app is used and improve it. We also use Meta Pixel to measure ad performance. You can decline and still use everything.</div>
@@ -15541,7 +15541,12 @@ function openCameraFromCoach() {
 
   function gnHideConsentBanner() {
     var banner = document.getElementById('gnConsentBanner');
-    if (banner) banner.style.display = 'none';
+    if (banner) {
+      banner.style.display = 'none';
+      banner.style.pointerEvents = 'none';
+    }
+    // Ensure app is interactive after banner dismissal
+    document.body.style.overflow = '';
   }
 
   window.gnGrantConsent = function() {
@@ -15583,7 +15588,9 @@ function openCameraFromCoach() {
       window._gnFbqQueue = [];
     }
 
-    gtag('event', 'consent_granted');
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'consent_granted');
+    }
   };
 
   window.gnDeclineConsent = function() {
@@ -15591,7 +15598,10 @@ function openCameraFromCoach() {
     gnHideConsentBanner();
     // GA4 stays denied — anonymized data only via Consent Mode
     // No Clarity, no Meta Pixel
-    gtag('event', 'consent_declined');
+    // Safe gtag call — may not be initialized yet
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'consent_declined');
+    }
   };
 
   // Safe fbq wrapper — queues calls until consent granted
@@ -15607,12 +15617,11 @@ function openCameraFromCoach() {
 
   // Init on load
   if (!stored) {
-    // First visit — show banner after short delay so page loads first
-    setTimeout(gnShowConsentBanner, 1200);
+    setTimeout(gnShowConsentBanner, 2000);
   } else if (stored === 'granted') {
-    // Previously granted — load trackers immediately
     window.gnGrantConsent();
   }
+  // declined = do nothing, app works fully without trackers
   // declined = do nothing, trackers stay off
 })();
 </script>
