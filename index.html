@@ -568,6 +568,7 @@
     animation: scanLine 3s linear infinite;
   }
   @keyframes scanLine { to { top: 110%; } }
+  @keyframes gnSkeleton { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
   .scan-icon  { font-size: 36px; margin-bottom: 10px; display: block; }
   .scan-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .15em; margin-bottom: 5px; }
   .scan-sub   { font-size: 11px; color: var(--text3); line-height: 1.6; }
@@ -2850,42 +2851,61 @@ function logError(source, message, extra) {
         </div>
 
         <!-- SCAN RESULTS — shown after scan completes -->
-        <div id="scanResults" class="hidden" style="padding:20px;">
+        <div id="scanResults" class="hidden" style="padding:16px 16px 100px;">
 
-          <!-- Insight bar -->
+          <!-- Warm insight bar -->
           <div id="scanCelebration" style="display:none;">
-            <div id="scanInsightBar" style="background:linear-gradient(135deg,#0f1f17,#0a1510);border:1px solid rgba(91,173,138,0.25);border-radius:18px;padding:16px 18px;margin-bottom:14px;position:relative;overflow:hidden;">
-              <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.15) 0%,transparent 70%);pointer-events:none;"></div>
-              <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#5BAD8A;font-weight:600;margin-bottom:5px;">GuardNest found</div>
-              <div id="scanCelebTitle" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:3px;letter-spacing:-0.02em;line-height:1.2;"></div>
-              <div id="scanCelebSub" style="font-size:12px;color:rgba(255,255,255,0.4);line-height:1.5;"></div>
+            <div id="scanInsightBar" style="background:#FCEBEB;border:0.5px solid #F7C1C1;border-radius:14px;padding:14px 16px;margin-bottom:12px;">
+              <div id="scanCelebTitle" style="font-size:14px;font-weight:700;color:#A32D2D;margin-bottom:2px;font-family:var(--app-font);"></div>
+              <div id="scanCelebSub" style="font-size:12px;color:#C0392B;line-height:1.5;font-family:var(--app-font);"></div>
             </div>
           </div>
 
           <!-- Results header -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div id="resultsTitle" style="font-size:16px;font-weight:700;color:var(--app-text);letter-spacing:-0.01em;">Your Fridge</div>
-            <button onclick="if(typeof gtag!=='undefined')gtag('event','save_button_tapped',{source:'auth_save'});saveScanResults();" id="btnSave" style="display:none;background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--app-font);touch-action:manipulation;">Save ✓</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div id="resultsTitle" style="font-size:15px;font-weight:700;color:var(--app-text);font-family:var(--app-font);">Your fridge</div>
+            <button onclick="if(typeof gtag!=='undefined')gtag('event','save_button_tapped',{source:'auth_save'});saveScanResults();" id="btnSave" style="display:none;background:#2D6A4F;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--app-font);touch-action:manipulation;">Save ✓</button>
           </div>
 
           <!-- Manifest grid -->
-          <div id="manifestGrid" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div id="manifestGrid" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
 
-          <!-- Guest save banner -->
-          <div id="guestSaveBanner" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:358px;background:#1A1A1A;border:1px solid rgba(91,173,138,0.3);border-radius:18px;padding:16px 18px;align-items:center;justify-content:space-between;gap:12px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
-            <div>
-              <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;" id="saveBannerTitle">Protect your scan — free.</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.35);" id="saveBannerSub">GuardNest watches for you.</div>
-            </div>
-            <button onclick="if(typeof gtag!=='undefined')gtag('event','save_button_tapped',{source:'protect_banner'});guestSaveAnonymous();" style="background:#5BAD8A;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;touch-action:manipulation;font-family:var(--app-font);">
-              Protect free →
-            </button>
+          <!-- Save CTA — visible immediately after items render -->
+          <div id="guestSaveCta" style="display:none;background:#fff;border:0.5px solid #e0ddd6;border-radius:16px;padding:16px;margin-bottom:12px;">
+            <div style="font-family:'Lora',Georgia,serif;font-size:15px;color:#1a1a1a;margin-bottom:4px;line-height:1.3;">Save your fridge — free.</div>
+            <div style="font-size:12px;color:#888;margin-bottom:12px;font-family:var(--app-font);">We'll remind you before anything expires.</div>
+            <button onclick="if(typeof gtag!=='undefined')gtag('event','save_button_tapped',{source:'inline_cta'});guestSaveAnonymous();" style="width:100%;background:#2D6A4F;border:none;border-radius:20px;padding:13px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);">Save my fridge — free</button>
+            <div style="font-size:11px;color:#bbb;text-align:center;margin-top:8px;font-family:var(--app-font);">No account needed</div>
           </div>
-        </div>
 
-      </div>
+          <!-- Timeout state — shown if no results after 12 seconds -->
+          <div id="scanTimeoutState" style="display:none;padding:24px 0;text-align:center;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#FAEEDA;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 6v5M10 14h.01" stroke="#854F0B" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="10" r="8" stroke="#854F0B" stroke-width="1.5"/></svg>
+            </div>
+            <div style="font-family:'Lora',Georgia,serif;font-size:16px;color:#1a1a1a;margin-bottom:6px;line-height:1.3;">Taking longer than usual</div>
+            <div style="font-size:12px;color:#888;margin-bottom:20px;font-family:var(--app-font);line-height:1.6;">The scan is still running.<br>Try again or scan a different shelf.</div>
+            <button onclick="window.location.reload();" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--app-font);margin-bottom:8px;">Try again</button>
+          </div>
 
-      <!-- ─── ALERTS ─── -->
+          <!-- Empty result state — shown if Gemini returns 0 items -->
+          <div id="scanEmptyState" style="display:none;padding:24px 0;text-align:center;">
+            <div style="width:48px;height:48px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 10h8M10 6l4 4-4 4" stroke="#2D6A4F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="font-family:'Lora',Georgia,serif;font-size:16px;color:#1a1a1a;margin-bottom:6px;line-height:1.3;">Couldn't make out the items</div>
+            <div style="font-size:12px;color:#888;margin-bottom:12px;font-family:var(--app-font);line-height:1.6;">Better with a closer shot, one shelf at a time.</div>
+            <div style="background:#f7f5f0;border-radius:10px;padding:10px 14px;margin-bottom:20px;text-align:left;">
+              <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;font-family:var(--app-font);">Tips for a better scan</div>
+              <div style="font-size:12px;color:#555;font-family:var(--app-font);line-height:1.7;">One shelf at a time · good light · 30cm away</div>
+            </div>
+            <button onclick="gnRestartScanner();" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--app-font);">Scan again</button>
+          </div>
+
+          <!-- Legacy guest save banner — kept for JS compatibility -->
+          <div id="guestSaveBanner" style="display:none;"></div>
+
+              <!-- ─── ALERTS ─── -->
       <div class="page" id="page-alerts">
         <div class="stat-row cols5" id="alertStats">
           <div class="stat-card c-red" onclick="filterAlerts('expired')" style="cursor:pointer" id="aCardExpired"><div class="sc-label">Expired</div><div class="sc-num" id="aExpired">0</div></div>
@@ -3554,8 +3574,15 @@ function logError(source, message, extra) {
     <div class="scan-line"></div>
   </div>
   <div class="scan-shield"></div>
-  <div class="scan-status" id="scanStatusText">Mapping your fridge...</div>
-  <div class="scan-substatus" id="scanSubText">GuardNest gets more accurate every time you scan</div>
+  <div class="scan-status" id="scanStatusText">Identifying items...</div>
+  <div class="scan-substatus" id="scanSubText">Reading shelf life for everything visible</div>
+  <!-- Skeleton cards shown during processing -->
+  <div id="scanSkeletonCards" style="padding:0 20px;margin-top:16px;display:none;">
+    <div style="height:56px;background:rgba(255,255,255,0.06);border-radius:12px;margin-bottom:8px;animation:gnSkeleton 1.4s ease-in-out infinite;"></div>
+    <div style="height:56px;background:rgba(255,255,255,0.06);border-radius:12px;margin-bottom:8px;animation:gnSkeleton 1.4s ease-in-out infinite;animation-delay:0.2s;"></div>
+    <div style="height:56px;background:rgba(255,255,255,0.06);border-radius:12px;animation:gnSkeleton 1.4s ease-in-out infinite;animation-delay:0.4s;"></div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:10px;font-family:var(--app-font);">Usually takes 5–8 seconds</div>
+  </div>
   <div class="scan-progress-track" style="margin-top:0;">
     <div class="scan-progress-fill" id="scanProgressFill"></div>
   </div>
@@ -4396,13 +4423,25 @@ function stopLiveDetection() {
     // Show results after hero is dismissed
     showPage('scanner');
     setTimeout(() => {
+      // Clear timeout watchdog
+      if (window._gnScanTimeout) { clearTimeout(window._gnScanTimeout); window._gnScanTimeout = null; }
+      // Hide skeleton
+      var _skel = document.getElementById('scanSkeletonCards'); if (_skel) _skel.style.display = 'none';
       renderManifest(pendingItems, 'manifestGrid', 'resultsTitle');
       document.getElementById('scanResults').classList.remove('hidden');
       (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
       scheduleGuestSavePrompt('scanResults', 'manifestGrid');
+      // Show inline save CTA immediately — not hidden behind a banner
+      if (!window.currentUser) {
+        var _cta = document.getElementById('guestSaveCta'); if (_cta) _cta.style.display = 'block';
+      }
     }, 200);
   } else {
-    showToast('Nothing detected — try moving closer or improving lighting', 'info');
+    // Clear watchdog and show empty state
+    if (window._gnScanTimeout) { clearTimeout(window._gnScanTimeout); window._gnScanTimeout = null; }
+    var _skel = document.getElementById('scanSkeletonCards'); if (_skel) _skel.style.display = 'none';
+    var _empty = document.getElementById('scanEmptyState'); if (_empty) _empty.style.display = 'block';
+    var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.remove('hidden');
     showPage('scanner');
   }
 }
@@ -5062,7 +5101,7 @@ function showPage(id) {
 
   // Scroll to top on mobile
   if (window.innerWidth <= 768) {
-    var _c = document.querySelector('.content'); if (_c) _c.scrollTo(0, 0);
+    var _sc = document.querySelector('.content'); if (_sc) _sc.scrollTo(0, 0);
     window.scrollTo(0, 0);
   }
 
@@ -5741,7 +5780,7 @@ function markVaultItemUsed(id) {
     allItems = allItems.filter(i => String(i.id) !== String(id));
   }
   refreshVault();
-  showToast('Marked as used 🌿 +$' + parseFloat(item && item.price||0).toFixed(2) + ' saved', 'success');
+  showToast('Marked as used 🌿 +$' + parseFloat((item && item.price)||0).toFixed(2) + ' saved', 'success');
 }
 
 function refreshVault() {
@@ -5939,6 +5978,15 @@ function refreshVault() {
 async function handleImageScan(input) {
   if (!input.files[0]) return;
   gtag('event', 'real_scan_started', {scan_type: 'receipt'});
+  // Show skeleton loading cards
+  var _skel = document.getElementById('scanSkeletonCards'); if (_skel) _skel.style.display = 'block';
+  // Start timeout watchdog — show timeout state after 14 seconds
+  window._gnScanTimeout = setTimeout(function() {
+    var _sk2 = document.getElementById('scanSkeletonCards'); if (_sk2) _sk2.style.display = 'none';
+    var _ts = document.getElementById('scanTimeoutState'); if (_ts) _ts.style.display = 'block';
+    var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.remove('hidden');
+    showPage('scanner');
+  }, 14000);
   window._savePromptFired = false;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
   const file = input.files[0];
@@ -5992,6 +6040,9 @@ async function handleImageScan(input) {
   document.getElementById('scanSub').textContent   = 'Review below and save to vault';
 
   pendingItems = result.map(i => ({ ...i, image_url: file.name }));
+  // Clear scan timeout watchdog
+  if (window._gnScanTimeout) { clearTimeout(window._gnScanTimeout); window._gnScanTimeout = null; }
+  var _skel2 = document.getElementById('scanSkeletonCards'); if (_skel2) _skel2.style.display = 'none';
   try {
     renderManifest(result, 'manifestGrid', 'resultsTitle');
     gtag('event', 'items_rendered_on_screen', { count: result.length, scan_type: 'receipt' });
@@ -6003,6 +6054,10 @@ async function handleImageScan(input) {
     console.error('renderManifest crashed:', renderErr);
   }
   document.getElementById('scanResults').classList.remove('hidden'); (function(){ var el=document.getElementById('scannerIdle'); if(el) el.style.display='none'; })();
+  // Show inline save CTA for guest users
+  if (!window.currentUser) {
+    var _cta = document.getElementById('guestSaveCta'); if (_cta) _cta.style.display = 'block';
+  }
   if (!localStorage.getItem('guardnest_first_scan_completed')) {
     localStorage.setItem('guardnest_first_scan_completed', 'true');
   }
@@ -6330,8 +6385,8 @@ function removeManifestItem(index) {
     pendingItems.splice(index, 1);
 
     if (pendingItems.length === 0) {
-      var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.add('hidden');
-      var _pr = document.getElementById('pdfResults'); if (_pr) _pr.classList.add('hidden');
+      var _sr2 = document.getElementById('scanResults'); if (_sr2) _sr2.classList.add('hidden');
+      var _pr2 = document.getElementById('pdfResults'); if (_pr2) _pr2.classList.add('hidden');
       showToast('All items removed — scan again to start over', 'info');
       return;
     }
@@ -6895,7 +6950,7 @@ async function saveItems(btnId, resultsId) {
       gtag('event', 'first_save_completed', { method: 'authenticated' });
     }
     pendingItems = [];
-    var _ri = document.getElementById(resultsId); if (_ri) _ri.classList.add('hidden');
+    var _ri2 = document.getElementById(resultsId); if (_ri2) _ri2.classList.add('hidden');
 
     // Update streak
     const wk = getWeekKey();
@@ -8653,77 +8708,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- ── SCREEN 0: Hook ───────────────────────────────────────── -->
     <div id="ds0" style="max-width:380px;width:100%;text-align:center;">
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:28px;">
-        <div style="width:24px;height:24px;background:#4CAF82;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);flex-shrink:0;"></div>
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:#4CAF82;">GuardNest</span>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px;">
+        <div style="width:22px;height:22px;background:#2D6A4F;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);flex-shrink:0;"></div>
+        <span style="font-family:'Lora',Georgia,serif;font-size:18px;color:#4CAF82;letter-spacing:.05em;">GuardNest</span>
       </div>
-      <div style="font-size:26px;font-weight:800;color:#fff;line-height:1.25;margin-bottom:12px;">You bought it.<br>Now where did it go?</div>
-      <div style="font-size:14px;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:32px;">Most people waste $31 of groceries a week without realizing it. Not because they're careless — because they couldn't see what they had.</div>
-      <!-- Animated fridge preview -->
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;margin-bottom:28px;text-align:left;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.12em;margin-bottom:14px;">YOUR FRIDGE — WITHOUT GUARDNEST</div>
+      <div style="font-family:'Lora',Georgia,serif;font-size:24px;font-weight:400;color:#fff;line-height:1.3;margin-bottom:10px;">You bought it.<br><em>Now where did it go?</em></div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;">Most households lose ~€28 of groceries a week without noticing. Not from carelessness — from not being able to see what they have.</div>
+      <!-- Fridge preview — warm cards on dark bg for contrast -->
+      <div style="background:rgba(255,255,255,.05);border:0.5px solid rgba(255,255,255,.1);border-radius:16px;padding:16px;margin-bottom:24px;text-align:left;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.12em;margin-bottom:12px;font-family:'DM Sans',sans-serif;">YOUR FRIDGE RIGHT NOW</div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span style="font-size:22px;">🥬</span>
-            <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:12%;background:#E05555;border-radius:3px;transition:width 1s ease;" id="hook-bar-1"></div></div></div>
-            <span style="font-size:11px;font-weight:700;color:#E05555;min-width:52px;text-align:right;">2 days left</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(162,45,45,.12);border-radius:8px;padding:8px 10px;">
+            <span style="font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;">Baby spinach</span>
+            <span style="font-size:11px;font-weight:700;color:#F7A4A4;background:rgba(162,45,45,.3);padding:2px 8px;border-radius:20px;font-family:'DM Sans',sans-serif;">expires tomorrow</span>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span style="font-size:22px;">🍗</span>
-            <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:20%;background:#D4A843;border-radius:3px;transition:width 1s ease;" id="hook-bar-2"></div></div></div>
-            <span style="font-size:11px;font-weight:700;color:#D4A843;min-width:52px;text-align:right;">3 days left</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(133,79,11,.12);border-radius:8px;padding:8px 10px;">
+            <span style="font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;">Chicken breast</span>
+            <span style="font-size:11px;font-weight:700;color:#FAC775;background:rgba(133,79,11,.3);padding:2px 8px;border-radius:20px;font-family:'DM Sans',sans-serif;">3 days left</span>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span style="font-size:22px;">🍓</span>
-            <div style="flex:1;"><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div style="height:100%;width:8%;background:#E05555;border-radius:3px;transition:width 1s ease;" id="hook-bar-3"></div></div></div>
-            <span style="font-size:11px;font-weight:700;color:#E05555;min-width:52px;text-align:right;">1 day left</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(162,45,45,.12);border-radius:8px;padding:8px 10px;">
+            <span style="font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;">Strawberries</span>
+            <span style="font-size:11px;font-weight:700;color:#F7A4A4;background:rgba(162,45,45,.3);padding:2px 8px;border-radius:20px;font-family:'DM Sans',sans-serif;">use today</span>
           </div>
         </div>
-        <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.3);line-height:1.5;">You won't remember this tomorrow.<br>GuardNest reminds you before it's too late.</div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.3);line-height:1.5;font-family:'DM Sans',sans-serif;">You won't remember all of this by Thursday.<br>GuardNest reminds you before it's too late.</div>
       </div>
-      <button onclick="demoGoTo(1)" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;">
+      <button onclick="demoGoTo(1)" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
         Show me what's going bad →
       </button>
-      <div style="font-size:11px;color:rgba(255,255,255,.2);">Free · No download · 30 seconds</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif;">Free · No download · 30 seconds</div>
     </div>
-
     <!-- ── SCREEN 1: Pick your item ─────────────────────────────── -->
     <div id="ds1" style="display:none;max-width:380px;width:100%;text-align:center;">
-      <div style="font-size:28px;margin-bottom:14px;">🛒</div>
-      <div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.3;">What's in your fridge right now?</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:22px;">Tap one thing — we'll show you what GuardNest sees</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;" id="demoPickerS1">
-        <div onclick="demoPickItem(this,'Baby Spinach','🥬',2,3.49)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🥬</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Spinach</div>
+      <div style="font-family:'Lora',Georgia,serif;font-size:20px;color:#fff;margin-bottom:8px;line-height:1.3;">What goes bad in your<br>kitchen most often?</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:20px;font-family:'DM Sans',sans-serif;">Pick the one that quietly disappears. We'll show you exactly what GuardNest catches.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;" id="demoPickerS1">
+        <div onclick="demoPickItem(this,'Baby Spinach','🥬',2,3.49)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(45,106,79,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9c1-3 4-6 7-7M9 2c0 4-2 8-6 11" stroke="#4CAF82" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Leafy greens</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Spinach, salad bags, herbs</div>
+          </div>
         </div>
-        <div onclick="demoPickItem(this,'Chicken Breast','🍗',1,9.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🍗</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Chicken</div>
+        <div onclick="demoPickItem(this,'Strawberries','🍓',2,4.99)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(162,45,45,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="10" r="5" stroke="#F7A4A4" stroke-width="1.5"/><path d="M9 5v2" stroke="#F7A4A4" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Fresh produce</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Berries, tomatoes, avocado</div>
+          </div>
         </div>
-        <div onclick="demoPickItem(this,'Strawberries','🍓',2,4.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🍓</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Berries</div>
+        <div onclick="demoPickItem(this,'Chicken Breast','🍗',1,9.99)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(133,79,11,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 13V8a4 4 0 018 0v5" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round"/><path d="M3 13h12" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Meat and fish</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Chicken, beef, salmon</div>
+          </div>
         </div>
-        <div onclick="demoPickItem(this,'Greek Yogurt','🥛',3,5.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🥛</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Yogurt</div>
+        <div onclick="demoPickItem(this,'Greek Yogurt','🥛',3,5.99)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="4" y="6" width="10" height="9" rx="2" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><path d="M7 6V5a2 2 0 014 0v1" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Dairy and eggs</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Yogurt, cheese, milk</div>
+          </div>
         </div>
-        <div onclick="demoPickItem(this,'Avocado','🥑',1,1.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🥑</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Avocado</div>
-        </div>
-        <div onclick="demoPickItem(this,'Broccoli','🥦',4,2.99)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🥦</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Broccoli</div>
-        </div>
-        <div onclick="demoPickItem(this,'Whole Milk','🥛',5,4.29)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🥛</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Milk</div>
-        </div>
-        <div onclick="demoPickItem(this,'Leftovers','🍱',2,0)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🍱</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Leftovers</div>
-        </div>
-        <div onclick="demoPickItem(this,'Bread','🍞',3,3.49)" style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 6px;cursor:pointer;transition:all .15s;touch-action:manipulation;">
-          <div style="font-size:26px;">🍞</div><div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:5px;">Bread</div>
+        <div onclick="demoPickItem(this,'Leftovers','🍱',2,0)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="7" rx="2" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><path d="M6 8V6a3 3 0 016 0v2" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Leftovers</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Cooked meals, opened jars</div>
+          </div>
         </div>
       </div>
-      <button onclick="demoGoTo(2,true)" style="background:none;border:none;color:rgba(255,255,255,.25);font-size:12px;cursor:pointer;padding:10px;touch-action:manipulation;">Skip — just show me →</button>
+      <button onclick="demoGoTo(2,true)" style="background:none;border:none;color:rgba(255,255,255,.25);font-size:12px;cursor:pointer;padding:10px;touch-action:manipulation;font-family:'DM Sans',sans-serif;">Not sure — skip →</button>
     </div>
-
     <!-- ── SCREEN 2: The reveal — one item, full focus ───────────── -->
     <div id="ds2" style="display:none;max-width:380px;width:100%;text-align:center;">
       <!-- Scanning animation — auto-hides -->
@@ -8768,50 +8835,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- ── SCREEN 3: Payoff + CTA ───────────────────────────────── -->
     <div id="ds3" style="display:none;max-width:380px;width:100%;text-align:center;">
-      <!-- XP burst -->
-      <div id="ds3XpBurst" style="background:rgba(76,175,130,.12);border:1px solid rgba(76,175,130,.4);border-radius:16px;padding:20px;margin-bottom:20px;">
-        <div style="font-size:40px;margin-bottom:8px;animation:levelNumPop .4s cubic-bezier(.36,1.5,.64,1) both;">⚡</div>
-        <div style="font-size:18px;font-weight:800;color:#4CAF82;margin-bottom:6px;">Nothing wasted.</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;" id="ds3SaveText">You just saved ~$3.49. Do that every week and it's $42/year back in your pocket.</div>
+
+      <!-- ① Personalized payoff -->
+      <div style="background:rgba(162,45,45,.12);border:0.5px solid rgba(247,161,161,.2);border-radius:14px;padding:14px;margin-bottom:10px;text-align:left;">
+        <div style="font-size:10px;font-weight:700;color:rgba(247,161,161,.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-family:'DM Sans',sans-serif;">GuardNest found</div>
+        <div id="ds3SaveText" style="font-family:'Lora',Georgia,serif;font-size:20px;color:#fff;margin-bottom:5px;line-height:1.2;">~€3.49 at risk right now</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif;line-height:1.6;" id="ds3Insight">Your Baby Spinach has 2 days left. Most households have 4–6 items like this going unnoticed at any time.</div>
       </div>
-      <!-- XP bar progress -->
-      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px;">
-          <span>Level 1 — First Action</span>
-          <span id="ds3XpCount">50 / 100 XP</span>
+
+      <!-- ② Bridge line -->
+      <div style="text-align:center;padding:4px 0 6px;">
+        <div style="font-size:12px;color:rgba(255,255,255,.35);font-family:'Lora',Georgia,serif;font-style:italic;">That was one item. Most fridges have eight.</div>
+      </div>
+
+      <!-- ③ Intelligence ladder -->
+      <div style="background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;margin-bottom:14px;">
+
+        <!-- Week 1 unlocked -->
+        <div style="padding:11px 14px;border-bottom:0.5px solid rgba(255,255,255,.06);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:11px;font-weight:700;color:#4CAF82;font-family:'DM Sans',sans-serif;">Week 1</div>
+            <div style="font-size:9px;font-weight:700;color:#4CAF82;background:rgba(76,175,130,.15);padding:2px 7px;border-radius:20px;font-family:'DM Sans',sans-serif;">Starts now</div>
+          </div>
+          <div style="font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;margin-bottom:3px;font-weight:600;">See exactly what's going bad</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;line-height:1.5;">Monday morning we tell you what needs attention that week.</div>
         </div>
-        <div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;">
-          <div id="ds3XpFill" style="height:100%;width:0%;background:linear-gradient(90deg,#3D9B6E,#4CAF82);border-radius:3px;transition:width .8s ease;"></div>
+
+        <!-- Week 3 blurred -->
+        <div style="padding:11px 14px;border-bottom:0.5px solid rgba(255,255,255,.04);position:relative;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif;">Week 3</div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);padding:2px 7px;border-radius:20px;font-family:'DM Sans',sans-serif;">After scan 3</div>
+          </div>
+          <div style="filter:blur(6px);user-select:none;">
+            <div style="font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;margin-bottom:3px;font-weight:600;">Your most wasted item</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;line-height:1.5;">Cost per week · cost per year · why it keeps happening.</div>
+          </div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(14,17,23,.4);">
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;background:rgba(14,17,23,.75);padding:4px 12px;border-radius:20px;">Unlocks after scan 3</div>
+          </div>
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:6px;">Complete your first real scan to level up</div>
+
+        <!-- Week 6 blurred -->
+        <div style="padding:11px 14px;position:relative;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.15);font-family:'DM Sans',sans-serif;">Week 6+</div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:2px 7px;border-radius:20px;font-family:'DM Sans',sans-serif;">Yours after 6 scans</div>
+          </div>
+          <div style="filter:blur(7px);user-select:none;">
+            <div style="font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;margin-bottom:3px;font-weight:600;">Your kitchen profile</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;line-height:1.5;">Best shopping day · repeat offenders · annual rescue total.</div>
+          </div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(14,17,23,.5);">
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);font-family:'DM Sans',sans-serif;background:rgba(14,17,23,.85);padding:4px 12px;border-radius:20px;">Yours after 6 scans</div>
+          </div>
+        </div>
+
       </div>
-      <!-- Insight -->
-      <div style="background:rgba(255,255,255,.03);border-radius:12px;padding:14px;margin-bottom:24px;text-align:left;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.1em;margin-bottom:6px;">WHY THIS HAPPENS</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.55);line-height:1.7;" id="ds3Insight">You buy this most weeks. But without a reminder, it sits at the back of the fridge until it's too late. That's not carelessness — that's just not being able to see it.</div>
-      </div>
-      <!-- Bridge line — makes clear demo is over, real step is next -->
-      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:left;">
-        <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;">That was a demo. Your kitchen probably has 8 of these right now — and you won’t remember them all by Thursday.</div>
-      </div>
-      <!-- Primary CTA — universal, works for any scan method -->
-      <button onclick="gtag('event','demo_see_mine');demoGoToRealScanner();" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;">
-        Show me what I have →
+
+      <!-- ④ Single CTA -->
+      <button onclick="gtag('event','demo_see_mine');demoGoToRealScanner();" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;font-family:'DM Sans',sans-serif;">
+        Start with a scan — free
       </button>
-      <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:14px;">Receipt · Fridge · Pantry — your choice</div>
-      <div id="ds3RemindWrap" style="display:none;margin-top:4px;">
-        <input id="ds3Email" type="email" placeholder="Enter email — get your Monday report"
-          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;font-size:16px;color:#fff;margin-bottom:6px;outline:none;text-align:center;">
-        <button onclick="submitDemoReminderNew()" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);border-radius:10px;padding:10px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;">
-          Send me the report →
-        </button>
-      </div>
-      <div id="ds3RemindSuccess" style="display:none;padding:10px;font-size:13px;color:#4CAF82;">✓ Saved! Check your inventory.</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.2);margin-bottom:0;font-family:'DM Sans',sans-serif;">Unlock your pattern report after scan 3</div>
+
     </div>
 
   </div>
 </div>
-
 <style>
 .demo-dot {
   width:6px;height:6px;border-radius:50%;
@@ -8996,9 +9087,12 @@ function _demoShowPayoff() {
   if (saveText) saveText.textContent = `You just saved ${saveVal} on ${pick.name}. Do that every week and it\'s ${yearVal} back in your pocket.`;
   if (insight)  insight.textContent  = `You probably buy ${pick.name} most weeks. Without a reminder it sits at the back of the fridge until it\'s too late. That\'s not carelessness — that\'s just not being able to see it.`;
 
-  // Animate XP bar
-  if (xpFill)  setTimeout(() => { xpFill.style.width = '50%'; }, 300);
-  if (xpCount) xpCount.textContent = '50 / 100 XP';
+  // Update ds3 payoff with personalized data
+  var _pick = window._demoPick || { name: 'Baby Spinach', price: 3.49, days: 2 };
+  var _saveText = document.getElementById('ds3SaveText');
+  var _ds3Insight = document.getElementById('ds3Insight');
+  if (_saveText) _saveText.textContent = '€' + (_pick.price || 3.49).toFixed(2) + ' at risk right now';
+  if (_ds3Insight) _ds3Insight.textContent = 'Your ' + _pick.name + ' has ' + (_pick.days || 2) + ' day' + ((_pick.days || 2) !== 1 ? 's' : '') + ' left. Most households have 4–6 items like this going unnoticed at any time.';
 
   // Reset email form
   const emailInput = document.getElementById('ds3Email');
@@ -9019,7 +9113,8 @@ async function submitDemoReminderNew() {
     await supa.from('email_leads').insert({
       email,
       source: 'demo_reminder_v2',
-      selected_items: window._demoPick && window._demoPick.name || null,
+      guest_id: localStorage.getItem('guardnest_guest_id') || null,
+      selected_items: (window._demoPick && window._demoPick.name) || null,
       email_sent: false,
       created_at: new Date().toISOString()
     });
@@ -9559,7 +9654,7 @@ async function guestSignupWithEmail() {
     showToast('Error: ' + error.message, 'error');
     
     showGuestSavePrompt();
-  } else if (data && data.user && data && data.session) {
+  } else if (data && data.user && data.session) {
     // Verify user actually exists by querying Supabase directly
     const { data: { user: confirmedUser }, error: getUserError } = await supa.auth.getUser();
 
@@ -9587,7 +9682,7 @@ async function guestSignupWithEmail() {
       showToast('Welcome back! 🌿', 'success');
       // onAuthStateChange will handle bootApp and page navigation
     }
-  } else if (data && data.user && !data && data.session) {
+  } else if (data && data.user && !data.session) {
     // User created but no session — try signing them in immediately
     
     const { data: signInRetry, error: retryError } = await supa.auth.signInWithPassword({ email, password });
@@ -10032,6 +10127,13 @@ async function guestSaveAnonymous() {
 function incrementScanCount() {
   const count = parseInt(localStorage.getItem('guardnest_scan_count') || '0') + 1;
   localStorage.setItem('guardnest_scan_count', count);
+  // Track return visits — fire on scan 2+ if same guest_id exists
+  if (count >= 2) {
+    const guestId = localStorage.getItem('guardnest_guest_id');
+    if (guestId) {
+      gtag('event', 'return_visit', { scan_number: count, guest_id_present: true });
+    }
+  }
   
   if (count === 3 && !localStorage.getItem('guardnest_engaged')) {
     localStorage.setItem('guardnest_engaged', 'true');
@@ -10123,7 +10225,7 @@ async function submitDeferredEmail() {
   const email = (document.getElementById('deferredEmail') ? (document.getElementById('deferredEmail').value || '').trim() : '');
   if (!email || !email.includes('@')) { showToast('Please enter a valid email', 'error'); return; }
   try {
-    await supa.from('email_leads').insert({ email, source: 'deferred_3scan_ask', email_sent: false, created_at: new Date().toISOString() });
+    await supa.from('email_leads').insert({ email, source: 'deferred_3scan_ask', guest_id: localStorage.getItem('guardnest_guest_id') || null, email_sent: false, created_at: new Date().toISOString() });
   } catch(e) { console.log('Deferred email:', e.message); }
   localStorage.setItem('guardnest_guest_email', email);
   
