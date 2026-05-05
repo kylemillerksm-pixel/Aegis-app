@@ -33,6 +33,8 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
+    // Flush any errors that fired before gtag was ready
+    if (window._gnFlushErrors) window._gnFlushErrors();
   gtag('config', 'G-87DCQ5CB9M');
 </script>
 <script>
@@ -2082,40 +2084,64 @@ src="https://www.facebook.com/tr?id=1047256908474342&ev=PageView&noscript=1"
 <!-- End Meta Pixel Code -->
 <script>
 // ── ERROR MONITORING — catches all JS errors and sends to GA4 ──
+// Queue errors that fire before gtag is ready
+window._gnErrorQueue = [];
+
 window.onerror = function(msg, url, line, col, error) {
-  if (typeof gtag === 'undefined') return;
   if (!msg || msg === 'Script error.' || msg.trim() === '') return;
-  gtag('event', 'js_error', {
+  var payload = {
     error_message: (msg || '').substring(0, 150),
     line_number: line || 0,
     column: col || 0,
     stack: error && error.stack ? error.stack.substring(0, 200) : 'none'
-  });
+  };
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'js_error', payload);
+  } else {
+    window._gnErrorQueue.push(payload);
+  }
 };
 
-// Catches silent Promise failures — failed Supabase calls, Gemini timeouts etc
+// Catches silent Promise failures
 window.addEventListener('unhandledrejection', function(e) {
-  if (typeof gtag === 'undefined') return;
-  const msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
-  const stack = e.reason && e.reason.stack ? e.reason.stack.substring(0, 200) : 'none';
-  gtag('event', 'js_error', {
+  var msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
+  var stack = e.reason && e.reason.stack ? e.reason.stack.substring(0, 200) : 'none';
+  var payload = {
     error_message: ('Promise: ' + msg).substring(0, 150),
     line_number: 0,
     column: 0,
     stack: stack
-  });
+  };
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'js_error', payload);
+  } else {
+    window._gnErrorQueue.push(payload);
+  }
 });
+
+// Flush queued errors once gtag is ready
+window._gnFlushErrors = function() {
+  if (typeof gtag === 'undefined') return;
+  var q = window._gnErrorQueue || [];
+  q.forEach(function(p) { gtag('event', 'js_error', p); });
+  window._gnErrorQueue = [];
+};
 
 // ── DIAGNOSTIC LOGGER — fires named errors to GA4 with full context ──
 function logError(source, message, extra) {
-  if (typeof gtag === 'undefined') return;
-  const fullMsg = (source + ': ' + message).substring(0, 150);
-  gtag('event', 'js_error', {
+  var fullMsg = (source + ': ' + message).substring(0, 150);
+  var payload = {
     error_message: fullMsg,
     line_number: extra && extra.status ? extra.status : 0,
     column: 0,
     stack: extra ? JSON.stringify(extra).substring(0, 200) : 'none'
-  });
+  };
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'js_error', payload);
+  } else {
+    if (!window._gnErrorQueue) window._gnErrorQueue = [];
+    window._gnErrorQueue.push(payload);
+  }
 }
 </script>
 </head>
