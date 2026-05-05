@@ -3699,7 +3699,7 @@ const UNLOCK_HINTS = [
 (async () => {
   setLoadingMsg('CHECKING CREDENTIALS...');
   const { data: { session } } = await supa.auth.getSession();
-  if (session?.user) {
+  if (session && session.user) {
     currentUser = session.user;
     await bootApp();
   } else {
@@ -3708,7 +3708,7 @@ const UNLOCK_HINTS = [
   }
 
   supa.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user) {
+    if (event === 'SIGNED_IN' && session && session.user) {
       // Prevent double-firing — if we're already booting ignore subsequent events
       if (window._bootingApp) return;
       window._bootingApp = true;
@@ -5062,7 +5062,7 @@ function showPage(id) {
 
   // Scroll to top on mobile
   if (window.innerWidth <= 768) {
-    document.querySelector('.content')?.scrollTo(0, 0);
+    var _c = document.querySelector('.content'); if (_c) _c.scrollTo(0, 0);
     window.scrollTo(0, 0);
   }
 
@@ -5741,7 +5741,7 @@ function markVaultItemUsed(id) {
     allItems = allItems.filter(i => String(i.id) !== String(id));
   }
   refreshVault();
-  showToast('Marked as used 🌿 +$' + parseFloat(item?.price||0).toFixed(2) + ' saved', 'success');
+  showToast('Marked as used 🌿 +$' + parseFloat(item && item.price||0).toFixed(2) + ' saved', 'success');
 }
 
 function refreshVault() {
@@ -5926,7 +5926,7 @@ function refreshVault() {
   const sorted = [...allItems]
     .filter(i => !i.status || i.status === 'active')
     .sort((a,b) =>
-      (rarityOrder[a.rarity?.toUpperCase()]??3) - (rarityOrder[b.rarity?.toUpperCase()]??3)
+      ((a.rarity ? rarityOrder[a.rarity.toUpperCase()] : undefined) || 3) - ((b.rarity ? rarityOrder[b.rarity.toUpperCase()] : undefined) || 3)
     );
   document.getElementById('fullRegistryCount').textContent = `${sorted.length} total`;
   const el = document.getElementById('vaultList');
@@ -6330,8 +6330,8 @@ function removeManifestItem(index) {
     pendingItems.splice(index, 1);
 
     if (pendingItems.length === 0) {
-      document.getElementById('scanResults')?.classList.add('hidden');
-      document.getElementById('pdfResults')?.classList.add('hidden');
+      var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.add('hidden');
+      var _pr = document.getElementById('pdfResults'); if (_pr) _pr.classList.add('hidden');
       showToast('All items removed — scan again to start over', 'info');
       return;
     }
@@ -6762,7 +6762,7 @@ async function markItemUsed(itemId, itemName, event) {
     showToast(`✅ ${itemName} marked as used — nice work!`, 'success');
     // XP bonus for using something before it expired
     totalCredits += 25;
-    showXpFloat(25, event?.clientX, event?.clientY);
+    showXpFloat(25, event && event.clientX, event && event.clientY);
     await loadItems();
     refreshDashboard();
     refreshAlerts();
@@ -6844,7 +6844,7 @@ async function saveItems(btnId, resultsId) {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
   // Step 1: Create receipt session
-  const merchant   = pendingItems[0]?.merchant || 'Unknown';
+  const merchant   = pendingItems[0] && pendingItems[0].merchant || 'Unknown';
   const totalValue = pendingItems.reduce((s,i) => s + parseFloat(i.price || 0), 0);
   const sourceType = resultsId === 'pdfResults' ? 'pdf' : 'image';
   const today      = new Date().toISOString().split('T')[0];
@@ -6862,7 +6862,7 @@ async function saveItems(btnId, resultsId) {
     .select()
     .single();
 
-  const receiptId = receiptData?.id || null;
+  const receiptId = receiptData && receiptData.id || null;
 
   // Step 2: Save items
   const rows = pendingItems.map(item => ({
@@ -6895,7 +6895,7 @@ async function saveItems(btnId, resultsId) {
       gtag('event', 'first_save_completed', { method: 'authenticated' });
     }
     pendingItems = [];
-    document.getElementById(resultsId)?.classList.add('hidden');
+    var _ri = document.getElementById(resultsId); if (_ri) _ri.classList.add('hidden');
 
     // Update streak
     const wk = getWeekKey();
@@ -7126,7 +7126,7 @@ async function saveShoppingPrompt() {
     source_type: 'quick-add',
   }).select().single();
 
-  if (receiptData?.id) {
+  if (receiptData && receiptData.id) {
     rows.forEach(r => r.receipt_id = receiptData.id);
   }
 
@@ -7616,13 +7616,13 @@ async function loadProStatus() {
     .select('is_pro, pro_since')
     .eq('id', currentUser.id)
     .single();
-  currentUserIsPro = data?.is_pro || false;
+  currentUserIsPro = data && data.is_pro || false;
   if (!currentUserIsPro) {
     currentUserIsPro = !!localStorage.getItem('guardnest_pro_' + currentUser.id);
   }
   const dot = document.getElementById('bn-pro-dot');
   if (dot) dot.style.display = currentUserIsPro ? 'block' : 'none';
-  if (data?.pro_since) window._guardnestProSince = data.pro_since;
+  if (data && data.pro_since) window._guardnestProSince = data.pro_since;
 }
 
 function refreshAccountPage() {
@@ -7697,7 +7697,7 @@ async function startCheckout(plan) {
       },
       body: JSON.stringify({
         plan,
-        email: currentUser?.email || undefined,
+        email: currentUser && currentUser.email || undefined,
       }),
     });
 
@@ -9010,7 +9010,7 @@ function _demoShowPayoff() {
 }
 
 async function submitDemoReminderNew() {
-  const email = document.getElementById('ds3Email')?.value?.trim();
+  const email = (document.getElementById('ds3Email') ? (document.getElementById('ds3Email').value || '').trim() : '');
   if (!email || !email.includes('@')) {
     hideSampleReport();
     return;
@@ -9019,7 +9019,7 @@ async function submitDemoReminderNew() {
     await supa.from('email_leads').insert({
       email,
       source: 'demo_reminder_v2',
-      selected_items: window._demoPick?.name || null,
+      selected_items: window._demoPick && window._demoPick.name || null,
       email_sent: false,
       created_at: new Date().toISOString()
     });
@@ -9301,8 +9301,8 @@ function guestMarkUsed(index, event) {
     window._savedAmount = (window._savedAmount || 0) + 3.50;
     const totalSaved = window._savedAmount.toFixed(2);
     const banner = document.getElementById('guestSaveBanner');
-    const bannerTitle = banner?.querySelector('div > div:first-child');
-    const bannerSub = banner?.querySelector('div > div:last-child');
+    const bannerTitle = banner && banner.querySelector('div > div:first-child');
+    const bannerSub = banner && banner.querySelector('div > div:last-child');
     if (bannerTitle) bannerTitle.textContent = `You've saved ~$${totalSaved} so far.`;
     if (bannerSub) bannerSub.textContent = 'Save free to keep the streak going.';
     if (banner) {
@@ -9395,7 +9395,7 @@ function showGuestSavePrompt() {
     commitEl.style.display = 'block';
     const topItems = urgent.slice(0, 3);
     commitItemsEl.innerHTML = topItems.map(item => {
-      const emoji = getItemEmoji ? (getItemEmoji(item.item_name, item.category)?.[0] || '🥗') : '🥗';
+      const emoji = getItemEmoji ? ((getItemEmoji(item.item_name, item.category) || [])[0] || '🥗') : '🥗';
       return `<button onclick="selectCommitmentItem(this, '${item.item_name}')" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,.7);cursor:pointer;text-align:left;width:100%;transition:all .15s;">
         <span style="margin-right:8px;">${emoji}</span>${item.item_name} <span style="color:#E05555;font-size:11px;float:right;">expires in ${item.days_until_spoil}d</span>
       </button>`;
@@ -9482,7 +9482,7 @@ function hideGuestSaveModal() {
 async function guestSignupMagicLink() {
   window._savePromptFired = true;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
-  const email = document.getElementById('guestMagicEmail')?.value?.trim();
+  const email = (document.getElementById('guestMagicEmail') ? (document.getElementById('guestMagicEmail').value || '').trim() : '');
   if (!email || !email.includes('@')) {
     showToast('Please enter a valid email', 'error');
     return;
@@ -9545,7 +9545,7 @@ async function guestSignupWithEmail() {
   // Try sign in first — if they already have an account this logs them in
   const { data: signInData, error: signInError } = await supa.auth.signInWithPassword({ email, password });
 
-  if (!signInError && signInData?.session) {
+  if (!signInError && signInData && signInData.session) {
     // Existing user — logged in successfully
     showToast('Welcome back! 🌿', 'success');
     
@@ -9559,7 +9559,7 @@ async function guestSignupWithEmail() {
     showToast('Error: ' + error.message, 'error');
     
     showGuestSavePrompt();
-  } else if (data?.user && data?.session) {
+  } else if (data && data.user && data && data.session) {
     // Verify user actually exists by querying Supabase directly
     const { data: { user: confirmedUser }, error: getUserError } = await supa.auth.getUser();
 
@@ -9587,11 +9587,11 @@ async function guestSignupWithEmail() {
       showToast('Welcome back! 🌿', 'success');
       // onAuthStateChange will handle bootApp and page navigation
     }
-  } else if (data?.user && !data?.session) {
+  } else if (data && data.user && !data && data.session) {
     // User created but no session — try signing them in immediately
     
     const { data: signInRetry, error: retryError } = await supa.auth.signInWithPassword({ email, password });
-    if (!retryError && signInRetry?.session) {
+    if (!retryError && signInRetry && signInRetry.session) {
       showToast('Welcome to GuardNest! 🌿', 'success');
       
     } else {
@@ -9807,8 +9807,8 @@ function saveManualItems() {
   const items = [];
   rows.forEach(row => {
     const inputs = row.querySelectorAll('input');
-    const name = inputs[0]?.value?.trim();
-    const days = parseInt(inputs[1]?.value || 7);
+    const name = (inputs[0] ? (inputs[0].value || '').trim() : '');
+    const days = parseInt((inputs[1] && inputs[1].value) || 7);
     if (name) items.push({
       item_name: name,
       merchant: 'Home',
@@ -9839,7 +9839,7 @@ function saveManualItems() {
 
 // ── FOUNDER FEEDBACK ─────────────────────────────────────────
 async function submitFounderFeedback() {
-  const text = document.getElementById('founderFeedbackText')?.value?.trim();
+  const text = (document.getElementById('founderFeedbackText') ? (document.getElementById('founderFeedbackText').value || '').trim() : '');
   if (!text) return;
 
   const btn = document.querySelector('#founderFeedbackForm button');
@@ -9847,8 +9847,8 @@ async function submitFounderFeedback() {
 
   try {
     const guestId = localStorage.getItem('guardnest_guest_id') || null;
-    const userId = currentUser?.id || null;
-    const email = currentUser?.email || localStorage.getItem('guardnest_lead_email') || null;
+    const userId = currentUser && currentUser.id || null;
+    const email = currentUser && currentUser.email || localStorage.getItem('guardnest_lead_email') || null;
 
     await supa.from('feedback').insert({
       message: text,
@@ -9899,7 +9899,7 @@ function showFloatingFeedback() {
 }
 
 async function submitFloatingFeedback() {
-  const text = document.getElementById('floatingFeedbackText')?.value?.trim();
+  const text = (document.getElementById('floatingFeedbackText') ? (document.getElementById('floatingFeedbackText').value || '').trim() : '');
   if (!text) return;
 
   const btn = document.querySelector('#floatingFeedbackModal button:last-child');
@@ -9907,8 +9907,8 @@ async function submitFloatingFeedback() {
 
   try {
     const guestId = localStorage.getItem('guardnest_guest_id') || null;
-    const userId = currentUser?.id || null;
-    const email = currentUser?.email || localStorage.getItem('guardnest_lead_email') || null;
+    const userId = currentUser && currentUser.id || null;
+    const email = currentUser && currentUser.email || localStorage.getItem('guardnest_lead_email') || null;
 
     await supa.from('feedback').insert({
       message: text,
@@ -10120,7 +10120,7 @@ async function requestPostSavePush() {
 }
 
 async function submitDeferredEmail() {
-  const email = document.getElementById('deferredEmail')?.value?.trim();
+  const email = (document.getElementById('deferredEmail') ? (document.getElementById('deferredEmail').value || '').trim() : '');
   if (!email || !email.includes('@')) { showToast('Please enter a valid email', 'error'); return; }
   try {
     await supa.from('email_leads').insert({ email, source: 'deferred_3scan_ask', email_sent: false, created_at: new Date().toISOString() });
