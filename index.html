@@ -3114,6 +3114,29 @@ function logError(source, message, extra) {
       <div class="page" id="page-account">
         <div style="max-width:480px;margin:0 auto;padding:8px 16px 100px;box-sizing:border-box;width:100%;">
 
+          <!-- Guest account view -->
+          <div id="accountGuestView" style="display:none;">
+            <div style="background:var(--card-bg,#fff);border:0.5px solid #e0ddd6;border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;">
+              <div style="font-family:'Lora',Georgia,serif;font-size:20px;color:var(--app-text,#1a1a1a);margin-bottom:6px;">Your GuardNest</div>
+              <div style="font-size:12px;color:#888;margin-bottom:16px;font-family:var(--app-font);">You're browsing as a guest. Create a free account to keep your history across devices.</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+                <div style="background:#f7f5f0;border-radius:10px;padding:12px;">
+                  <div id="accountItemCount" style="font-size:22px;font-weight:700;color:#2D6A4F;font-family:var(--app-font);">0</div>
+                  <div style="font-size:11px;color:#888;font-family:var(--app-font);">items tracked</div>
+                </div>
+                <div style="background:#f7f5f0;border-radius:10px;padding:12px;">
+                  <div id="accountScanCount" style="font-size:22px;font-weight:700;color:#2D6A4F;font-family:var(--app-font);">0</div>
+                  <div style="font-size:11px;color:#888;font-family:var(--app-font);">scans done</div>
+                </div>
+              </div>
+              <button onclick="showPage('auth')" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--app-font);margin-bottom:8px;">Create free account</button>
+              <div style="font-size:11px;color:#bbb;font-family:var(--app-font);">Keeps your history across devices</div>
+            </div>
+          </div>
+
+          <!-- Authenticated account view -->
+          <div id="accountAuthView">
+
           <!-- Pro Status Card -->
           <div id="accountProCard" style="border-radius:14px;padding:20px;margin-bottom:16px;background:linear-gradient(135deg,rgba(245,200,66,.12),rgba(245,200,66,.04));border:1px solid rgba(245,200,66,.25);box-sizing:border-box;overflow:hidden;">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
@@ -6039,7 +6062,27 @@ async function handleImageScan(input) {
   document.getElementById('scanTitle').textContent = `Found ${result.length} item${result.length!==1?'s':''} — save to your fridge`;
   document.getElementById('scanSub').textContent   = 'Review below and save to vault';
 
-  pendingItems = result.map(i => ({ ...i, image_url: file.name }));
+  // Filter out non-food items from receipt scans
+  const NON_FOOD_KEYWORDS = [
+    'tax','hst','gst','vat','subtotal','total','change','cash','credit','debit',
+    'card','visa','mastercard','amex','points','reward','discount','coupon','savings',
+    'bag fee','bag charge','bottle deposit','deposit','loyalty','member','club',
+    'service fee','delivery fee','tip','gratuity','receipt','transaction','approval',
+    'store #','invoice','order #','phone','website','survey','feedback',
+    'plastic bag','paper bag','reusable bag'
+  ];
+  const isNonFood = (item) => {
+    const name = (item.item_name || '').toLowerCase();
+    return NON_FOOD_KEYWORDS.some(kw => name.includes(kw)) ||
+           name.match(/^\$?\d+\.\d{2}$/) || // bare price like "2.99"
+           name.match(/^\d+\s*x\s*/i) ||      // "2 x item"
+           (item.price === 0 && name.length < 4); // very short zero-price items
+  };
+  const allScanned = result.map(i => ({ ...i, image_url: file.name }));
+  pendingItems = allScanned.filter(i => !isNonFood(i));
+  if (pendingItems.length < allScanned.length) {
+    console.log('Filtered ' + (allScanned.length - pendingItems.length) + ' non-food items from receipt');
+  }
   // Clear scan timeout watchdog
   if (window._gnScanTimeout) { clearTimeout(window._gnScanTimeout); window._gnScanTimeout = null; }
   var _skel2 = document.getElementById('scanSkeletonCards'); if (_skel2) _skel2.style.display = 'none';
@@ -7681,7 +7724,23 @@ async function loadProStatus() {
 }
 
 function refreshAccountPage() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    // Guest account view
+    var _acctGuest = document.getElementById('accountGuestView');
+    var _acctAuth  = document.getElementById('accountAuthView');
+    if (_acctGuest) _acctGuest.style.display = 'block';
+    if (_acctAuth)  _acctAuth.style.display  = 'none';
+    // Populate guest stats
+    var _gItemCount = document.getElementById('accountItemCount');
+    var _gScanCount = document.getElementById('accountScanCount');
+    if (_gItemCount) _gItemCount.textContent = allItems.length;
+    if (_gScanCount) _gScanCount.textContent = parseInt(localStorage.getItem('guardnest_scan_count') || '0');
+    return;
+  }
+  var _acctGuest2 = document.getElementById('accountGuestView');
+  var _acctAuth2  = document.getElementById('accountAuthView');
+  if (_acctGuest2) _acctGuest2.style.display = 'none';
+  if (_acctAuth2)  _acctAuth2.style.display  = 'block';
 
   const emailEl = document.getElementById('accountUserEmail');
   if (emailEl) emailEl.textContent = currentUser.email || '—';
@@ -9172,91 +9231,103 @@ function demoCompleteFirstMission() { demoMarkUsed(); }
 function submitDemoReminder() { submitDemoReminderNew(); }
 
 // Opens real scanner with all three tabs visible — user picks their method
+function showPostSaveVault() {
+  showPage('vault');
+  refreshVault();
+  // Show first-time vault onboarding banner if this is their first save
+  if (!localStorage.getItem('guardnest_vault_welcomed')) {
+    localStorage.setItem('guardnest_vault_welcomed', 'true');
+    var banner = document.createElement('div');
+    banner.id = 'vaultWelcomeBanner';
+    banner.style.cssText = 'background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:14px;padding:14px 16px;margin-bottom:14px;';
+    banner.innerHTML = '<div style="font-family:\'Lora\',Georgia,serif;font-size:15px;color:#1a1a1a;margin-bottom:4px;">Your fridge is saved.</div><div style="font-size:12px;color:#555;line-height:1.6;font-family:var(--app-font);">Tap any item to mark it used. Scan again after your next shop to start building your pattern.</div><button onclick="document.getElementById(\'vaultWelcomeBanner\').remove();" style="margin-top:10px;background:none;border:none;color:#2D6A4F;font-size:12px;font-weight:700;cursor:pointer;padding:0;font-family:var(--app-font);">Got it</button>';
+    var vaultList = document.getElementById('vaultActiveList');
+    if (vaultList && vaultList.parentNode) {
+      vaultList.parentNode.insertBefore(banner, vaultList);
+    }
+  }
+}
+
+function submitPushFallbackEmail() {
+  var emailEl = document.getElementById('pushFallbackEmail');
+  if (!emailEl) return;
+  var email = (emailEl.value || '').trim();
+  if (!email || !email.includes('@')) { emailEl.style.borderColor = 'rgba(162,45,45,.5)'; return; }
+  supa.from('email_leads').insert({
+    email: email,
+    source: 'push_fallback_ios',
+    guest_id: localStorage.getItem('guardnest_guest_id') || null,
+    email_sent: false,
+    created_at: new Date().toISOString()
+  });
+  document.getElementById('postSavePushModal').style.display = 'none';
+  showPostSaveVault();
+}
+
 function demoGoToRealScanner() {
   hideSampleReport();
   localStorage.setItem('guardnest_onboarded', 'true');
-  // Ensure app is fully visible
   const appEl = document.getElementById('screen-app');
   if (appEl) { appEl.style.opacity = '1'; appEl.style.pointerEvents = ''; }
   document.body.classList.add('app-active');
-  showPage('scanner');
 
-  // Remove any existing post-demo guide
+  // Remove any existing guide
   const existing = document.getElementById('postDemoGuide');
   if (existing) existing.remove();
 
-  // Build post-demo guide — replaces scanner zone with single clear action
-  const pick = window._demoPick || { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
+  // Build welcome camera overlay — no choices, just the camera
   const guide = document.createElement('div');
   guide.id = 'postDemoGuide';
-  guide.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#0a0f0a;z-index:9990;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;';
-  guide.addEventListener('click', function(e) { if (e.target === guide) { guide.remove(); showPage('dashboard'); } });
+  guide.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#060a06;z-index:9990;display:flex;flex-direction:column;cursor:pointer;';
   guide.innerHTML = `
-    <div style="max-width:360px;width:100%;text-align:center;">
-      <div style="font-size:42px;margin-bottom:16px;">📸</div>
-      <div style="font-size:22px;font-weight:800;color:#fff;line-height:1.3;margin-bottom:8px;">Your turn.</div>
-      <div style="font-size:15px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:28px;">
-        You just saw what GuardNest finds.<br>Now let's check your actual fridge.
+    <div style="flex:1;background:linear-gradient(170deg,#0c1a0a 0%,#141f0f 45%,#0e1b0b 100%);position:relative;overflow:hidden;">
+      <!-- Scan frame -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-54%);width:55%;max-width:220px;height:38%;">
+        <div style="position:absolute;top:0;left:0;width:22px;height:22px;border-top:2px solid #4CAF82;border-left:2px solid #4CAF82;border-radius:1px 0 0 0;"></div>
+        <div style="position:absolute;top:0;right:0;width:22px;height:22px;border-top:2px solid #4CAF82;border-right:2px solid #4CAF82;border-radius:0 1px 0 0;"></div>
+        <div style="position:absolute;bottom:0;left:0;width:22px;height:22px;border-bottom:2px solid #4CAF82;border-left:2px solid #4CAF82;border-radius:0 0 0 1px;"></div>
+        <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-bottom:2px solid #4CAF82;border-right:2px solid #4CAF82;border-radius:0 0 1px 0;"></div>
+        <div style="position:absolute;left:6px;right:6px;height:1px;top:45%;background:linear-gradient(90deg,transparent,rgba(76,175,130,.6),transparent);"></div>
       </div>
-
-      <!-- Single most important action first -->
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-        <button onclick="
-          document.getElementById('postDemoGuide').remove();
-          setScanType('fridge');
-          showCoachModal('fridge');
-        " style="display:flex;align-items:center;gap:14px;background:rgba(76,175,130,.12);border:1.5px solid rgba(76,175,130,.35);border-radius:14px;padding:16px;cursor:pointer;text-align:left;touch-action:manipulation;width:100%;">
-          <span style="font-size:28px;flex-shrink:0;">🧊</span>
-          <div style="flex:1;">
-            <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;">Photo of my fridge</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.4);">One shelf at a time · takes 30 seconds</div>
-          </div>
-          <span style="font-size:18px;color:#4CAF82;">→</span>
-        </button>
-
-        <button onclick="
-          document.getElementById('postDemoGuide').remove();
-          setScanType('receipt');
-          triggerScan();
-        " style="display:flex;align-items:center;gap:14px;background:rgba(245,200,66,.06);border:1.5px solid rgba(245,200,66,.2);border-radius:14px;padding:16px;cursor:pointer;text-align:left;touch-action:manipulation;width:100%;">
-          <span style="font-size:28px;flex-shrink:0;">🧾</span>
-          <div style="flex:1;">
-            <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;">Scan a grocery receipt</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.4);">Most accurate · tracks everything you bought</div>
-          </div>
-          <span style="font-size:18px;color:rgba(245,200,66,.6);">→</span>
-        </button>
-
-        <button onclick="
-          document.getElementById('postDemoGuide').remove();
-          setScanType('pantry');
-          showCoachModal('pantry');
-        " style="display:flex;align-items:center;gap:14px;background:rgba(136,102,255,.08);border:1.5px solid rgba(136,102,255,.25);border-radius:14px;padding:16px;cursor:pointer;text-align:left;touch-action:manipulation;width:100%;">
-          <span style="font-size:28px;flex-shrink:0;">🗄️</span>
-          <div style="flex:1;">
-            <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;">Photo of my pantry</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.4);">Canned goods · dry goods · snacks</div>
-          </div>
-          <span style="font-size:18px;color:rgba(136,102,255,.6);">→</span>
+      <!-- Top HUD — welcome not instruction -->
+      <div style="position:absolute;top:0;left:0;right:0;padding:20px;background:linear-gradient(180deg,rgba(4,8,4,.9) 0%,transparent 100%);text-align:center;">
+        <div style="font-family:'Lora',Georgia,serif;font-size:14px;color:#4CAF82;margin-bottom:6px;">GuardNest</div>
+        <div style="font-family:'Lora',Georgia,serif;font-size:15px;color:rgba(255,255,255,.8);font-style:italic;line-height:1.5;">Your fridge.<br>Let's see what's in there.</div>
+      </div>
+      <!-- Bottom — receipt secondary option -->
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:0 20px 28px;background:linear-gradient(0deg,rgba(4,8,4,.9) 0%,transparent 100%);text-align:center;">
+        <div style="font-size:12px;color:rgba(255,255,255,.25);font-family:'DM Sans',sans-serif;letter-spacing:.06em;margin-bottom:14px;text-transform:uppercase;">Tap anywhere to scan</div>
+        <button onclick="event.stopPropagation();document.getElementById('postDemoGuide').remove();setScanType('receipt');triggerScan();" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:12px;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif;touch-action:manipulation;">
+          Have a receipt instead? →
         </button>
       </div>
-
-      <div style="font-size:11px;color:rgba(255,255,255,.2);line-height:1.6;">
-        GuardNest reads your photo and identifies every item automatically.<br>Nothing is saved until you say so.
-      </div>
-      <button onclick="document.getElementById('postDemoGuide').remove();showPage('dashboard');" style="margin-top:20px;background:none;border:none;color:rgba(255,255,255,.2);font-size:12px;cursor:pointer;padding:8px;font-family:'DM Sans',sans-serif;touch-action:manipulation;">
-        Skip for now →
-      </button>
     </div>`;
 
-  document.body.appendChild(guide);
-  setTimeout(() => {
-    const content = document.querySelector('.content');
-    if (content) content.scrollTo(0, 0);
-    window.scrollTo(0, 0);
-  }, 50);
-}
+  // Tapping anywhere on the guide opens the fridge camera
+  guide.addEventListener('click', function(e) {
+    if (e.target.tagName === 'BUTTON') return;
+    guide.remove();
+    setScanType('fridge');
+    triggerScan();
+  });
 
+  document.body.appendChild(guide);
+  gtag('event', 'real_scan_started', {
+    scan_type: 'fridge',
+    source: 'demo_transition',
+    utm_source: (window._gnUtm && window._gnUtm.source) || 'direct'
+  });
+  // Show skeleton cards
+  var _skel = document.getElementById('scanSkeletonCards'); if (_skel) _skel.style.display = 'none';
+  // Start timeout watchdog
+  window._gnScanTimeout = setTimeout(function() {
+    var _ts = document.getElementById('scanTimeoutState'); if (_ts) _ts.style.display = 'block';
+    var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.remove('hidden');
+    showPage('scanner');
+  }, 14000);
+
+  setTimeout(() => { window.scrollTo(0, 0); }, 50);
+}
 // Save demo state as guest and close modal
 async function demoSaveAndClose() {
   const pick = window._demoPick || { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
@@ -9798,22 +9869,28 @@ function openCameraFromCoach() {
 <!-- Post-save push prompt — shown after first save -->
 <div id="postSavePushModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);z-index:99999;align-items:center;justify-content:center;padding:24px;">
   <div style="max-width:360px;width:100%;background:#1a2330;border-radius:20px;border:1px solid rgba(76,175,130,.3);padding:24px;text-align:center;">
-    <div style="font-size:32px;margin-bottom:10px;">🔔</div>
-    <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;">Want a reminder before things expire?</div>
-    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">GuardNest can notify you before your groceries go bad.</div>
+    <div style="font-family:'Lora',Georgia,serif;font-size:18px;color:#fff;margin-bottom:8px;line-height:1.3;">Get reminded before<br>things expire.</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6;">We'll message you Monday morning with what needs attention that week.</div>
+    <!-- Preview notification -->
+    <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;margin-bottom:20px;text-align:left;">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Monday 8:07am</div>
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;">Baby spinach — use today</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;">Expires tomorrow · ~€3.49 at risk</div>
+    </div>
+    <!-- Push button — works on all modern browsers including iOS Safari 16.4+ -->
     <div id="postSavePushAndroid">
-      <button onclick="requestPostSavePush()" style="width:100%;background:#4CAF82;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;color:#0e1117;cursor:pointer;margin-bottom:8px;">
-        Yes — notify me
+      <button onclick="requestPostSavePush()" style="width:100%;background:#2D6A4F;border:none;border-radius:20px;padding:14px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:10px;font-family:var(--app-font);">
+        Yes — remind me
       </button>
     </div>
+    <!-- iOS fallback — only shown if push not supported -->
     <div id="postSavePushIOS" style="display:none;margin-bottom:12px;">
-      <div style="background:rgba(76,175,130,.08);border:1px solid rgba(76,175,130,.2);border-radius:12px;padding:14px;text-align:left;">
-        <div style="font-size:13px;font-weight:700;color:#4CAF82;margin-bottom:8px;">Get reminders on iPhone</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.7;">1. Tap the Share button in Safari<br>2. Tap "Add to Home Screen"<br>3. Open GuardNest from your home screen<br>4. You'll get a notification prompt</div>
-      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:10px;line-height:1.5;">Push not available in this browser. Get your Monday report by email instead.</div>
+      <input id="pushFallbackEmail" type="email" placeholder="your@email.com" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:14px;color:#fff;margin-bottom:8px;outline:none;font-family:var(--app-font);">
+      <button onclick="submitPushFallbackEmail()" style="width:100%;background:#2D6A4F;border:none;border-radius:20px;padding:12px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--app-font);">Send me the Monday report</button>
     </div>
-    <button onclick="document.getElementById('postSavePushModal').style.display='none';showPage('vault');" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:16px;width:100%;text-align:center;touch-action:manipulation;min-height:44px;">
-      No thanks
+    <button onclick="document.getElementById('postSavePushModal').style.display='none';showPostSaveVault();" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:12px;cursor:pointer;padding:14px;width:100%;text-align:center;touch-action:manipulation;min-height:44px;font-family:var(--app-font);">
+      Maybe later
     </button>
   </div>
 </div>
@@ -10093,6 +10170,8 @@ async function guestSaveAnonymous() {
 
   
   if (typeof fbq !== 'undefined') fbq('track', 'CompleteRegistration', { method: 'anonymous' });
+  // Reload items from Supabase/localStorage into allItems so vault shows correctly
+  await loadItems();
   hideGuestSaveModal();
 
   // Show push prompt after first save only — don't re-ask if already answered
