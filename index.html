@@ -2930,11 +2930,32 @@ function logError(source, message, extra) {
       <div class="page" id="page-vault" style="font-family:var(--app-font);background:var(--app-bg);min-height:100vh;padding:20px 20px 20px;">
 
         <!-- HEADER -->
-        <div style="margin-bottom:20px;">
-          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--app-green);font-weight:600;margin-bottom:3px;">Your Fridge</div>
-          <div style="font-size:22px;font-weight:700;letter-spacing:-0.02em;color:var(--app-text);margin-bottom:2px;">Vault</div>
-          <div style="font-size:12px;color:var(--app-text2);">GuardNest is watching over <span id="vTotal">0</span> items</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;">
+          <div style="font-family:'Lora',Georgia,serif;font-size:18px;color:#2D6A4F;">Your fridge</div>
+          <div style="font-size:11px;color:#aaa;font-family:var(--app-font);"><span id="vTotal">0</span> items tracked</div>
         </div>
+
+        <!-- DAILY CHECK-IN VIEW — shown when urgent items exist -->
+        <div id="vaultCheckinView" style="display:none;margin-bottom:14px;">
+          <div style="background:#FCEBEB;border:0.5px solid #F7C1C1;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:12px;font-weight:500;color:#A32D2D;font-family:var(--app-font);" id="checkinUrgentLabel">2 things need attention</div>
+              <div style="font-size:11px;color:#C0392B;font-family:var(--app-font);" id="checkinAtRisk"></div>
+            </div>
+            <button onclick="document.getElementById('vaultCheckinView').style.display='none';document.getElementById('vaultListView').style.display='block';" style="background:none;border:none;font-size:11px;color:#aaa;cursor:pointer;font-family:var(--app-font);padding:4px 8px;touch-action:manipulation;">See all →</button>
+          </div>
+          <div id="checkinCard" style="background:#fff;border:0.5px solid #e0ddd6;border-radius:14px;padding:16px;text-align:center;"></div>
+          <div style="font-size:10px;color:#bbb;text-align:center;margin-top:8px;font-family:var(--app-font);" id="checkinProgress"></div>
+        </div>
+
+        <!-- RESCUE TOTAL — shown after first used-it tap -->
+        <div id="vaultRescueTotal" style="display:none;background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:12px;padding:10px 14px;margin-bottom:10px;flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;color:#2D6A4F;font-family:var(--app-font);">Rescued this week</span>
+          <span class="rescue-amount" style="font-family:'Lora',Georgia,serif;font-size:16px;color:#2D6A4F;"></span>
+        </div>
+
+        <!-- FULL LIST VIEW -->
+        <div id="vaultListView">
 
         <!-- SUMMARY STRIP -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
@@ -2999,6 +3020,7 @@ function logError(source, message, extra) {
           </div>
         </div>
 
+        </div><!-- /vaultListView -->
         <!-- WEEKLY CHECK-IN -->
         <div style="background:linear-gradient(135deg,#1A1A1A,#2a2a2a);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.1);margin-bottom:20px;">
           <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(91,173,138,0.12) 0%,transparent 70%);pointer-events:none;"></div>
@@ -5130,7 +5152,7 @@ function showPage(id) {
 
   if (id === 'dashboard') { refreshDashboard(); try { refreshBriefCard(); } catch(e){} }
   if (id === 'alerts')    { refreshAlerts(); }
-  if (id === 'vault')     { refreshVault(); }
+  if (id === 'vault')     { refreshVault(); setTimeout(gnInitSwipe, 100); }
   if (id === 'receipts')  { refreshReceipts(); }
   if (id === 'account')   { refreshAccountPage(); }
 }
@@ -5769,23 +5791,31 @@ function showVaultQuickReview() {
 }
 
 function renderVaultItemNew(item, daysLeft) {
-  const emoji = getItemEmojiFresh(item.item_name);
   const pct = Math.min(((daysLeft||0) / 14) * 100, 100);
-  const col = (daysLeft||0) <= 2 ? '#E8735A' : (daysLeft||0) <= 4 ? '#E8A44A' : '#5BAD8A';
-  const urgentBg = (daysLeft||0) <= 2 ? 'rgba(232,115,90,0.06)' : (daysLeft||0) <= 4 ? 'rgba(232,164,74,0.06)' : 'transparent';
-  const urgentBorder = (daysLeft||0) <= 2 ? 'rgba(232,115,90,0.15)' : (daysLeft||0) <= 4 ? 'rgba(232,164,74,0.12)' : 'rgba(0,0,0,0.06)';
-  return `<div style="background:${urgentBg || '#fff'};border:1px solid ${urgentBorder};border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-    <div style="width:42px;height:42px;border-radius:13px;background:#F5F3EF;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;">${emoji}</div>
-    <div style="flex:1;min-width:0;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <div style="font-size:14px;font-weight:600;color:#1A1A1A;font-family:var(--app-font);">${item.item_name||'Unknown'}</div>
-        <div style="font-size:11px;font-weight:700;color:${col};flex-shrink:0;margin-left:8px;font-family:var(--app-font);">${daysLeft != null ? daysLeft + 'd left' : ''}</div>
+  const isUrgent = daysLeft != null && daysLeft <= 3;
+  const isSoon = daysLeft != null && daysLeft > 3 && daysLeft <= 5;
+  const barCol = isUrgent ? '#E24B4A' : isSoon ? '#EF9F27' : '#2D6A4F';
+  const borderCol = isUrgent ? '#F7C1C1' : isSoon ? 'rgba(239,159,39,.25)' : '#e0ddd6';
+  const badgeBg = isUrgent ? '#FCEBEB' : isSoon ? '#FAEEDA' : '#EAF3DE';
+  const badgeCol = isUrgent ? '#A32D2D' : isSoon ? '#854F0B' : '#3B6D11';
+  const dayLabel = daysLeft == null ? '' : daysLeft <= 0 ? 'use today' : daysLeft === 1 ? 'tomorrow' : daysLeft + ' days';
+  const priceStr = item.price ? '€' + parseFloat(item.price).toFixed(2) : '';
+  const showButtons = daysLeft != null && daysLeft <= 5;
+  const cardId = 'vc-' + item.id;
+  return \`<div id="\${cardId}" style="background:#fff;border:0.5px solid \${borderCol};border-radius:14px;padding:12px 14px;position:relative;overflow:hidden;touch-action:pan-y;" data-item-id="\${item.id}" data-price="\${item.price||0}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:\${daysLeft != null ? '5px' : '0'};">
+      <div>
+        <span style="font-size:13px;font-weight:500;color:#1a1a1a;font-family:'DM Sans',sans-serif;">\${item.item_name||'Unknown'}</span>
+        \${item.category ? \`<span style="font-size:10px;color:#aaa;font-family:'DM Sans',sans-serif;margin-left:6px;">\${item.category}</span>\` : ''}
       </div>
-      <div style="font-size:11px;color:rgba(26,26,26,0.4);margin-top:2px;font-family:var(--app-font);">${item.category || ''}</div>
-      ${daysLeft != null ? `<div style="height:3px;background:rgba(0,0,0,0.06);border-radius:99px;overflow:hidden;margin-top:6px;"><div style="height:100%;width:${pct}%;background:${col};border-radius:99px;"></div></div>` : ''}
+      \${dayLabel ? \`<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:\${badgeBg};color:\${badgeCol};font-family:'DM Sans',sans-serif;white-space:nowrap;">\${dayLabel}</span>\` : ''}
     </div>
-    <button onclick="markVaultItemUsed('${item.id}')" style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:11px;font-weight:700;color:rgba(26,26,26,0.45);font-family:var(--app-font);flex-shrink:0;white-space:nowrap;touch-action:manipulation;">Used it</button>
-  </div>`;
+    \${daysLeft != null ? \`<div style="height:3px;background:#f0ede8;border-radius:2px;\${showButtons ? 'margin-bottom:10px;' : 'margin-bottom:0;'}"><div style="height:100%;width:\${pct}%;background:\${barCol};border-radius:2px;"></div></div>\` : ''}
+    \${showButtons ? \`<div style="display:flex;gap:6px;">
+      <button onclick="markVaultItemUsed('\${item.id}')" style="flex:1;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:8px 0;font-size:12px;font-weight:500;cursor:pointer;touch-action:manipulation;font-family:'DM Sans',sans-serif;">Used it\${priceStr ? ' · ' + priceStr : ''}</button>
+      <button onclick="markVaultItemStillThere('\${item.id}')" style="flex:1;background:transparent;color:#888;border:0.5px solid #e0ddd6;border-radius:20px;padding:8px 0;font-size:12px;font-weight:500;cursor:pointer;touch-action:manipulation;font-family:'DM Sans',sans-serif;">Still there</button>
+    </div>\` : ''}
+  </div>\`;
 }
 
 function markVaultItemUsed(id) {
@@ -5796,6 +5826,29 @@ function markVaultItemUsed(id) {
     const lifetime = parseFloat(localStorage.getItem('gn_lifetime_saved') || '0') + amt;
     localStorage.setItem('gn_monthly_saved', monthly.toFixed(2));
     localStorage.setItem('gn_lifetime_saved', lifetime.toFixed(2));
+    // Update Supabase status
+    const guestId = localStorage.getItem('guardnest_guest_id');
+    if (guestId) {
+      supa.from('guest_items').update({ status: 'used', used_at: new Date().toISOString() }).eq('id', id).eq('guest_id', guestId);
+    } else if (window.currentUser) {
+      supa.from('items').update({ status: 'used', used_at: new Date().toISOString() }).eq('id', id).eq('user_id', window.currentUser.id);
+    }
+    // Replace card with inline rescue confirmation
+    var cardEl = document.getElementById('vc-' + id);
+    if (cardEl) {
+      var priceStr = amt > 0 ? '€' + amt.toFixed(2) : '';
+      cardEl.style.background = '#EAF3DE';
+      cardEl.style.borderColor = '#C0DD97';
+      cardEl.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;font-weight:500;color:#2D6A4F;font-family:'DM Sans',sans-serif;">' + (item.item_name||'Item') + ' · saved</div>' + (priceStr ? '<div style="font-size:11px;color:#3B6D11;font-family:'DM Sans',sans-serif;">' + priceStr + ' rescued</div>' : '') + '</div>' + (priceStr ? '<span style="font-family:'Lora',Georgia,serif;font-size:18px;color:#2D6A4F;">' + priceStr + '</span>' : '') + '</div>';
+      setTimeout(() => {
+        cardEl.style.transition = 'opacity .4s, max-height .4s';
+        cardEl.style.opacity = '0';
+        cardEl.style.maxHeight = '0';
+        cardEl.style.padding = '0';
+        cardEl.style.margin = '0';
+        setTimeout(() => { cardEl.remove(); updateRescueTotal(); }, 400);
+      }, 1200);
+    }
     // Move to rescued
     if (!window._vaultRescued) window._vaultRescued = [];
     window._vaultRescued.unshift({ ...item, _rescuedAt: Date.now() });
@@ -5803,7 +5856,46 @@ function markVaultItemUsed(id) {
     allItems = allItems.filter(i => String(i.id) !== String(id));
   }
   refreshVault();
-  showToast('Marked as used 🌿 +$' + parseFloat((item && item.price)||0).toFixed(2) + ' saved', 'success');
+  showToast('Saved €' + parseFloat((item && item.price)||0).toFixed(2) + ' rescued', 'success'); updateRescueTotal();
+}
+
+function markVaultItemStillThere(id) {
+  const item = allItems.find(i => String(i.id) === String(id));
+  if (!item) return;
+  // Reset purchase_date to today — recalculates days left from now
+  const today = new Date().toISOString().split('T')[0];
+  item.purchase_date = today;
+  // Update Supabase
+  const guestId = localStorage.getItem('guardnest_guest_id');
+  if (guestId) {
+    supa.from('guest_items').update({ purchase_date: today }).eq('id', id).eq('guest_id', guestId);
+  } else if (window.currentUser) {
+    supa.from('items').update({ purchase_date: today }).eq('id', id).eq('user_id', window.currentUser.id);
+  }
+  // Track for shelf life learning — increment still_there count for this item name
+  var key = 'gn_still_there_' + (item.item_name||'').toLowerCase().replace(/[^a-z]/g,'');
+  var count = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, count);
+  // Visual feedback — brief pulse on the card
+  var cardEl = document.getElementById('vc-' + id);
+  if (cardEl) {
+    cardEl.style.transition = 'background .2s';
+    cardEl.style.background = '#FAEEDA';
+    setTimeout(() => { cardEl.style.background = '#fff'; }, 300);
+  }
+  refreshVault();
+  showToast('Got it — clock reset to today', 'info');
+}
+
+function updateRescueTotal() {
+  var rescued = window._vaultRescued || [];
+  var total = rescued.reduce(function(s, i) { return s + (parseFloat(i.price)||0); }, 0);
+  // Update rescue total display in vault
+  var el = document.getElementById('vaultRescueTotal');
+  if (el && total > 0) {
+    el.style.display = 'flex';
+    el.querySelector('.rescue-amount').textContent = '€' + total.toFixed(2);
+  }
 }
 
 function refreshVault() {
@@ -5838,14 +5930,34 @@ function refreshVault() {
   const vRescued = document.getElementById('vaultRescuedValue');
   if (vTotalEl) vTotalEl.textContent = total;
   if (vTotalDisplay) vTotalDisplay.textContent = total;
-  if (vValueEl) vValueEl.textContent = '$' + rescuedVal.toFixed(0);
-  if (vAtRisk)  vAtRisk.textContent  = '$' + atRisk.toFixed(2);
-  if (vRescued) vRescued.textContent = '$' + rescuedVal.toFixed(2) + ' rescued from waste.';
+  if (vValueEl) vValueEl.textContent = '€' + rescuedVal.toFixed(0);
+  if (vAtRisk)  vAtRisk.textContent  = '€' + atRisk.toFixed(2);
+  if (vRescued) vRescued.textContent = '€' + rescuedVal.toFixed(2) + ' rescued from waste.';
 
   // Urgent count badge
   const urgentItems = itemsWithDays.filter(i => i._daysLeft != null && i._daysLeft <= 4 && i._daysLeft >= 0);
   const urgentCountEl = document.getElementById('vaultUrgentCount');
   if (urgentCountEl) urgentCountEl.textContent = urgentItems.length > 0 ? urgentItems.length : '';
+
+  // Populate daily check-in view
+  var checkinView = document.getElementById('vaultCheckinView');
+  var listView = document.getElementById('vaultListView');
+  if (urgentItems.length > 0 && !localStorage.getItem('guardnest_checkin_dismissed_' + new Date().toDateString())) {
+    if (checkinView) checkinView.style.display = 'block';
+    if (listView) listView.style.display = 'none';
+    var urgentLabel = document.getElementById('checkinUrgentLabel');
+    var atRiskEl2 = document.getElementById('checkinAtRisk');
+    var checkinCard = document.getElementById('checkinCard');
+    var checkinProg = document.getElementById('checkinProgress');
+    if (urgentLabel) urgentLabel.textContent = urgentItems.length + ' thing' + (urgentItems.length > 1 ? 's' : '') + ' need attention';
+    if (atRiskEl2) atRiskEl2.textContent = '€' + atRisk.toFixed(2) + ' at risk today';
+    window._checkinItems = urgentItems;
+    window._checkinIndex = 0;
+    gnShowCheckinCard();
+  } else {
+    if (checkinView) checkinView.style.display = 'none';
+    if (listView) listView.style.display = 'block';
+  }
 
   // Apply filter
   const filter = window._vaultFilter || 'all';
@@ -9231,6 +9343,78 @@ function demoCompleteFirstMission() { demoMarkUsed(); }
 function submitDemoReminder() { submitDemoReminderNew(); }
 
 // Opens real scanner with all three tabs visible — user picks their method
+
+function gnShowCheckinCard() {
+  var items = window._checkinItems || [];
+  var idx = window._checkinIndex || 0;
+  var card = document.getElementById('checkinCard');
+  var prog = document.getElementById('checkinProgress');
+  if (!card) return;
+
+  if (idx >= items.length) {
+    // All done
+    localStorage.setItem('guardnest_checkin_dismissed_' + new Date().toDateString(), '1');
+    var checkinView = document.getElementById('vaultCheckinView');
+    var listView = document.getElementById('vaultListView');
+    if (checkinView) checkinView.style.display = 'none';
+    if (listView) listView.style.display = 'block';
+    refreshVault();
+    return;
+  }
+
+  var item = items[idx];
+  var daysLeft = item._daysLeft;
+  var dayLabel = daysLeft <= 0 ? 'use today' : daysLeft === 1 ? 'tomorrow' : daysLeft + ' days left';
+  var badgeBg = daysLeft <= 1 ? '#FCEBEB' : '#FAEEDA';
+  var badgeCol = daysLeft <= 1 ? '#A32D2D' : '#854F0B';
+  var priceStr = item.price ? '€' + parseFloat(item.price).toFixed(2) : '';
+
+  card.innerHTML = '<div style="margin-bottom:8px;"><span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:' + badgeBg + ';color:' + badgeCol + ';font-family:'DM Sans',sans-serif;">' + dayLabel + '</span></div>'
+    + '<div style="font-family:'Lora',Georgia,serif;font-size:18px;color:#1a1a1a;margin-bottom:4px;line-height:1.3;">' + (item.item_name||'Item') + '</div>'
+    + (priceStr ? '<div style="font-size:13px;color:#aaa;font-family:'DM Sans',sans-serif;margin-bottom:14px;">' + priceStr + '</div>' : '<div style="margin-bottom:14px;"></div>')
+    + '<div style="display:flex;gap:8px;">'
+    + '<button onclick="gnCheckinUsed('' + item.id + '')" style="flex:1;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:11px 0;font-size:13px;font-weight:500;cursor:pointer;touch-action:manipulation;font-family:'DM Sans',sans-serif;">Used it' + (priceStr ? ' · ' + priceStr : '') + '</button>'
+    + '<button onclick="gnCheckinStillThere('' + item.id + '')" style="flex:1;background:transparent;color:#888;border:0.5px solid #e0ddd6;border-radius:20px;padding:11px 0;font-size:13px;font-weight:500;cursor:pointer;touch-action:manipulation;font-family:'DM Sans',sans-serif;">Still there</button>'
+    + '</div>';
+
+  if (prog) prog.textContent = (idx + 1) + ' of ' + items.length + ' · tap or swipe to continue';
+}
+
+function gnCheckinUsed(id) {
+  markVaultItemUsed(id);
+  window._checkinIndex = (window._checkinIndex || 0) + 1;
+  setTimeout(gnShowCheckinCard, 800);
+}
+
+function gnCheckinStillThere(id) {
+  markVaultItemStillThere(id);
+  window._checkinIndex = (window._checkinIndex || 0) + 1;
+  setTimeout(gnShowCheckinCard, 300);
+}
+
+function gnInitSwipe() {
+  var list = document.getElementById('vaultActiveList');
+  if (!list || list._swipeInited) return;
+  list._swipeInited = true;
+  var startX = 0, startY = 0, el = null;
+  list.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    el = e.target.closest('[data-item-id]');
+  }, { passive: true });
+  list.addEventListener('touchend', function(e) {
+    if (!el) return;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+    var id = el.getAttribute('data-item-id');
+    if (!id) return;
+    if (dx > 50) { markVaultItemUsed(id); }
+    else if (dx < -50) { markVaultItemStillThere(id); }
+    el = null;
+  }, { passive: true });
+}
+
 function showPostSaveVault() {
   showPage('vault');
   refreshVault();
