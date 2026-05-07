@@ -2703,9 +2703,9 @@ function logError(source, message, extra) {
             <div style="font-size:10px;color:#888;font-family:var(--app-font);">this month</div>
           </div>
           <div style="background:#fff;border:0.5px solid #e0ddd6;border-radius:12px;padding:12px 14px;">
-            <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;font-family:var(--app-font);">Tracked</div>
+            <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;font-family:var(--app-font);" id="dashSecondTileLabel">Tracked</div>
             <div style="font-family:'Lora',Georgia,serif;font-size:22px;color:#1a1a1a;" id="dashProtected">0</div>
-            <div style="font-size:10px;color:#888;font-family:var(--app-font);">items in fridge</div>
+            <div style="font-size:10px;color:#888;font-family:var(--app-font);" id="dashSecondTileSub">items in fridge</div>
           </div>
         </div>
 
@@ -2725,10 +2725,19 @@ function logError(source, message, extra) {
           <div id="dashFridgeItems" style="display:flex;flex-direction:column;gap:7px;"></div>
         </div>
 
+        <!-- PATTERN UNLOCK BANNER — fires once at scan 3 -->
+        <div id="dashPatternUnlock" style="display:none;background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:12px;padding:11px 13px;cursor:pointer;" onclick="showPage('vault')">
+          <div style="font-size:11px;font-weight:500;color:#2D6A4F;font-family:var(--app-font);margin-bottom:2px;">Pattern report unlocked</div>
+          <div style="font-size:10px;color:#3B6D11;font-family:var(--app-font);">GuardNest noticed something about how you shop →</div>
+        </div>
+
         <!-- SCAN BUTTON -->
-        <button onclick="showPage('scanner')" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:14px;font-size:14px;font-weight:500;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);margin-bottom:12px;">
+        <button onclick="showPage('scanner')" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:14px;font-size:14px;font-weight:500;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);margin-bottom:0;">
           + Scan again
         </button>
+
+        <!-- SCAN COUNTER HINT — scan 1 and 2 only -->
+        <div id="dashScanHint" style="display:none;font-size:10px;color:#bbb;text-align:center;font-family:var(--app-font);padding-top:6px;"></div>
 
         <!-- WEEKLY INSIGHT — shown after first week -->
         <div id="dashWeeklyInsight" style="display:none;background:#fff;border:0.5px solid #e0ddd6;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
@@ -5403,290 +5412,194 @@ function getItemEmojiFresh(name) {
 }
 
 function refreshDashboard() {
-  const alerts = buildAlerts();
-  const total = allItems.length;
-  const totalVal = allItems.reduce((s,i) => s + (i.price||0), 0);
-  const protectedVal = allItems.filter(i => (i.warranty_days||0) > 0).reduce((s,i) => s + (i.price||0), 0);
-  const atRisk = alerts.reduce((s,a) => s + (a.price||0), 0);
+  var today = new Date(); today.setHours(0,0,0,0);
+  var alerts = buildAlerts();
+  var total = allItems.length;
+  var atRisk = alerts.reduce(function(s,a){ return s + (a.price||0); }, 0);
+  var scanCountVal = parseInt(localStorage.getItem('guardnest_scan_count') || '0');
 
-  // ── NEW DASHBOARD UI ──────────────────────────────────────────────
+  // Greeting + date
+  var hour = new Date().getHours();
+  var greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  var greetEl = document.getElementById('dashGreeting');
+  var dateEl  = document.getElementById('dashDate');
+  if (greetEl) greetEl.textContent = greeting;
+  if (dateEl)  dateEl.textContent  = new Date().toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+
   // At risk banner
-  const atRiskBanner = document.getElementById('dashAtRiskBanner');
-  const dashRiskEl = document.getElementById('dashRisk');
-  const dashAlertCount = document.getElementById('dashAlertCount');
-  if (dashRiskEl) dashRiskEl.textContent = '$' + atRisk.toFixed(2);
-  if (dashAlertCount) dashAlertCount.textContent = alerts.length;
-  if (atRiskBanner) atRiskBanner.style.display = atRisk > 0 ? 'flex' : 'none';
+  var atRiskBanner = document.getElementById('dashAtRiskBanner');
+  var dashRiskEl   = document.getElementById('dashRisk');
+  var dashAlertCnt = document.getElementById('dashAlertCount');
+  if (dashRiskEl)   dashRiskEl.textContent   = '\u20ac' + atRisk.toFixed(2);
+  if (dashAlertCnt) dashAlertCnt.textContent = alerts.length;
+  if (atRiskBanner) atRiskBanner.style.display = atRisk > 0 ? 'block' : 'none';
 
-  // Fridge items list
-  const fridgeItems = allItems.filter(i => i.days_until_spoil > 0 || i.expiry_date).sort((a,b) => (a.days_until_spoil||99) - (b.days_until_spoil||99));
-  const fridgeEl = document.getElementById('dashFridgeItems');
-  if (fridgeEl) {
-    if (fridgeItems.length === 0) {
-      fridgeEl.innerHTML = `<div style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:16px;padding:20px;text-align:center;color:rgba(26,26,26,0.35);font-size:13px;font-family:var(--app-font);">Scan your fridge to see what's inside 🌿</div>`;
-    } else {
-      fridgeEl.innerHTML = fridgeItems.slice(0, 6).map(item => {
-        const days = item.days_until_spoil || 0;
-        const pct = Math.min((days / 14) * 100, 100);
-        const col = days <= 2 ? '#E8735A' : days <= 4 ? '#E8A44A' : '#5BAD8A';
-        const emoji = getItemEmojiFresh(item.item_name);
-        return `<div style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-          <div style="width:42px;height:42px;border-radius:13px;background:#F5F3EF;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;">${emoji}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;">
-              <div style="font-size:14px;font-weight:600;color:#1A1A1A;font-family:var(--app-font);">${item.item_name||'Unknown'}</div>
-              <div style="font-size:11px;font-weight:700;color:${col};flex-shrink:0;margin-left:8px;font-family:var(--app-font);">${days}d left</div>
-            </div>
-            <div style="height:3px;background:rgba(0,0,0,0.06);border-radius:99px;overflow:hidden;margin-top:7px;"><div style="height:100%;width:${pct}%;background:${col};border-radius:99px;"></div></div>
-          </div>
-        </div>`;
-      }).join('');
-    }
-  }
-
-  // Today card — most urgent item
-  const todayCard = document.getElementById('dashTodayCard');
-  const urgentItems = allItems.filter(i => (i.days_until_spoil || 0) <= 2 && (i.days_until_spoil || 0) >= 0);
+  // Today card - most urgent item
+  var todayCard = document.getElementById('dashTodayCard');
+  var urgentItems = allItems.filter(function(i) {
+    if (!i.days_until_spoil || i.days_until_spoil <= 0) return false;
+    var exp = new Date(i.purchase_date || today);
+    exp.setDate(exp.getDate() + i.days_until_spoil);
+    var d = Math.round((exp - today) / 86400000);
+    i._daysLeft = d;
+    return d <= 2 && d >= 0;
+  });
   if (todayCard) {
     if (urgentItems.length > 0 && !window._todayItemUsed) {
-      const item = urgentItems[0];
-      todayCard.style.display = 'flex';
-      const emojiEl = document.getElementById('dashTodayEmoji');
-      const nameEl = document.getElementById('dashTodayName');
-      const subEl = document.getElementById('dashTodaySub');
-      if (emojiEl) emojiEl.textContent = getItemEmojiFresh(item.item_name);
+      var item = urgentItems[0];
+      todayCard.style.display = 'block';
+      var nameEl = document.getElementById('dashTodayName');
+      var subEl  = document.getElementById('dashTodaySub');
+      var btn    = document.getElementById('dashTodayBtn');
       if (nameEl) nameEl.textContent = item.item_name || 'Unknown';
-      if (subEl) subEl.textContent = item.days_until_spoil <= 0 ? 'Expired — use or remove' : item.days_until_spoil === 1 ? 'Expires tomorrow · $' + (item.price||0).toFixed(2) + ' saved' : `${item.days_until_spoil} days left · $${(item.price||0).toFixed(2)} saved`;
+      if (subEl)  subEl.textContent  = (item._daysLeft <= 0 ? 'Expires today' : item._daysLeft === 1 ? 'Expires tomorrow' : item._daysLeft + ' days left') + (item.price ? ' \u00b7 \u20ac' + parseFloat(item.price).toFixed(2) : '');
+      if (btn)    btn.textContent    = 'Used it' + (item.price ? ' \u00b7 \u20ac' + parseFloat(item.price).toFixed(2) : '');
       window._todayItemId = item.id;
     } else {
       todayCard.style.display = 'none';
     }
   }
 
-  // Savings numbers
-  const savedThisMonth = parseFloat(localStorage.getItem('gn_monthly_saved') || '0');
-  const savedLifetime  = parseFloat(localStorage.getItem('gn_lifetime_saved') || '0');
-  const monthEl = document.getElementById('dashMonthlySaved');
-  const lifeEl  = document.getElementById('dashLifetimeSaved');
-  if (monthEl) monthEl.textContent = '$' + savedThisMonth.toFixed(2);
-  if (lifeEl)  lifeEl.textContent  = '$' + savedLifetime.toFixed(2);
+  // Rescue stats
+  var savedThisMonth = parseFloat(localStorage.getItem('gn_monthly_saved') || '0');
+  var monthEl = document.getElementById('dashMonthlySaved');
+  if (monthEl) monthEl.textContent = '\u20ac' + savedThisMonth.toFixed(2);
 
-  // Tier system
-  const streakWeeks = updateStreak();
-  const impactScore = getGnImpactScore(savedLifetime, scanCount, streakWeeks);
-  const { tier, next, progress } = getGnTier(impactScore);
-  const tierIcon = document.getElementById('dashTierIcon');
-  const tierName = document.getElementById('dashTierName');
-  const tierBar  = document.getElementById('dashTierBar');
-  const nextTier = document.getElementById('dashNextTier');
-  const scoreEl  = document.getElementById('dashImpactScore');
-  const nextThreshold = document.getElementById('dashNextThreshold');
-  if (tierIcon) tierIcon.textContent = tier.icon;
-  if (tierName) tierName.textContent = tier.name;
-  if (tierBar)  setTimeout(() => { tierBar.style.width = progress.toFixed(1) + '%'; }, 300);
-  if (nextTier && next) nextTier.textContent = next.icon + ' ' + next.name + ' — ' + (next.threshold - impactScore) + ' pts away';
-  if (nextTier && !next) nextTier.textContent = '🏆 Max tier reached';
-  if (scoreEl) scoreEl.textContent = impactScore;
-  if (nextThreshold && next) nextThreshold.textContent = next.threshold + ' to unlock';
-
-  // Mobile header tier chip
-  const mobileTierIcon = document.getElementById('mobileTierIcon');
-  const mobileTierName = document.getElementById('mobileTierName');
-  const mobileStreakNum = document.getElementById('mobileStreakNum');
-  if (mobileTierIcon) mobileTierIcon.textContent = tier.icon;
-  if (mobileTierName) { mobileTierName.textContent = tier.name; mobileTierName.style.color = tier.color; }
-  if (mobileStreakNum) mobileStreakNum.textContent = streakWeeks + 'w';
-
-  // Render community proof number
-  gnRenderCommunityProof();
-  // Animate on first view
-  const communityEl = document.querySelector('.gn-community-score');
-  if (communityEl && !communityEl.dataset.animated) gnAnimateCommunityScore(communityEl);
-
-  // Update hidden fields (used by other functions)
-  const dashTotal = document.getElementById('dashTotal');
-  const dashProtectedEl = document.getElementById('dashProtected');
-  const dashCreditsEl = document.getElementById('dashCredits');
-  if (dashTotal) dashTotal.textContent = total;
-  if (dashProtectedEl) dashProtectedEl.textContent = allItems.filter(i => (i.days_until_spoil||0) > 0).length;
-  if (dashCreditsEl) dashCreditsEl.textContent = scanCount || 0;
-
-  // Update scanner stats (only if elements exist)
-  const stScans = document.getElementById('statTotalScans');
-  const stItems = document.getElementById('statTotalItems');
-  if (stScans) stScans.textContent = scanCount;
-  if (stItems) stItems.textContent = total;
-
-  // Update alert badge
-  const alertBadgeEl = document.getElementById('alertBadge');
-  if (alertBadgeEl) {
-    if (alerts.length > 0) {
-      alertBadgeEl.textContent = alerts.length;
-      alertBadgeEl.classList.remove('hidden');
-    } else {
-      alertBadgeEl.classList.add('hidden');
-    }
-  }
-  const bnBadgeEl = document.getElementById('bnAlertBadge');
-  if (bnBadgeEl) {
-    if (alerts.length > 0) {
-      bnBadgeEl.textContent = alerts.length;
-      bnBadgeEl.classList.remove('hidden');
-    } else {
-      bnBadgeEl.classList.add('hidden');
-    }
+  // Second tile: Tracked (scan <6) or Efficiency (scan 6+)
+  var secLabel = document.getElementById('dashSecondTileLabel');
+  var secVal   = document.getElementById('dashProtected');
+  var secSub   = document.getElementById('dashSecondTileSub');
+  if (scanCountVal >= 6 && savedThisMonth > 0) {
+    var usedCount  = (window._vaultRescued || []).length;
+    var efficiency = total > 0 ? Math.min(99, Math.round((usedCount / Math.max(total,1)) * 100 + scanCountVal * 2)) : 0;
+    if (secLabel) secLabel.textContent = 'Efficiency';
+    if (secVal)   secVal.textContent   = efficiency;
+    if (secSub)   secSub.textContent   = 'up ' + Math.min(efficiency, 26) + 'pts';
+  } else {
+    if (secLabel) secLabel.textContent = 'Tracked';
+    if (secVal)   secVal.textContent   = total;
+    if (secSub)   secSub.textContent   = 'items in fridge';
   }
 
-  // ── STREAK ────────────────────────────────────────────────
-  const streak = updateStreak();
-  const streakEl = document.getElementById('missionStreak');
-  if (streakEl) {
-    streakEl.className = `mission-streak${streak === 0 ? ' streak-zero' : ''}`;
-  }
-  const streakNum = document.getElementById('streakNum');
-  if (streakNum) streakNum.textContent = streak;
+  // Fridge items list
+  var fridgeEl = document.getElementById('dashFridgeItems');
+  if (fridgeEl) {
+    var fridgeItems = allItems.map(function(i) {
+      var d = i.days_until_spoil;
+      if (i.purchase_date && i.days_until_spoil) {
+        var exp = new Date(i.purchase_date);
+        exp.setDate(exp.getDate() + i.days_until_spoil);
+        d = Math.round((exp - today) / 86400000);
+      }
+      return Object.assign({}, i, { _daysLeft: d });
+    }).sort(function(a,b){ return (a._daysLeft||99) - (b._daysLeft||99); });
 
-  // ── LEVEL HEADER ──────────────────────────────────────────
-  const info = getLevelInfo(totalCredits);
-  const levelTitle = document.getElementById('missionLevelTitle');
-  const xpFill = document.getElementById('missionXpFill');
-  const xpLabel = document.getElementById('missionXpLabel');
-  if (levelTitle) levelTitle.textContent = `${info.title} · Level ${info.level}`;
-  if (xpFill) xpFill.style.width = (info.progress * 100).toFixed(1) + '%';
-  if (xpLabel) xpLabel.textContent = info.atMax
-    ? `${totalCredits.toLocaleString()} XP · Max Level 🏆`
-    : `${totalCredits.toLocaleString()} XP · ${info.toNext} to ${info.nextTitle}`;
-
-  // ── RIGHT NOW: Most urgent item ───────────────────────────
-  const urgentContent = document.getElementById('urgentContent');
-  if (urgentContent) {
-    if (alerts.length === 0) {
-      urgentContent.innerHTML = `<div class="empty-state" style="padding:28px">
-        <span class="empty-icon">✅</span>
-        <div class="empty-title">All Clear</div>
-        <div class="empty-sub">Your vault is secure. Nothing slips through.</div>
-      </div>`;
+    if (fridgeItems.length === 0) {
+      fridgeEl.innerHTML = '<div style="background:#fff;border:0.5px solid #e0ddd6;border-radius:12px;padding:16px;text-align:center;color:#aaa;font-size:13px;font-family:var(--app-font);">Scan your fridge to see what\u2019s inside</div>';
     } else {
-      const most = alerts[0];
-      const isSpoil = most.alertType === 'Perishable';
-      const [cls,,label] = urgencyClass(most.days);
-      const [emoji] = getItemEmoji(most.item_name, most.category);
-      const actionText = isSpoil
-        ? `Use tonight — ${most.days <= 0 ? 'already expired' : most.days + ' day' + (most.days !== 1 ? 's' : '') + ' left'}`
-        : `File a warranty claim — ${most.days <= 0 ? 'expired' : most.days + ' day' + (most.days !== 1 ? 's' : '') + ' remaining'}`;
-      const searchUrl = isSpoil
-        ? `https://www.google.com/search?q=recipe+with+${encodeURIComponent(most.item_name||'')}`
-        : `https://www.google.com/search?q=${encodeURIComponent((most.merchant||'') + ' ' + (most.item_name||'') + ' warranty claim')}`;
-
-      urgentContent.innerHTML = `<div class="urgent-item">
-        <div class="urgent-emoji">${emoji}</div>
-        <div class="urgent-info">
-          <div class="urgent-name">${most.item_name || 'Unknown'}</div>
-          <div class="urgent-detail">${most.merchant || '—'} · ${isSpoil ? '🥗 Perishable' : '🛡️ Warranty'}</div>
-          <div class="urgent-action">${actionText}</div>
-        </div>
-        <div class="urgent-badge">
-          <span class="alert-badge ${cls}">${label}</span>
-          ${alerts.length > 1 ? `<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px">+${alerts.length-1} more</div>` : ''}
-        </div>
-      </div>
-      <div style="padding:0 20px 14px">
-        <a href="${searchUrl}" target="_blank" style="display:block;text-align:center;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);border-radius:7px;padding:8px;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.06em;text-decoration:none;text-transform:uppercase">
-          ${isSpoil ? '🍳 Find a Recipe' : '🔍 Find Claim Info'}
-        </a>
-      </div>`;
-    }
-  }
-
-  // ── MISSIONS ──────────────────────────────────────────────
-  const { missions } = buildMissions();
-  const missionsEl = document.getElementById('missionsList');
-  const xpPool = document.getElementById('missionXpPool');
-  const remainingXp = missions.filter(m => !m.done).reduce((s,m) => s + m.xp, 0);
-  if (xpPool) xpPool.textContent = remainingXp > 0 ? `+${remainingXp} XP available` : '✅ All done';
-
-  if (missionsEl) {
-    if (missions.length === 0 || total === 0) {
-      missionsEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🎯</span><div class="empty-title">No Missions Yet</div><div class="empty-sub">Scan your first receipt to unlock missions</div></div>`;
-    } else {
-      missionsEl.innerHTML = missions.map(m => {
-        const doneClass = m.done ? ' done' : '';
-        const checkContent = m.done ? '✓' : '';
-        const checkClick = m.done || m.auto ? '' : `onclick="completeMission('${m.id}',${m.xp})" ontouchend="this.onclick()"`;
-        return `<div class="mission-item${doneClass}">
-          <div class="mission-icon">${m.icon}</div>
-          <div class="mission-body">
-            <div class="mission-title">${m.title}</div>
-            <div class="mission-desc">${m.desc}</div>
-          </div>
-          <div class="mission-xp-badge">${m.done ? '✓' : '+' + m.xp + ' XP'}</div>
-          ${!m.auto ? `<button class="mission-check" ${checkClick}>${checkContent}</button>` : ''}
-        </div>`;
+      fridgeEl.innerHTML = fridgeItems.slice(0, 5).map(function(item) {
+        var d = item._daysLeft;
+        if (item.status === 'used') {
+          return '<div style="background:#fff;border:0.5px solid #e0ddd6;border-radius:12px;padding:9px 12px;opacity:.6;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;font-weight:500;color:#1a1a1a;font-family:var(--app-font);">' + (item.item_name||'Item') + '</span><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#EAF3DE;color:#3B6D11;font-family:var(--app-font);">used \u2713</span></div></div>';
+        }
+        var badgeBg  = d <= 1 ? '#FCEBEB' : d <= 3 ? '#FAEEDA' : '#EAF3DE';
+        var badgeCol = d <= 1 ? '#A32D2D' : d <= 3 ? '#854F0B' : '#3B6D11';
+        var dayLabel = d == null ? '' : d <= 0 ? 'today' : d === 1 ? 'tomorrow' : d + 'd';
+        var barCol   = d <= 1 ? '#E24B4A' : d <= 3 ? '#EF9F27' : '#2D6A4F';
+        var pct      = Math.min(((d||0) / 14) * 100, 100);
+        return '<div style="background:#fff;border:0.5px solid #e0ddd6;border-radius:12px;padding:9px 12px;">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
+          + '<span style="font-size:12px;font-weight:500;color:#1a1a1a;font-family:var(--app-font);">' + (item.item_name||'Item') + '</span>'
+          + (dayLabel ? '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:' + badgeBg + ';color:' + badgeCol + ';font-family:var(--app-font);">' + dayLabel + '</span>' : '')
+          + '</div><div style="height:2px;background:#f0ede8;border-radius:2px;"><div style="height:100%;width:' + pct + '%;background:' + barCol + ';border-radius:2px;"></div></div></div>';
       }).join('');
     }
   }
 
-  // ── SUMMARY BAR ───────────────────────────────────────────
-  const msTotal = document.getElementById('msTotal');
-  const msProtected = document.getElementById('msProtected');
-  const msAlerts = document.getElementById('msAlerts');
-  const msCredits = document.getElementById('msCredits');
-  if (msTotal) msTotal.textContent = total;
-  if (msProtected) msProtected.textContent = '$' + protectedVal.toFixed(0);
-  if (msAlerts) msAlerts.textContent = alerts.length;
-  if (msCredits) msCredits.textContent = totalCredits.toLocaleString();
+  // Scan counter hint / pattern nudge / unlock banner
+  var hintEl   = document.getElementById('dashScanHint');
+  var nudgeEl  = document.getElementById('dashPatternNudge');
+  var unlockEl = document.getElementById('dashPatternUnlock');
+  if (hintEl)   hintEl.style.display   = 'none';
+  if (nudgeEl)  nudgeEl.style.display  = 'none';
+  if (unlockEl) unlockEl.style.display = 'none';
 
-  // Update scanner recent
-  const scannerRecentEl = document.getElementById('scannerRecent');
-  if (scannerRecentEl && total > 0) {
-    const sources = [...new Set(allItems.map(i => i.image_url).filter(Boolean))].slice(0,3);
-    scannerRecentEl.innerHTML = sources.map(src => {
-      const count = allItems.filter(i => i.image_url === src).length;
-      return `<div class="recent-item">
-        <div class="recent-thumb">${src.toLowerCase().endsWith('.pdf') ? '📄' : '🧾'}</div>
-        <div class="recent-info"><div class="recent-name">${src}</div><div class="recent-time">${count} item${count!==1?'s':''}</div></div>
-        <div class="recent-xp">+${count*10} XP</div>
-      </div>`;
-    }).join('');
+  if (scanCountVal < 3) {
+    if (hintEl) {
+      hintEl.style.display = 'block';
+      hintEl.textContent = scanCountVal < 2
+        ? 'Scan ' + (scanCountVal + 1) + ' of 3 to unlock your pattern report'
+        : 'One more scan to unlock your pattern report';
+    }
+  } else if (scanCountVal === 3 && !localStorage.getItem('guardnest_pattern_unlock_seen')) {
+    if (unlockEl) {
+      unlockEl.style.display = 'block';
+      setTimeout(function() {
+        if (unlockEl) unlockEl.style.display = 'none';
+        localStorage.setItem('guardnest_pattern_unlock_seen', '1');
+      }, 10000);
+    }
+  } else if (scanCountVal >= 3 && total > 0 && nudgeEl) {
+    var nameCounts = {};
+    allItems.forEach(function(i) {
+      var n = (i.item_name||'').toLowerCase().trim();
+      if (n) nameCounts[n] = (nameCounts[n]||0) + 1;
+    });
+    var topItem = Object.keys(nameCounts).sort(function(a,b){ return nameCounts[b]-nameCounts[a]; })[0];
+    if (topItem && nameCounts[topItem] >= 2) {
+      nudgeEl.style.display = 'block';
+      var patternText = document.getElementById('dashPatternText');
+      var patternSub  = document.getElementById('dashPatternSub');
+      if (patternText) patternText.textContent = topItem.charAt(0).toUpperCase() + topItem.slice(1) + ' in ' + nameCounts[topItem] + ' of your scans.';
+      if (patternSub)  patternSub.textContent  = 'See what that means \u2192';
+      nudgeEl.onclick = function() { showPage('vault'); };
+    }
   }
 
-  // Refresh daily brief card + missions
-  try { refreshBriefCard(); } catch(e) { console.error('Brief refresh error:', e); }
-  try { refreshMissionsCompact(); } catch(e) { console.error('Missions compact error:', e); }
-}
-
-// ─── ALERTS ───────────────────────────────────────────────────
-function buildAlerts() {
-  const alerts = [];
-  const today  = new Date(); today.setHours(0,0,0,0);
-
-  allItems.forEach(item => {
-    const warranty = item.warranty_days || 0;
-    const spoil    = item.days_until_spoil || 0;
-
-    if (warranty > 0 && item.purchase_date) {
-      const purchased = new Date(item.purchase_date);
-      const expiry    = new Date(purchased);
-      expiry.setDate(expiry.getDate() + warranty);
-      const daysLeft  = Math.round((expiry - today) / 86400000);
-      if (daysLeft <= 30) alerts.push({ ...item, alertType: 'Warranty', days: daysLeft, category: item.category || '' });
+  // Weekly insight
+  var insightEl   = document.getElementById('dashWeeklyInsight');
+  var insightText = document.getElementById('dashWeeklyText');
+  if (insightEl && insightText) {
+    if (savedThisMonth > 0) {
+      insightEl.style.display = 'block';
+      insightText.textContent = '\u20ac' + savedThisMonth.toFixed(2) + ' rescued this month. Scan again after your next shop.';
+    } else if (total > 0 && scanCountVal > 0) {
+      insightEl.style.display = 'block';
+      insightText.textContent = total + ' items tracked. Mark things used to build your pattern.';
+    } else {
+      insightEl.style.display = 'none';
     }
+  }
 
-    if (spoil > 0 && item.purchase_date) {
-      const purchasedSpoil = new Date(item.purchase_date);
-      const spoilExpiry = new Date(purchasedSpoil);
-      spoilExpiry.setDate(spoilExpiry.getDate() + spoil);
-      const spoilDaysLeft = Math.round((spoilExpiry - today) / 86400000);
-      if (spoilDaysLeft <= 7) alerts.push({ ...item, alertType: 'Perishable', days: spoilDaysLeft, category: item.category || '' });
-    } else if (spoil > 0) {
-      // Fallback: no purchase_date, use stored value
-      if (spoil <= 7) alerts.push({ ...item, alertType: 'Perishable', days: spoil, category: item.category || '' });
-    }
-  });
+  // markTodayItemUsed
+  window.markTodayItemUsed = function() {
+    if (!window._todayItemId) return;
+    if (typeof markVaultItemUsed === 'function') markVaultItemUsed(window._todayItemId);
+    window._todayItemUsed = true;
+    var tc = document.getElementById('dashTodayCard');
+    if (tc) tc.style.display = 'none';
+    var saved2 = parseFloat(localStorage.getItem('gn_monthly_saved') || '0');
+    var me2 = document.getElementById('dashMonthlySaved');
+    if (me2) me2.textContent = '\u20ac' + saved2.toFixed(2);
+  };
 
-  return alerts.sort((a, b) => a.days - b.days);
+  // Compat elements
+  var dt = document.getElementById('dashTotal');
+  if (dt) dt.textContent = total;
+
+  // Alert badge
+  var alertBadge = document.getElementById('alertBadge');
+  if (alertBadge) {
+    if (alerts.length > 0) { alertBadge.textContent = alerts.length; alertBadge.classList.remove('hidden'); }
+    else { alertBadge.textContent = ''; alertBadge.classList.add('hidden'); }
+  }
+
+  // Scanner stats
+  var stScans = document.getElementById('statTotalScans');
+  var stItems = document.getElementById('statTotalItems');
+  if (stScans) stScans.textContent = scanCountVal;
+  if (stItems) stItems.textContent = total;
 }
-
 function urgencyClass(days) {
   if (days <= 0)  return ['ab-red',    'var(--red)',    'EXPIRED'];
   if (days <= 3)  return ['ab-orange', 'var(--orange)', days + 'D LEFT'];
@@ -9466,11 +9379,18 @@ function gnInitSwipe() {
 
 function showPostSaveVault() {
   showPage('vault');
-  // Reload then render — ensures allItems is populated before render
   loadItems().then(function() {
     refreshVault();
     refreshDashboard();
   });
+  // Show consent banner after first save — highest intent moment
+  var stored = localStorage.getItem('gn_consent_v1');
+  if (!stored) {
+    setTimeout(function() {
+      var banner = document.getElementById('gnConsentBanner');
+      if (banner) banner.style.display = 'block';
+    }, 1500);
+  }
   // Show first-time vault onboarding banner if this is their first save
   if (!localStorage.getItem('guardnest_vault_welcomed')) {
     localStorage.setItem('guardnest_vault_welcomed', 'true');
@@ -10227,12 +10147,11 @@ function openCameraFromCoach() {
   };
 
   // Init on load
-  if (!stored) {
-    setTimeout(gnShowConsentBanner, 2000);
-  } else if (stored === 'granted') {
+  if (stored === 'granted') {
     window.gnGrantConsent();
   }
-  // declined = do nothing, app works fully without trackers
+  // declined or no answer = do nothing until post-save moment
+  // Banner fires in showPostSaveVault() after first scan is saved
   // declined = do nothing, trackers stay off
 })();
 </script>
