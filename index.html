@@ -26,12 +26,14 @@
   function gtag(){dataLayer.push(arguments);}
   // Set consent defaults BEFORE gtag config — required for Consent Mode v2
   gtag('consent', 'default', {
-    'analytics_storage': 'denied',
-    'ad_storage': 'denied',
-    'ad_user_data': 'denied',
-    'ad_personalization': 'denied',
-    'wait_for_update': 500
+    'analytics_storage': 'granted',   // anonymized analytics fires immediately — no cookies, no user ID
+    'ad_storage': 'denied',           // Meta/ad cookies blocked until consent
+    'ad_user_data': 'denied',         // ad data blocked until consent
+    'ad_personalization': 'denied',   // ad personalization blocked until consent
+    'wait_for_update': 2000
   });
+  // anonymize_ip ensures no personal data in analytics before consent
+  gtag('set', 'url_passthrough', true);
   gtag('js', new Date());
   if (window._gnFlushErrors) window._gnFlushErrors();
   gtag('config', 'G-87DCQ5CB9M', { 'anonymize_ip': true });
@@ -9383,13 +9385,14 @@ function showPostSaveVault() {
     refreshVault();
     refreshDashboard();
   });
-  // Show consent banner after first save — highest intent moment
-  var stored = localStorage.getItem('gn_consent_v1');
-  if (!stored) {
+  // Consent banner fires at demo completion (demoGoToRealScanner)
+  // Keep this as fallback for users who somehow reach save without seeing banner
+  var stored2 = localStorage.getItem('gn_consent_v1');
+  if (!stored2) {
     setTimeout(function() {
       var banner = document.getElementById('gnConsentBanner');
       if (banner) banner.style.display = 'block';
-    }, 1500);
+    }, 2000);
   }
   // Show first-time vault onboarding banner if this is their first save
   if (!localStorage.getItem('guardnest_vault_welcomed')) {
@@ -9424,6 +9427,16 @@ function submitPushFallbackEmail() {
 function demoGoToRealScanner() {
   hideSampleReport();
   localStorage.setItem('guardnest_onboarded', 'true');
+
+  // Show consent banner at demo completion — user has shown intent
+  // GA4 needs this signal to start collecting EU data
+  var _consentStored = localStorage.getItem('gn_consent_v1');
+  if (!_consentStored) {
+    setTimeout(function() {
+      var _cb = document.getElementById('gnConsentBanner');
+      if (_cb) _cb.style.display = 'block';
+    }, 800);
+  }
   const appEl = document.getElementById('screen-app');
   if (appEl) { appEl.style.opacity = '1'; appEl.style.pointerEvents = ''; }
   document.body.classList.add('app-active');
@@ -10086,8 +10099,8 @@ function openCameraFromCoach() {
 
     // Update GA4 Consent Mode v2
     gtag('consent', 'update', {
-      'analytics_storage': 'granted',
-      'ad_storage': 'granted',
+      'analytics_storage': 'granted',    // upgrades to full user tracking with cookies
+      'ad_storage': 'granted',           // enables Meta Pixel cookies
       'ad_user_data': 'granted',
       'ad_personalization': 'granted'
     });
@@ -10127,12 +10140,12 @@ function openCameraFromCoach() {
   window.gnDeclineConsent = function() {
     localStorage.setItem(CONSENT_KEY, 'declined');
     gnHideConsentBanner();
-    // GA4 stays denied — anonymized data only via Consent Mode
-    // No Clarity, no Meta Pixel
-    // Safe gtag call — may not be initialized yet
+    // analytics_storage stays granted (anonymized, no cookies)
+    // ad_storage stays denied — no Meta Pixel, no remarketing
     if (typeof gtag !== 'undefined') {
       gtag('event', 'consent_declined');
     }
+    // No Clarity, no Meta Pixel on decline
   };
 
   // Safe fbq wrapper — queues calls until consent granted
