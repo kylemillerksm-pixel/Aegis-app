@@ -572,7 +572,11 @@
     animation: scanLine 3s linear infinite;
   }
   @keyframes scanLine { to { top: 110%; } }
-  @keyframes gnSkeleton { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
+  @keyframes gnDirectivePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45,106,79,0); }
+  50% { box-shadow: 0 0 0 6px rgba(45,106,79,.06); }
+}
+@keyframes gnSkeleton { 0%,100%{opacity:0.3} 50%{opacity:0.7} }
   .scan-icon  { font-size: 36px; margin-bottom: 10px; display: block; }
   .scan-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: .15em; margin-bottom: 5px; }
   .scan-sub   { font-size: 11px; color: var(--text3); line-height: 1.6; }
@@ -4062,6 +4066,8 @@ function refreshMissionsCompact() {
 }
 
 async function syncPendingItems() {
+  // Skip on localhost — CORS will always fail and cause console spam
+  if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') return;
   // Retry Supabase insert for items saved while offline/blocked
   var guestId = localStorage.getItem('guardnest_guest_id');
   if (!guestId) return;
@@ -4520,7 +4526,7 @@ function stopLiveDetection() {
     // Clear watchdog and show empty state
     if (window._gnScanTimeout) { clearTimeout(window._gnScanTimeout); window._gnScanTimeout = null; }
     var _skel = document.getElementById('scanSkeletonCards'); if (_skel) _skel.style.display = 'none';
-    var _empty = document.getElementById('scanEmptyState'); if (_empty) _empty.style.display = 'block';
+    gnShowScanFailure('empty');
     var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.remove('hidden');
     showPage('scanner');
   }
@@ -5020,6 +5026,13 @@ async function loadItems() {
       if (pending) { try { allItems = JSON.parse(pending); } catch(e) { allItems = []; } }
       return;
     }
+    // Skip Supabase on localhost — CORS blocked, use localStorage only
+    if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
+      var lsLocal = [];
+      try { lsLocal = JSON.parse(localStorage.getItem('guardnest_saved_items') || '[]'); } catch(e) {}
+      allItems = lsLocal;
+      return;
+    }
     // Try Supabase first
     try {
       const { data, error } = await supa
@@ -5411,6 +5424,24 @@ function getItemEmojiFresh(name) {
   const map = { spinach:'🥬', chicken:'🍗', beef:'🥩', milk:'🥛', egg:'🥚', yogurt:'🫙', berry:'🫐', blueberr:'🫐', strawberr:'🍓', cheese:'🧀', broccoli:'🥦', carrot:'🥕', apple:'🍎', bread:'🍞', butter:'🧈', rice:'🍚', pasta:'🍝', tomato:'🍅', onion:'🧅', pepper:'🫑', fish:'🐟', shrimp:'🍤', bacon:'🥓', ham:'🍖', lemon:'🍋', orange:'🍊', banana:'🍌', avocado:'🥑', lettuce:'🥗', cucumber:'🥒', mushroom:'🍄' };
   for (const [k,v] of Object.entries(map)) { if (n.includes(k)) return v; }
   return '🥡';
+}
+
+function buildAlerts() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  return allItems
+    .map(function(item) {
+      var daysLeft = item.days_until_spoil;
+      if (item.purchase_date && item.days_until_spoil) {
+        var exp = new Date(item.purchase_date);
+        exp.setDate(exp.getDate() + item.days_until_spoil);
+        daysLeft = Math.round((exp - today) / 86400000);
+      }
+      return Object.assign({}, item, { days: daysLeft });
+    })
+    .filter(function(item) {
+      return item.days != null && item.days <= 30 && item.status !== 'used';
+    })
+    .sort(function(a, b) { return a.days - b.days; });
 }
 
 function refreshDashboard() {
@@ -5821,6 +5852,13 @@ function markVaultItemUsed(id) {
   }
   refreshVault();
   showToast('Saved €' + parseFloat((item && item.price)||0).toFixed(2) + ' rescued', 'success'); updateRescueTotal();
+  // Show rescue moment on first ever Used it tap
+  if (!localStorage.getItem('guardnest_first_rescue_seen') && item) {
+    localStorage.setItem('guardnest_first_rescue_seen', '1');
+    setTimeout(function() {
+      gnShowRescueMoment(item.item_name, item.price);
+    }, 1400);
+  }
 }
 
 function markVaultItemStillThere(id) {
@@ -6082,9 +6120,8 @@ async function handleImageScan(input) {
   // Start timeout watchdog — show timeout state after 14 seconds
   window._gnScanTimeout = setTimeout(function() {
     var _sk2 = document.getElementById('scanSkeletonCards'); if (_sk2) _sk2.style.display = 'none';
-    var _ts = document.getElementById('scanTimeoutState'); if (_ts) _ts.style.display = 'block';
-    var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.remove('hidden');
-    showPage('scanner');
+    clearInterval(window._gnLiveInterval);
+    gnShowScanFailure('timeout');
   }, 14000);
   window._savePromptFired = false;
   if (window._savePromptTimer) clearTimeout(window._savePromptTimer);
@@ -8843,35 +8880,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- ── SCREEN 0: Hook ───────────────────────────────────────── -->
     <div id="ds0" style="max-width:380px;width:100%;text-align:center;">
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px;">
-        <div style="width:22px;height:22px;background:#2D6A4F;clip-path:polygon(50% 0%,100% 20%,100% 70%,50% 100%,0% 70%,0% 20%);flex-shrink:0;"></div>
-        <span style="font-family:'Lora',Georgia,serif;font-size:18px;color:#4CAF82;letter-spacing:.05em;">GuardNest</span>
-      </div>
-      <div style="font-family:'Lora',Georgia,serif;font-size:24px;font-weight:400;color:#fff;line-height:1.3;margin-bottom:10px;">You bought it.<br><em>Now where did it go?</em></div>
-      <div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;">Most households lose ~€28 of groceries a week without noticing. Not from carelessness — from not being able to see what they have.</div>
-      <!-- Fridge preview — warm cards on dark bg for contrast -->
-      <div style="background:rgba(255,255,255,.05);border:0.5px solid rgba(255,255,255,.1);border-radius:16px;padding:16px;margin-bottom:24px;text-align:left;">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.12em;margin-bottom:12px;font-family:'DM Sans',sans-serif;">YOUR FRIDGE RIGHT NOW</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(162,45,45,.12);border-radius:8px;padding:8px 10px;">
-            <span style="font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;">Baby spinach</span>
-            <span style="font-size:11px;font-weight:700;color:#F7A4A4;background:rgba(162,45,45,.3);padding:2px 8px;border-radius:20px;font-family:'DM Sans',sans-serif;">expires tomorrow</span>
+
+      <div style="font-family:'Lora',Georgia,serif;font-size:13px;color:rgba(76,175,130,.7);margin-bottom:28px;letter-spacing:.05em;">GuardNest</div>
+
+      <!-- The dare -->
+      <div style="font-family:'Lora',Georgia,serif;font-size:24px;color:#fff;line-height:1.3;margin-bottom:10px;">How much of your last shop is already gone?</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:24px;">Point your camera at your grocery receipt.<br>We'll tell you in 8 seconds.</div>
+
+      <!-- Receipt illustration -->
+      <div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;margin-bottom:22px;text-align:left;">
+        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:4px;width:52%;background:rgba(255,255,255,.07);border-radius:2px;"></div>
+            <div style="height:4px;width:16%;background:rgba(247,161,161,.28);border-radius:2px;"></div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(133,79,11,.12);border-radius:8px;padding:8px 10px;">
-            <span style="font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;">Chicken breast</span>
-            <span style="font-size:11px;font-weight:700;color:#FAC775;background:rgba(133,79,11,.3);padding:2px 8px;border-radius:20px;font-family:'DM Sans',sans-serif;">3 days left</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:4px;width:45%;background:rgba(255,255,255,.05);border-radius:2px;"></div>
+            <div style="height:4px;width:16%;background:rgba(76,175,130,.22);border-radius:2px;"></div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(162,45,45,.12);border-radius:8px;padding:8px 10px;">
-            <span style="font-size:13px;color:#fff;font-family:'DM Sans',sans-serif;">Strawberries</span>
-            <span style="font-size:11px;font-weight:700;color:#F7A4A4;background:rgba(162,45,45,.3);padding:2px 8px;border-radius:20px;font-family:'DM Sans',sans-serif;">use today</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:4px;width:58%;background:rgba(255,255,255,.06);border-radius:2px;"></div>
+            <div style="height:4px;width:16%;background:rgba(247,161,161,.22);border-radius:2px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:4px;width:42%;background:rgba(255,255,255,.04);border-radius:2px;"></div>
+            <div style="height:4px;width:16%;background:rgba(76,175,130,.18);border-radius:2px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:4px;width:50%;background:rgba(255,255,255,.05);border-radius:2px;"></div>
+            <div style="height:4px;width:16%;background:rgba(247,161,161,.2);border-radius:2px;"></div>
           </div>
         </div>
-        <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:rgba(255,255,255,.3);line-height:1.5;font-family:'DM Sans',sans-serif;">You won't remember all of this by Thursday.<br>GuardNest reminds you before it's too late.</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.18);text-align:center;font-family:'DM Sans',sans-serif;">your receipt · 8 seconds</div>
       </div>
-      <button onclick="demoGoTo(1)" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:10px;font-family:'DM Sans',sans-serif;">
-        Show me what's going bad →
+
+      <!-- Social proof -->
+      <div style="font-size:11px;color:rgba(255,255,255,.22);line-height:1.6;margin-bottom:24px;font-family:'DM Sans',sans-serif;">4,200 households already tracking<br>their fridge this week.</div>
+
+      <!-- CTA -->
+      <button onclick="demoGoTo(1)" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;font-family:'DM Sans',sans-serif;">
+        Scan my receipt →
       </button>
-      <div style="font-size:11px;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif;">Free · No download · 30 seconds</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif;">Free · no account needed</div>
+
     </div>
     <!-- ── SCREEN 1: Pick your item ─────────────────────────────── -->
     <div id="ds1" style="display:none;max-width:380px;width:100%;text-align:center;">
@@ -9032,7 +9083,17 @@ document.addEventListener('DOMContentLoaded', () => {
       <button onclick="gtag('event','demo_see_mine');demoGoToRealScanner();" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;font-family:'DM Sans',sans-serif;">
         Start with a scan — free
       </button>
-      <div style="font-size:10px;color:rgba(255,255,255,.2);margin-bottom:0;font-family:'DM Sans',sans-serif;">Unlock your pattern report after scan 3</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.2);margin-bottom:16px;font-family:'DM Sans',sans-serif;">Unlock your pattern report after scan 3</div>
+
+      <!-- Email capture — soft secondary -->
+      <div id="ds3RemindWrap" style="margin-top:4px;">
+        <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:8px;text-align:center;font-family:'DM Sans',sans-serif;">Or get your Monday report by email instead</div>
+        <div style="display:flex;gap:6px;">
+          <input id="ds3Email" type="email" placeholder="your@email.com" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 12px;font-size:16px;color:#fff;outline:none;font-family:'DM Sans',sans-serif;">
+          <button onclick="submitDemoReminderNew()" style="background:#2D6A4F;border:none;color:#fff;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:'DM Sans',sans-serif;white-space:nowrap;">Send →</button>
+        </div>
+      </div>
+      <div id="ds3RemindSuccess" style="display:none;padding:10px;font-size:13px;color:#4CAF82;font-family:'DM Sans',sans-serif;text-align:center;">Saved — check your inbox Monday.</div>
 
     </div>
 
@@ -9380,31 +9441,23 @@ function gnInitSwipe() {
 }
 
 function showPostSaveVault() {
-  showPage('vault');
   loadItems().then(function() {
-    refreshVault();
     refreshDashboard();
+    // Show cinematic save confirmation on first save
+    if (!localStorage.getItem('guardnest_vault_welcomed')) {
+      gnShowSaveConfirmation();
+    } else {
+      showPage('vault');
+      refreshVault();
+    }
   });
-  // Consent banner fires at demo completion (demoGoToRealScanner)
-  // Keep this as fallback for users who somehow reach save without seeing banner
+  // Consent fallback
   var stored2 = localStorage.getItem('gn_consent_v1');
   if (!stored2) {
     setTimeout(function() {
       var banner = document.getElementById('gnConsentBanner');
       if (banner) banner.style.display = 'block';
-    }, 2000);
-  }
-  // Show first-time vault onboarding banner if this is their first save
-  if (!localStorage.getItem('guardnest_vault_welcomed')) {
-    localStorage.setItem('guardnest_vault_welcomed', 'true');
-    var banner = document.createElement('div');
-    banner.id = 'vaultWelcomeBanner';
-    banner.style.cssText = 'background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:14px;padding:14px 16px;margin-bottom:14px;';
-    banner.innerHTML = '<div style="font-family:\'Lora\',Georgia,serif;font-size:15px;color:#1a1a1a;margin-bottom:4px;">Your fridge is saved.</div><div style="font-size:12px;color:#555;line-height:1.6;font-family:var(--app-font);">Tap any item to mark it used. Scan again after your next shop to start building your pattern.</div><button onclick="document.getElementById(\'vaultWelcomeBanner\').remove();" style="margin-top:10px;background:none;border:none;color:#2D6A4F;font-size:12px;font-weight:700;cursor:pointer;padding:0;font-family:var(--app-font);">Got it</button>';
-    var vaultList = document.getElementById('vaultActiveList');
-    if (vaultList && vaultList.parentNode) {
-      vaultList.parentNode.insertBefore(banner, vaultList);
-    }
+    }, 4000);
   }
 }
 
@@ -9422,6 +9475,229 @@ function submitPushFallbackEmail() {
   });
   document.getElementById('postSavePushModal').style.display = 'none';
   showPostSaveVault();
+}
+
+
+// ── POST-SAVE CINEMATIC ONBOARDING ───────────────────────────────
+
+function gnShowSaveConfirmation() {
+  localStorage.setItem('guardnest_vault_welcomed', 'true');
+  var savedItems = allItems.slice(0, 4);
+  var totalVal = allItems.reduce(function(s,i){ return s + parseFloat(i.price||0); }, 0);
+
+  // Remove any existing overlay
+  var existing = document.getElementById('gnSaveConfirmOverlay');
+  if (existing) existing.remove();
+
+  // Build item rows
+  var itemRows = savedItems.map(function(item) {
+    var d = item.days_until_spoil;
+    if (item.purchase_date && d) {
+      var today = new Date(); today.setHours(0,0,0,0);
+      var exp = new Date(item.purchase_date);
+      exp.setDate(exp.getDate() + d);
+      d = Math.round((exp - today) / 86400000);
+    }
+    var badgeBg  = d <= 1 ? 'rgba(162,45,45,.25)' : 'rgba(133,79,11,.2)';
+    var badgeCol = d <= 1 ? '#F7A4A4' : 'rgba(255,255,255,.4)';
+    var dayLabel = d == null ? '' : d <= 0 ? 'today' : d === 1 ? 'tmrw' : d + 'd';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<span style="font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--app-font);">' + (item.item_name||'Item') + '</span>'
+      + (dayLabel ? '<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:' + badgeBg + ';color:' + badgeCol + ';font-family:var(--app-font);">' + dayLabel + '</span>' : '')
+      + '</div>';
+  }).join('');
+
+  var overlay = document.createElement('div');
+  overlay.id = 'gnSaveConfirmOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99990;overflow:hidden;';
+
+  overlay.innerHTML = '<div id="gnSaveConfirmInner" style="position:absolute;inset:0;background:#080c08;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;">'
+    // Fridge interior bg
+    + '<div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,#0d2010 0%,#081208 45%,#040804 100%);">'
+    + '<div style="position:absolute;top:0;left:20%;right:20%;height:3px;background:rgba(210,255,225,.5);border-radius:0 0 4px 4px;box-shadow:0 0 18px 8px rgba(160,240,190,.1);"></div>'
+    + '<div style="position:absolute;left:10px;right:10px;top:28%;height:1px;background:linear-gradient(90deg,transparent,rgba(170,235,200,.25),transparent);"></div>'
+    + '<div style="position:absolute;left:10px;right:10px;top:54%;height:1px;background:linear-gradient(90deg,transparent,rgba(170,235,200,.18),transparent);"></div>'
+    + '<div style="position:absolute;inset:0;background:radial-gradient(ellipse 90% 90% at 50% 45%,transparent 35%,rgba(0,0,0,.45) 100%);"></div>'
+    + '</div>'
+    // Door slivers
+    + '<div style="position:absolute;top:0;bottom:0;left:0;width:8%;background:linear-gradient(135deg,#0f1f0f,#0a1208);border-right:1px solid rgba(76,175,130,.18);"></div>'
+    + '<div style="position:absolute;top:0;bottom:0;right:0;width:8%;background:linear-gradient(225deg,#0f1f0f,#0a1208);border-left:1px solid rgba(76,175,130,.18);"></div>'
+    // Content
+    + '<div style="position:relative;z-index:2;text-align:center;width:100%;max-width:320px;">'
+    + '<div style="font-family:var(--app-font);font-size:13px;color:rgba(76,175,130,.65);margin-bottom:14px;letter-spacing:.05em;">GuardNest</div>'
+    + '<div style="font-family:var(--app-font);font-size:36px;font-style:italic;color:#fff;margin-bottom:6px;letter-spacing:-.01em;">Saved.</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.3);margin-bottom:22px;font-family:var(--app-font);">' + allItems.length + ' items · €' + totalVal.toFixed(2) + ' tracked</div>'
+    // Items summary
+    + '<div style="background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:22px;display:flex;flex-direction:column;gap:8px;text-align:left;">'
+    + itemRows
+    + '</div>'
+    + '<button onclick="gnEnterVaultFromSave()" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:15px;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);">See my fridge →</button>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(overlay);
+}
+
+function gnEnterVaultFromSave() {
+  var overlay = document.getElementById('gnSaveConfirmOverlay');
+  if (overlay) {
+    overlay.style.transition = 'opacity .3s';
+    overlay.style.opacity = '0';
+    setTimeout(function() { overlay.remove(); }, 300);
+  }
+  showPage('vault');
+  refreshVault();
+  // Show vault directive after brief delay
+  setTimeout(gnShowVaultDirective, 400);
+}
+
+function gnShowVaultDirective() {
+  // Find most urgent item
+  var urgent = allItems.filter(function(i) {
+    var d = i.days_until_spoil;
+    if (i.purchase_date && d) {
+      var today = new Date(); today.setHours(0,0,0,0);
+      var exp = new Date(i.purchase_date);
+      exp.setDate(exp.getDate() + d);
+      d = Math.round((exp - today) / 86400000);
+    }
+    i._daysLeft = d;
+    return d != null && d <= 2;
+  }).sort(function(a,b){ return a._daysLeft - b._daysLeft; });
+
+  if (urgent.length === 0) return;
+  var item = urgent[0];
+
+  // Remove existing directive
+  var existing = document.getElementById('gnVaultDirective');
+  if (existing) existing.remove();
+
+  var directive = document.createElement('div');
+  directive.id = 'gnVaultDirective';
+  directive.style.cssText = 'background:#fff;border:1.5px solid #2D6A4F;border-radius:14px;padding:13px 14px;margin-bottom:12px;animation:gnDirectivePulse 2.4s ease-in-out infinite;';
+  directive.innerHTML = '<div style="font-family:var(--app-font);font-size:14px;color:#1a1a1a;font-style:italic;margin-bottom:4px;line-height:1.4;">"The ' + (item.item_name||'item').toLowerCase() + ' won’t wait.<br>Tonight’s a good night."</div>'
+    + '<div style="font-size:11px;color:#888;font-family:var(--app-font);">When you use it — tap below.</div>';
+
+  var vaultList = document.getElementById('vaultActiveList');
+  if (vaultList && vaultList.parentNode) {
+    vaultList.parentNode.insertBefore(directive, vaultList);
+  }
+}
+
+// ── RESCUE MOMENT — called after first Used it ─────────────────
+
+function gnShowRescueMoment(itemName, price) {
+  var existing = document.getElementById('gnRescueOverlay');
+  if (existing) existing.remove();
+
+  var priceStr = price ? '€' + parseFloat(price).toFixed(2) : '';
+  var scanCount = parseInt(localStorage.getItem('guardnest_scan_count') || '0');
+
+  var overlay = document.createElement('div');
+  overlay.id = 'gnRescueOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99989;background:rgba(247,245,240,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;';
+
+  overlay.innerHTML = '<div style="width:100%;max-width:340px;text-align:center;">'
+    // Rescue card
+    + '<div style="background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:20px;padding:24px;margin-bottom:16px;">'
+    + '<div style="font-size:11px;font-weight:700;color:#3B6D11;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;font-family:var(--app-font);">Rescued</div>'
+    + '<div id="gnRescueAmount" style="font-family:var(--app-font);font-size:52px;color:#2D6A4F;line-height:1;margin-bottom:8px;transition:all .4s;">' + priceStr + '</div>'
+    + '<div style="font-size:12px;color:rgba(45,106,79,.6);margin-bottom:14px;font-family:var(--app-font);">' + (itemName||'Item') + ' · saved from the bin</div>'
+    + '<div style="border-top:0.5px solid rgba(45,106,79,.15);padding-top:14px;">'
+    + '<div style="font-family:var(--app-font);font-size:15px;color:#2D6A4F;font-style:italic;line-height:1.5;">That’s yours.<br>GuardNest found it before it disappeared.</div>'
+    + '</div>'
+    + '</div>'
+    // Scan counter nudge
+    + '<div style="background:#fff;border:0.5px solid #e0ddd6;border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">'
+    + '<div><div style="font-family:var(--app-font);font-size:14px;color:#1a1a1a;">Scan ' + (scanCount + 1) + ' of 3</div><div style="font-size:11px;color:#aaa;font-family:var(--app-font);">Next scan unlocks your pattern</div></div>'
+    + '<button onclick="gnDismissRescue(true)" style="background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);">Scan again</button>'
+    + '</div>'
+    + '<div id="gnRescueEmailWrap" style="margin-top:4px;width:100%;max-width:340px;">'
+    + '<div style="font-size:11px;color:#aaa;text-align:center;margin-bottom:8px;font-family:var(--app-font);">Get your Monday rescue report by email</div>'
+    + '<div style="display:flex;gap:6px;">'
+    + '<input id="gnRescueEmail" type="email" placeholder="your@email.com" style="flex:1;background:#fff;border:0.5px solid #e0ddd6;border-radius:10px;padding:11px 12px;font-size:16px;color:#1a1a1a;outline:none;font-family:var(--app-font);">'
+    + '<button onclick="gnSubmitRescueEmail()" style="background:#2D6A4F;border:none;color:#fff;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--app-font);white-space:nowrap;">Send →</button>'
+    + '</div>'
+    + '</div>'
+    + '<button onclick="gnDismissRescue(false)" style="background:none;border:none;color:#aaa;font-size:11px;cursor:pointer;padding:8px;font-family:var(--app-font);touch-action:manipulation;margin-top:4px;">Back to my fridge</button>'
+    + '</div>';
+
+  document.body.appendChild(overlay);
+}
+
+function gnSubmitRescueEmail() {
+  var emailEl = document.getElementById('gnRescueEmail');
+  if (!emailEl) return;
+  var email = (emailEl.value || '').trim();
+  if (!email || !email.includes('@')) {
+    emailEl.style.borderColor = 'rgba(162,45,45,.4)';
+    return;
+  }
+  emailEl.style.borderColor = '#C0DD97';
+  supa.from('email_leads').insert({
+    email: email,
+    source: 'rescue_moment',
+    guest_id: localStorage.getItem('guardnest_guest_id') || null,
+    email_sent: false,
+    created_at: new Date().toISOString()
+  });
+  localStorage.setItem('guardnest_lead_email', email);
+  if (typeof gnFbq !== 'undefined') gnFbq('track', 'Lead', { content_name: 'rescue_email' });
+  if (typeof gtag !== 'undefined') gtag('event', 'email_captured', { source: 'rescue_moment' });
+  var wrap = document.getElementById('gnRescueEmailWrap');
+  if (wrap) wrap.innerHTML = '<div style="font-size:13px;color:#2D6A4F;text-align:center;padding:8px;font-family:var(--app-font);">Saved — check your inbox Monday.</div>';
+}
+
+function gnDismissRescue(goToScanner) {
+  var overlay = document.getElementById('gnRescueOverlay');
+  if (overlay) {
+    overlay.style.transition = 'opacity .3s';
+    overlay.style.opacity = '0';
+    setTimeout(function() { overlay.remove(); }, 300);
+  }
+  if (goToScanner) {
+    showPage('scanner');
+  } else {
+    showPage('vault');
+    refreshVault();
+  }
+}
+
+// ── WARM SCAN FAILURE STATE ──────────────────────────────────────
+
+function gnShowScanFailure(type) {
+  // type: 'timeout' | 'empty' | 'error'
+  var existing = document.getElementById('gnScanFailureOverlay');
+  if (existing) existing.remove();
+
+  var msg = type === 'timeout'
+    ? 'Taking too long.'
+    : 'Hard to read.';
+  var sub = type === 'timeout'
+    ? 'Try again with better light — hold the camera steady.'
+    : 'Try again with a bit more light — lay the receipt flat and hold steady.';
+
+  var overlay = document.createElement('div');
+  overlay.id = 'gnScanFailureOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99988;background:#f7f5f0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;';
+
+  overlay.innerHTML = '<div style="width:100%;max-width:300px;">'
+    + '<div style="width:52px;height:52px;border-radius:50%;background:#FAEEDA;border:1px solid rgba(239,159,39,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">'
+    + '<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 7v5M11 15h.01" stroke="#854F0B" stroke-width="1.8" stroke-linecap="round"/><circle cx="11" cy="11" r="9" stroke="#854F0B" stroke-width="1.4"/></svg>'
+    + '</div>'
+    + '<div style="font-family:var(--app-font);font-size:22px;color:#1a1a1a;margin-bottom:8px;">' + msg + '</div>'
+    + '<div style="font-size:13px;color:#888;line-height:1.7;margin-bottom:28px;font-family:var(--app-font);">' + sub + '</div>'
+    + '<button onclick="gnDismissScanFailure()" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:15px;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);margin-bottom:10px;">Try again →</button>'
+    + '<div style="font-size:11px;color:#bbb;font-family:var(--app-font);">Or scan your fridge instead — open the door, point, hold steady.</div>'
+    + '</div>';
+
+  document.body.appendChild(overlay);
+}
+
+function gnDismissScanFailure() {
+  var overlay = document.getElementById('gnScanFailureOverlay');
+  if (overlay) overlay.remove();
+  showPage('scanner');
 }
 
 function demoGoToRealScanner() {
@@ -9494,9 +9770,8 @@ function demoGoToRealScanner() {
   var _skel = document.getElementById('scanSkeletonCards'); if (_skel) _skel.style.display = 'none';
   // Start timeout watchdog
   window._gnScanTimeout = setTimeout(function() {
-    var _ts = document.getElementById('scanTimeoutState'); if (_ts) _ts.style.display = 'block';
-    var _sr = document.getElementById('scanResults'); if (_sr) _sr.classList.remove('hidden');
-    showPage('scanner');
+    clearInterval(window._gnLiveInterval);
+    gnShowScanFailure('timeout');
   }, 14000);
 
   setTimeout(() => { window.scrollTo(0, 0); }, 50);
