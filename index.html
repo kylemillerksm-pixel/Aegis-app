@@ -2437,6 +2437,256 @@ function logError(source, message, extra) {
 })();
 </script>
 
+<script>
+// ── SELECTOR STUBS — safe to call before main JS loads ──────────
+// Real implementations are in the main script block below
+// These stubs queue the call if JS not ready yet
+function _gnSafeCall(fn, args) {
+  if (typeof window[fn] === 'function') {
+    window[fn].apply(null, args || []);
+  } else {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        if (typeof window[fn] === 'function') window[fn].apply(null, args || []);
+      }, 200);
+    });
+  }
+}
+</script>
+
+<script>
+// ── INTELLIGENT SELECTOR ─────────────────────────────────────────────
+var GN_ITEMS = [
+  {id:'spinach',  name:'Baby spinach',    cat:'Greens',  price:2.99, base:4,  days:4,  hist:true,  waste:68, pair:'herbs'},
+  {id:'herbs',    name:'Fresh herbs',     cat:'Greens',  price:1.29, base:3,  days:3,  hist:false, waste:71, pair:'spinach'},
+  {id:'kale',     name:'Kale',            cat:'Greens',  price:2.49, base:6,  days:6,  hist:false, waste:55, pair:null},
+  {id:'salad',    name:'Mixed salad bag', cat:'Greens',  price:1.99, base:4,  days:4,  hist:false, waste:62, pair:null},
+  {id:'courgette',name:'Courgette',       cat:'Greens',  price:1.09, base:9,  days:9,  hist:false, waste:30, pair:null},
+  {id:'chicken',  name:'Chicken breast',  cat:'Protein', price:5.99, base:4,  days:4,  hist:true,  waste:18, pair:null},
+  {id:'salmon',   name:'Salmon fillet',   cat:'Protein', price:7.49, base:2,  days:2,  hist:false, waste:22, pair:null},
+  {id:'beef',     name:'Beef mince',      cat:'Protein', price:6.99, base:5,  days:5,  hist:false, waste:15, pair:null},
+  {id:'sausages', name:'Pork sausages',   cat:'Protein', price:3.49, base:6,  days:6,  hist:false, waste:20, pair:null},
+  {id:'prawns',   name:'King prawns',     cat:'Protein', price:6.99, base:2,  days:2,  hist:false, waste:35, pair:null},
+  {id:'milk',     name:'Whole milk',      cat:'Dairy',   price:1.19, base:7,  days:7,  hist:true,  waste:12, pair:null},
+  {id:'yogurt',   name:'Greek yogurt',    cat:'Dairy',   price:2.49, base:9,  days:9,  hist:false, waste:25, pair:null},
+  {id:'eggs',     name:'Free range eggs', cat:'Dairy',   price:3.29, base:21, days:21, hist:false, waste:8,  pair:null},
+  {id:'cheese',   name:'Cheddar',         cat:'Dairy',   price:3.99, base:14, days:14, hist:false, waste:18, pair:null},
+  {id:'butter',   name:'Butter',          cat:'Dairy',   price:2.29, base:21, days:21, hist:false, waste:5,  pair:null},
+  {id:'avocado',  name:'Avocado',         cat:'Produce', price:1.49, base:3,  days:3,  hist:false, waste:45, pair:null},
+  {id:'tomatoes', name:'Vine tomatoes',   cat:'Produce', price:1.99, base:5,  days:5,  hist:false, waste:32, pair:null},
+  {id:'berries',  name:'Mixed berries',   cat:'Produce', price:3.49, base:3,  days:3,  hist:false, waste:52, pair:null},
+  {id:'pepper',   name:'Bell peppers',    cat:'Produce', price:1.29, base:7,  days:7,  hist:false, waste:22, pair:null},
+  {id:'mushrooms',name:'Mushrooms',       cat:'Produce', price:1.49, base:5,  days:5,  hist:false, waste:40, pair:null},
+];
+var GN_CAT_ORDER=['Greens','Protein','Dairy','Produce'];
+var GN_DEFAULT_SHOW=3;
+var gnSelected=new Set();
+var gnExpanded=new Set();
+var gnWhen={};
+var gnScanCount=parseInt(localStorage.getItem('guardnest_scan_count')||'0');
+
+function gnSc(d){return d<=3?'#E24B4A':d<=5?'#EF9F27':'#4CAF82';}
+function gnSp(d){return Math.min((d/14)*100,100).toFixed(0);}
+function gnDl(d){return d<=0?'today':d===1?'1 day':d+' days';}
+function gnAtRisk(){var t=0;gnSelected.forEach(function(id){var i=GN_ITEMS.find(function(x){return x.id===id;});if(i&&i.days<=5)t+=i.price;});return t;}
+function gnTotalVal(){var t=0;gnSelected.forEach(function(id){var i=GN_ITEMS.find(function(x){return x.id===id;});if(i)t+=i.price;});return t;}
+function gnUrgentCount(){var c=0;gnSelected.forEach(function(id){var i=GN_ITEMS.find(function(x){return x.id===id;});if(i&&i.days<=3)c++;});return c;}
+function gnEl(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;}
+
+function gnUpdateRisk(){
+  var ar=gnAtRisk(),tv=gnTotalVal(),uc=gnUrgentCount(),pct=tv>0?Math.round((ar/tv)*100):0;
+  var aEl=document.getElementById('gnSelRiskAmt');
+  if(aEl){aEl.innerHTML='€'+ar.toFixed(2);aEl.style.color=ar>0?'#F7A4A4':'#fff';setTimeout(function(){if(aEl)aEl.style.color='#fff';},350);}
+  var rc=document.getElementById('gnSelRiskCard');
+  if(rc)rc.style.background=ar===0&&gnSelected.size>0?'rgba(45,106,79,.08)':'rgba(162,45,45,.1)';
+  gnEl('gnSelTotal','of €'+tv.toFixed(2)+' selected');
+  gnEl('gnSelPct',tv>0?(pct+'% at risk'):'');
+  var rb=document.getElementById('gnSelRiskBar');if(rb)rb.style.width=pct+'%';
+  gnEl('gnSelRiskSub',gnSelected.size===0?'Select items to see what\'s expiring':ar===0?'All looking good — nothing expiring soon':uc+' item'+(uc!==1?'s':'')+' expiring within 3 days');
+  gnEl('gnSelCount',gnSelected.size+' selected · €'+tv.toFixed(2));
+  gnEl('gnSelUrgent',ar>0?'€'+ar.toFixed(2)+' needs attention this week':'');
+  var cta=document.getElementById('gnSelCta');
+  if(cta){cta.style.opacity=gnSelected.size>0?'1':'0.4';cta.style.pointerEvents=gnSelected.size>0?'auto':'none';}
+  gnUpdateCrossRisk();gnUpdateNudge();
+}
+
+function gnUpdateCrossRisk(){
+  var c=document.getElementById('gnCrossRisk');if(!c)return;
+  if(gnSelected.has('spinach')&&gnSelected.has('herbs')){c.style.display='block';c.innerHTML='<strong style="color:#F7A4A4;">Compound risk:</strong> Spinach + herbs go together. Miss Thursday and both are wasted. <strong style="color:#F7A4A4;">€'+(2.99+1.29).toFixed(2)+' combined.</strong>';}
+  else if(gnSelected.has('salmon')&&gnSelected.has('prawns')){c.style.display='block';c.innerHTML='<strong style="color:#F7A4A4;">Two seafood items</strong> expiring in 2 days. Use one tonight.';}
+  else{c.style.display='none';}
+}
+
+function gnUpdateNudge(){
+  var n=document.getElementById('gnSelNudge');if(!n)return;
+  var hasProd=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Produce';});});
+  var hasDairy=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Dairy';});});
+  var hasGreen=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Greens';});});
+  if(gnSelected.size>=3&&!hasProd&&hasGreen){n.style.display='block';n.textContent='Most households also have fresh produce this week — berries or avocado tend to be forgotten.';}
+  else if(gnSelected.size>=5&&!hasDairy){n.style.display='block';n.textContent="You haven't added dairy. Yogurt and milk expire sooner than most people expect.";}
+  else{n.style.display='none';}
+}
+
+function gnRenderItems(){
+  var list=document.getElementById('gnItemList');if(!list)return;
+  var html='';
+  GN_CAT_ORDER.forEach(function(cat){
+    var items=GN_ITEMS.filter(function(i){return i.cat===cat;});
+    var selInCat=items.filter(function(i){return gnSelected.has(i.id);}).length;
+    var visible=gnExpanded.has(cat)?items:items.slice(0,GN_DEFAULT_SHOW);
+    var sorted=visible.slice().sort(function(a,b){var as=gnSelected.has(a.id)||a.hist,bs=gnSelected.has(b.id)||b.hist;if(as&&!bs)return -1;if(!as&&bs)return 1;if(as&&bs)return a.days-b.days;return 0;});
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 7px;">'
+      +'<span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);font-family:sans-serif;">'+cat+'</span>'
+      +'<span style="font-size:9px;color:#4CAF82;font-family:sans-serif;opacity:'+(selInCat>=2?'1':'0')+';transition:opacity .3s;">✓ done</span>'
+      +'</div>';
+    sorted.forEach(function(item){
+      var sel=gnSelected.has(item.id),hist=item.hist&&!sel,showBar=sel||hist;
+      var col=gnSc(item.days);
+      var textCol=sel||hist?'#fff':'rgba(255,255,255,.35)';
+      var fw=sel||hist?'500':'400';
+      var bg=sel?'rgba(255,255,255,.07)':hist?'rgba(76,175,130,.04)':'rgba(255,255,255,.03)';
+      var bd=sel?'rgba(76,175,130,.4)':hist?'rgba(76,175,130,.2)':'rgba(255,255,255,.08)';
+      var cbg=sel||hist?'#2D6A4F':'transparent';
+      var cbd=sel||hist?'#2D6A4F':'rgba(255,255,255,.15)';
+      html+='<div onclick="gnToggleItem('+JSON.stringify(item.id)+')" style="border-radius:11px;padding:10px 12px;cursor:pointer;border:0.5px solid '+bd+';background:'+bg+';margin-bottom:5px;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(showBar?'6':'0')+'px;">';
+      html+='<div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;color:'+textCol+';font-weight:'+fw+';font-family:sans-serif;">'+item.name+'</span>';
+      if(hist&&!sel)html+='<span style="font-size:8px;color:rgba(76,175,130,.5);background:rgba(76,175,130,.08);padding:1px 5px;border-radius:4px;">usually buy</span>';
+      if(sel&&gnScanCount>=3&&item.waste>50)html+='<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(162,45,45,.2);color:#F7A4A4;">'+item.waste+'% waste</span>';
+      if(sel&&gnScanCount>=3&&item.waste<=25)html+='<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(45,106,79,.2);color:#4CAF82;">'+item.waste+'% used</span>';
+      html+='</div>';
+      html+='<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:'+(sel?'rgba(255,255,255,.35)':'rgba(255,255,255,.15)')+';font-family:sans-serif;">€'+item.price.toFixed(2)+'</span>';
+      html+='<div style="width:17px;height:17px;border-radius:50%;border:1.5px solid '+cbd+';background:'+cbg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
+      if(sel||hist)html+='<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5L7.5 2" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      html+='</div></div></div>';
+      if(showBar){
+        html+='<div style="display:flex;align-items:center;gap:7px;">';
+        html+='<div style="height:2px;background:rgba(255,255,255,.06);border-radius:2px;flex:1;overflow:hidden;"><div style="height:100%;border-radius:2px;background:'+col+';width:'+gnSp(item.days)+'%;"></div></div>';
+        html+='<span style="font-size:9px;font-weight:700;color:'+col+';white-space:nowrap;font-family:sans-serif;">'+gnDl(item.days)+'</span>';
+        if(sel){
+          var w=gnWhen[item.id]||'today';
+          html+='<div style="display:flex;gap:3px;" onclick="event.stopPropagation()">';
+          ['today','2d','4d'].forEach(function(wv){html+='<button onclick="gnSetWhen('+JSON.stringify(item.id)+','+JSON.stringify(wv)+')" style="font-size:9px;background:'+(w===wv?'rgba(76,175,130,.15)':'rgba(255,255,255,.06)')+';border:none;border-radius:6px;padding:2px 6px;cursor:pointer;color:'+(w===wv?'#4CAF82':'rgba(255,255,255,.35)')+';font-family:sans-serif;">'+wv+'</button>';});
+          html+='</div>';
+        }
+        html+='</div>';
+      }
+      html+='</div>';
+    });
+    if(!gnExpanded.has(cat)&&items.length>GN_DEFAULT_SHOW)
+      html+='<button onclick="gnExpandCat('+JSON.stringify(cat)+')" style="font-size:10px;color:rgba(255,255,255,.22);cursor:pointer;background:none;border:none;padding:4px 0 6px;width:100%;text-align:center;font-family:sans-serif;">+ '+(items.length-GN_DEFAULT_SHOW)+' more in '+cat.toLowerCase()+'</button>';
+  });
+  list.innerHTML=html;
+}
+
+function gnToggleItem(id){
+  if(gnSelected.has(id)){gnSelected.delete(id);delete gnWhen[id];var i=GN_ITEMS.find(function(x){return x.id===id;});if(i)i.days=i.base;}
+  else gnSelected.add(id);
+  gnRenderItems();gnUpdateRisk();
+}
+function gnExpandCat(cat){gnExpanded.add(cat);gnRenderItems();}
+function gnSetWhen(id,w){gnWhen[id]=w;var i=GN_ITEMS.find(function(x){return x.id===id;});if(i)i.days=Math.max(0,i.base-(w==='2d'?2:w==='4d'?4:0));gnRenderItems();gnUpdateRisk();}
+
+function gnOpenSelector(){
+  var ds0=document.getElementById('ds0'),ds1=document.getElementById('ds1');
+  if(ds0)ds0.style.display='none';if(ds1)ds1.style.display='block';
+  setTimeout(function(){var tip=document.getElementById('gnSelectorTip');if(tip){tip.style.transition='opacity .5s';tip.style.opacity='0';setTimeout(function(){if(tip)tip.style.display='none';},500);}},4000);
+  gnRenderItems();gnUpdateRisk();
+}
+
+function gnShowResult(){
+  var ds1=document.getElementById('ds1'),ds2=document.getElementById('ds2');
+  if(ds1)ds1.style.display='none';if(ds2)ds2.style.display='block';
+  var ar=gnAtRisk(),tv=gnTotalVal(),pct=tv>0?Math.round((ar/tv)*100):0;
+  var aEl=document.getElementById('gnResAmt');if(aEl)aEl.innerHTML='€'+ar.toFixed(2);
+  gnEl('gnResSub',gnSelected.size+' items · €'+tv.toFixed(2)+' total');
+  setTimeout(function(){var rb=document.getElementById('gnResBar');if(rb)rb.style.width=pct+'%';},100);
+  var urgent=[...gnSelected].map(function(id){return GN_ITEMS.find(function(i){return i.id===id;});}).filter(function(i){return i&&i.days<=5;}).sort(function(a,b){return a.days-b.days;});
+  var ri=document.getElementById('gnResItems');
+  if(ri){
+    ri.innerHTML=urgent.slice(0,5).map(function(item){
+      var col=item.days<=1?'#A32D2D':item.days<=3?'#854F0B':'#3B6D11';
+      var bg=item.days<=1?'#FCEBEB':item.days<=3?'#FAEEDA':'#EAF3DE';
+      return '<div style="background:rgba(255,255,255,.04);border:0.5px solid '+(item.days<=3?'rgba(247,161,161,.2)':'rgba(255,255,255,.07)')+';border-radius:10px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+        +'<span style="font-size:12px;color:#fff;font-weight:500;font-family:sans-serif;">'+item.name+'</span>'
+        +'<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+bg+';color:'+col+';font-family:sans-serif;">'+gnDl(item.days)+'</span>'
+        +'</div>';
+    }).join('')+(urgent.length===0?'<div style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:12px;">Nothing expiring this week — great job!</div>':'');
+  }
+  var comp=document.getElementById('gnResComparison');
+  if(comp)comp.innerHTML=ar>0?"The average household misses €28 a week. You just caught €"+ar.toFixed(2)+" before it disappeared.":"Most people don’t know what’s going bad. Now you do.";
+  var cta=document.getElementById('gnSaveCta');
+  if(cta)cta.textContent=ar>0?'Rescue €'+ar.toFixed(2)+' — save my fridge':'Save my fridge — free';
+}
+
+function gnSaveFromSelector(){
+  var guestId=localStorage.getItem('guardnest_guest_id');
+  if(!guestId){guestId='guest_'+Math.random().toString(36).substr(2,12)+'_'+Date.now();localStorage.setItem('guardnest_guest_id',guestId);}
+  var today=new Date().toISOString().split('T')[0];
+  var rows=[...gnSelected].map(function(id){var item=GN_ITEMS.find(function(i){return i.id===id;});if(!item)return null;return {guest_id:guestId,item_name:item.name,price:item.price,purchase_date:today,category:item.cat,days_until_spoil:item.days,status:'active',source:'selector_demo'};}).filter(Boolean);
+  localStorage.setItem('guardnest_saved_items',JSON.stringify(rows));
+  allItems=rows;
+  if(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){
+    supa.from('guest_items').insert(rows).then(function(res){if(!res.error){localStorage.removeItem('guardnest_saved_items');if(typeof gtag!=='undefined')gtag('event','selector_save_completed',{items:rows.length});}});
+  }
+  localStorage.setItem('gnSelectorItems',JSON.stringify(rows));
+  localStorage.setItem('gnSelectorAtRisk',gnAtRisk().toFixed(2));
+  var ds2=document.getElementById('ds2'),ds3=document.getElementById('ds3');
+  if(ds2)ds2.style.display='none';if(ds3)ds3.style.display='block';
+  gnEl('gnPushSavedSub',gnSelected.size+' items tracked · €'+gnAtRisk().toFixed(2)+' at risk this week');
+  var urgent=[...gnSelected].map(function(id){return GN_ITEMS.find(function(i){return i.id===id;});}).filter(function(i){return i&&i.days<=5;}).sort(function(a,b){return a.days-b.days;})[0];
+  if(urgent){
+    gnEl('gnPreview1Title',urgent.name+' — use '+(urgent.days<=1?'today':'before '+gnDl(urgent.days)));
+    gnEl('gnFirstReminder',urgent.name+' — reminder set for '+(urgent.days<=1?'tomorrow morning':'in '+gnDl(urgent.days)));
+  }
+  if(typeof gtag!=='undefined')gtag('event','demo_completed',{method:'selector',items:rows.length});
+}
+
+function gnRequestPush(){
+  if('Notification' in window){Notification.requestPermission().then(function(perm){if(perm==='granted')gnShowPushGranted();});}
+  else{gnShowPushGranted();}
+}
+function gnShowPushGranted(){
+  var ms=document.getElementById('gnPushMainSection'),g=document.getElementById('gnPushGranted');
+  if(ms)ms.style.display='none';if(g)g.style.display='block';
+}
+function gnSubmitPushEmail(){
+  var inp=document.getElementById('gnPushEmail'),v=inp?(inp.value||'').trim():'';
+  if(!v||!v.includes('@')){if(inp)inp.style.borderColor='rgba(162,45,45,.4)';return;}
+  gnSaveEmailLead(v,'push_screen_primary');
+  var ms=document.getElementById('gnPushMainSection');
+  if(ms)ms.innerHTML='<div style="font-size:12px;color:#4CAF82;text-align:center;padding:10px;font-family:sans-serif;">✓ Saved — Monday report pre-filled.</div>';
+  setTimeout(function(){enterApp();},1800);
+}
+function gnSubmitAlsoEmail(){
+  var inp=document.getElementById('gnAlsoEmailInput'),v=inp?(inp.value||'').trim():'';
+  if(!v||!v.includes('@'))return;
+  gnSaveEmailLead(v,'push_also_email');
+  var ae=document.getElementById('gnAlsoEmail');if(ae)ae.innerHTML='<div style="font-size:12px;color:#4CAF82;text-align:center;padding:6px;">✓ Monday report added.</div>';
+}
+function gnSaveEmailLead(email,source){
+  localStorage.setItem('guardnest_lead_email',email);
+  var guestId=localStorage.getItem('guardnest_guest_id');
+  if(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){
+    supa.from('email_leads').insert({email:email,source:source,guest_id:guestId||null,email_sent:false,created_at:new Date().toISOString()}).then(function(){if(typeof gtag!=='undefined')gtag('event','email_captured',{source:source});});
+  }
+}
+function gnSkipPush(){enterApp();}
+
+function enterApp(){
+  localStorage.setItem('guardnest_onboarded','true');
+  localStorage.setItem('guardnest_seen_sample','1');
+  var dw=document.getElementById('demoScreenWrap');if(dw)dw.style.display='none';
+  var hook=document.getElementById('instantHook');if(hook)hook.style.display='none';
+  var appEl=document.getElementById('screen-app');
+  if(appEl){appEl.style.opacity='1';appEl.style.pointerEvents='auto';}
+  var banner=document.getElementById('guestBanner');if(banner)banner.style.display='flex';
+  showPage('vault');
+  try{loadItems().then(function(){refreshVault();refreshDashboard();});}catch(e){}
+  if(typeof gtag!=='undefined')gtag('event','demo_enter_app',{});
+}
+</script>
+
 <!-- ── SELECTOR DEMO SCREENS ─────────────────────────────── -->
 <div id="demoScreenWrap" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99998;background:radial-gradient(ellipse 80% 60% at 50% 25%,#0d2010 0%,#081208 45%,#040804 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 32px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;">
 
@@ -8953,237 +9203,6 @@ function hideSampleReport() {
   if (m) m.style.display = 'none';
 }
 
-
-// ── INTELLIGENT SELECTOR ─────────────────────────────────────────────
-var GN_ITEMS = [
-  {id:'spinach',  name:'Baby spinach',    cat:'Greens',  price:2.99, base:4,  days:4,  hist:true,  waste:68, pair:'herbs'},
-  {id:'herbs',    name:'Fresh herbs',     cat:'Greens',  price:1.29, base:3,  days:3,  hist:false, waste:71, pair:'spinach'},
-  {id:'kale',     name:'Kale',            cat:'Greens',  price:2.49, base:6,  days:6,  hist:false, waste:55, pair:null},
-  {id:'salad',    name:'Mixed salad bag', cat:'Greens',  price:1.99, base:4,  days:4,  hist:false, waste:62, pair:null},
-  {id:'courgette',name:'Courgette',       cat:'Greens',  price:1.09, base:9,  days:9,  hist:false, waste:30, pair:null},
-  {id:'chicken',  name:'Chicken breast',  cat:'Protein', price:5.99, base:4,  days:4,  hist:true,  waste:18, pair:null},
-  {id:'salmon',   name:'Salmon fillet',   cat:'Protein', price:7.49, base:2,  days:2,  hist:false, waste:22, pair:null},
-  {id:'beef',     name:'Beef mince',      cat:'Protein', price:6.99, base:5,  days:5,  hist:false, waste:15, pair:null},
-  {id:'sausages', name:'Pork sausages',   cat:'Protein', price:3.49, base:6,  days:6,  hist:false, waste:20, pair:null},
-  {id:'prawns',   name:'King prawns',     cat:'Protein', price:6.99, base:2,  days:2,  hist:false, waste:35, pair:null},
-  {id:'milk',     name:'Whole milk',      cat:'Dairy',   price:1.19, base:7,  days:7,  hist:true,  waste:12, pair:null},
-  {id:'yogurt',   name:'Greek yogurt',    cat:'Dairy',   price:2.49, base:9,  days:9,  hist:false, waste:25, pair:null},
-  {id:'eggs',     name:'Free range eggs', cat:'Dairy',   price:3.29, base:21, days:21, hist:false, waste:8,  pair:null},
-  {id:'cheese',   name:'Cheddar',         cat:'Dairy',   price:3.99, base:14, days:14, hist:false, waste:18, pair:null},
-  {id:'butter',   name:'Butter',          cat:'Dairy',   price:2.29, base:21, days:21, hist:false, waste:5,  pair:null},
-  {id:'avocado',  name:'Avocado',         cat:'Produce', price:1.49, base:3,  days:3,  hist:false, waste:45, pair:null},
-  {id:'tomatoes', name:'Vine tomatoes',   cat:'Produce', price:1.99, base:5,  days:5,  hist:false, waste:32, pair:null},
-  {id:'berries',  name:'Mixed berries',   cat:'Produce', price:3.49, base:3,  days:3,  hist:false, waste:52, pair:null},
-  {id:'pepper',   name:'Bell peppers',    cat:'Produce', price:1.29, base:7,  days:7,  hist:false, waste:22, pair:null},
-  {id:'mushrooms',name:'Mushrooms',       cat:'Produce', price:1.49, base:5,  days:5,  hist:false, waste:40, pair:null},
-];
-var GN_CAT_ORDER=['Greens','Protein','Dairy','Produce'];
-var GN_DEFAULT_SHOW=3;
-var gnSelected=new Set();
-var gnExpanded=new Set();
-var gnWhen={};
-var gnScanCount=parseInt(localStorage.getItem('guardnest_scan_count')||'0');
-
-function gnSc(d){return d<=3?'#E24B4A':d<=5?'#EF9F27':'#4CAF82';}
-function gnSp(d){return Math.min((d/14)*100,100).toFixed(0);}
-function gnDl(d){return d<=0?'today':d===1?'1 day':d+' days';}
-function gnAtRisk(){var t=0;gnSelected.forEach(function(id){var i=GN_ITEMS.find(function(x){return x.id===id;});if(i&&i.days<=5)t+=i.price;});return t;}
-function gnTotalVal(){var t=0;gnSelected.forEach(function(id){var i=GN_ITEMS.find(function(x){return x.id===id;});if(i)t+=i.price;});return t;}
-function gnUrgentCount(){var c=0;gnSelected.forEach(function(id){var i=GN_ITEMS.find(function(x){return x.id===id;});if(i&&i.days<=3)c++;});return c;}
-function gnEl(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;}
-
-function gnUpdateRisk(){
-  var ar=gnAtRisk(),tv=gnTotalVal(),uc=gnUrgentCount(),pct=tv>0?Math.round((ar/tv)*100):0;
-  var aEl=document.getElementById('gnSelRiskAmt');
-  if(aEl){aEl.innerHTML='€'+ar.toFixed(2);aEl.style.color=ar>0?'#F7A4A4':'#fff';setTimeout(function(){if(aEl)aEl.style.color='#fff';},350);}
-  var rc=document.getElementById('gnSelRiskCard');
-  if(rc)rc.style.background=ar===0&&gnSelected.size>0?'rgba(45,106,79,.08)':'rgba(162,45,45,.1)';
-  gnEl('gnSelTotal','of €'+tv.toFixed(2)+' selected');
-  gnEl('gnSelPct',tv>0?(pct+'% at risk'):'');
-  var rb=document.getElementById('gnSelRiskBar');if(rb)rb.style.width=pct+'%';
-  gnEl('gnSelRiskSub',gnSelected.size===0?'Select items to see what's expiring':ar===0?'All looking good — nothing expiring soon':uc+' item'+(uc!==1?'s':'')+' expiring within 3 days');
-  gnEl('gnSelCount',gnSelected.size+' selected · €'+tv.toFixed(2));
-  gnEl('gnSelUrgent',ar>0?'€'+ar.toFixed(2)+' needs attention this week':'');
-  var cta=document.getElementById('gnSelCta');
-  if(cta){cta.style.opacity=gnSelected.size>0?'1':'0.4';cta.style.pointerEvents=gnSelected.size>0?'auto':'none';}
-  gnUpdateCrossRisk();gnUpdateNudge();
-}
-
-function gnUpdateCrossRisk(){
-  var c=document.getElementById('gnCrossRisk');if(!c)return;
-  if(gnSelected.has('spinach')&&gnSelected.has('herbs')){c.style.display='block';c.innerHTML='<strong style="color:#F7A4A4;">Compound risk:</strong> Spinach + herbs go together. Miss Thursday and both are wasted. <strong style="color:#F7A4A4;">€'+(2.99+1.29).toFixed(2)+' combined.</strong>';}
-  else if(gnSelected.has('salmon')&&gnSelected.has('prawns')){c.style.display='block';c.innerHTML='<strong style="color:#F7A4A4;">Two seafood items</strong> expiring in 2 days. Use one tonight.';}
-  else{c.style.display='none';}
-}
-
-function gnUpdateNudge(){
-  var n=document.getElementById('gnSelNudge');if(!n)return;
-  var hasProd=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Produce';});});
-  var hasDairy=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Dairy';});});
-  var hasGreen=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Greens';});});
-  if(gnSelected.size>=3&&!hasProd&&hasGreen){n.style.display='block';n.textContent='Most households also have fresh produce this week — berries or avocado tend to be forgotten.';}
-  else if(gnSelected.size>=5&&!hasDairy){n.style.display='block';n.textContent="You haven't added dairy. Yogurt and milk expire sooner than most people expect.";}
-  else{n.style.display='none';}
-}
-
-function gnRenderItems(){
-  var list=document.getElementById('gnItemList');if(!list)return;
-  var html='';
-  GN_CAT_ORDER.forEach(function(cat){
-    var items=GN_ITEMS.filter(function(i){return i.cat===cat;});
-    var selInCat=items.filter(function(i){return gnSelected.has(i.id);}).length;
-    var visible=gnExpanded.has(cat)?items:items.slice(0,GN_DEFAULT_SHOW);
-    var sorted=visible.slice().sort(function(a,b){var as=gnSelected.has(a.id)||a.hist,bs=gnSelected.has(b.id)||b.hist;if(as&&!bs)return -1;if(!as&&bs)return 1;if(as&&bs)return a.days-b.days;return 0;});
-    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 7px;">'
-      +'<span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);font-family:'DM Sans',sans-serif;">'+cat+'</span>'
-      +'<span style="font-size:9px;color:#4CAF82;font-family:'DM Sans',sans-serif;opacity:'+(selInCat>=2?'1':'0')+';transition:opacity .3s;">✓ done</span>'
-      +'</div>';
-    sorted.forEach(function(item){
-      var sel=gnSelected.has(item.id),hist=item.hist&&!sel,showBar=sel||hist;
-      var col=gnSc(item.days);
-      var textCol=sel||hist?'#fff':'rgba(255,255,255,.35)';
-      var fw=sel||hist?'500':'400';
-      var bg=sel?'rgba(255,255,255,.07)':hist?'rgba(76,175,130,.04)':'rgba(255,255,255,.03)';
-      var bd=sel?'rgba(76,175,130,.4)':hist?'rgba(76,175,130,.2)':'rgba(255,255,255,.08)';
-      var cbg=sel||hist?'#2D6A4F':'transparent';
-      var cbd=sel||hist?'#2D6A4F':'rgba(255,255,255,.15)';
-      html+='<div onclick="gnToggleItem('+JSON.stringify(item.id)+')" style="border-radius:11px;padding:10px 12px;cursor:pointer;border:0.5px solid '+bd+';background:'+bg+';margin-bottom:5px;">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(showBar?'6':'0')+'px;">';
-      html+='<div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;color:'+textCol+';font-weight:'+fw+';font-family:'DM Sans',sans-serif;">'+item.name+'</span>';
-      if(hist&&!sel)html+='<span style="font-size:8px;color:rgba(76,175,130,.5);background:rgba(76,175,130,.08);padding:1px 5px;border-radius:4px;">usually buy</span>';
-      if(sel&&gnScanCount>=3&&item.waste>50)html+='<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(162,45,45,.2);color:#F7A4A4;">'+item.waste+'% waste</span>';
-      if(sel&&gnScanCount>=3&&item.waste<=25)html+='<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(45,106,79,.2);color:#4CAF82;">'+item.waste+'% used</span>';
-      html+='</div>';
-      html+='<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:'+(sel?'rgba(255,255,255,.35)':'rgba(255,255,255,.15)')+';font-family:'DM Sans',sans-serif;">€'+item.price.toFixed(2)+'</span>';
-      html+='<div style="width:17px;height:17px;border-radius:50%;border:1.5px solid '+cbd+';background:'+cbg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
-      if(sel||hist)html+='<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5L7.5 2" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      html+='</div></div></div>';
-      if(showBar){
-        html+='<div style="display:flex;align-items:center;gap:7px;">';
-        html+='<div style="height:2px;background:rgba(255,255,255,.06);border-radius:2px;flex:1;overflow:hidden;"><div style="height:100%;border-radius:2px;background:'+col+';width:'+gnSp(item.days)+'%;"></div></div>';
-        html+='<span style="font-size:9px;font-weight:700;color:'+col+';white-space:nowrap;font-family:'DM Sans',sans-serif;">'+gnDl(item.days)+'</span>';
-        if(sel){
-          var w=gnWhen[item.id]||'today';
-          html+='<div style="display:flex;gap:3px;" onclick="event.stopPropagation()">';
-          ['today','2d','4d'].forEach(function(wv){html+='<button onclick="gnSetWhen('+JSON.stringify(item.id)+','+JSON.stringify(wv)+')" style="font-size:9px;background:'+(w===wv?'rgba(76,175,130,.15)':'rgba(255,255,255,.06)')+';border:none;border-radius:6px;padding:2px 6px;cursor:pointer;color:'+(w===wv?'#4CAF82':'rgba(255,255,255,.35)')+';font-family:'DM Sans',sans-serif;">'+wv+'</button>';});
-          html+='</div>';
-        }
-        html+='</div>';
-      }
-      html+='</div>';
-    });
-    if(!gnExpanded.has(cat)&&items.length>GN_DEFAULT_SHOW)
-      html+='<button onclick="gnExpandCat('+JSON.stringify(cat)+')" style="font-size:10px;color:rgba(255,255,255,.22);cursor:pointer;background:none;border:none;padding:4px 0 6px;width:100%;text-align:center;font-family:'DM Sans',sans-serif;">+ '+(items.length-GN_DEFAULT_SHOW)+' more in '+cat.toLowerCase()+'</button>';
-  });
-  list.innerHTML=html;
-}
-
-function gnToggleItem(id){
-  if(gnSelected.has(id)){gnSelected.delete(id);delete gnWhen[id];var i=GN_ITEMS.find(function(x){return x.id===id;});if(i)i.days=i.base;}
-  else gnSelected.add(id);
-  gnRenderItems();gnUpdateRisk();
-}
-function gnExpandCat(cat){gnExpanded.add(cat);gnRenderItems();}
-function gnSetWhen(id,w){gnWhen[id]=w;var i=GN_ITEMS.find(function(x){return x.id===id;});if(i)i.days=Math.max(0,i.base-(w==='2d'?2:w==='4d'?4:0));gnRenderItems();gnUpdateRisk();}
-
-function gnOpenSelector(){
-  var ds0=document.getElementById('ds0'),ds1=document.getElementById('ds1');
-  if(ds0)ds0.style.display='none';if(ds1)ds1.style.display='block';
-  setTimeout(function(){var tip=document.getElementById('gnSelectorTip');if(tip){tip.style.transition='opacity .5s';tip.style.opacity='0';setTimeout(function(){if(tip)tip.style.display='none';},500);}},4000);
-  gnRenderItems();gnUpdateRisk();
-}
-
-function gnShowResult(){
-  var ds1=document.getElementById('ds1'),ds2=document.getElementById('ds2');
-  if(ds1)ds1.style.display='none';if(ds2)ds2.style.display='block';
-  var ar=gnAtRisk(),tv=gnTotalVal(),pct=tv>0?Math.round((ar/tv)*100):0;
-  var aEl=document.getElementById('gnResAmt');if(aEl)aEl.innerHTML='€'+ar.toFixed(2);
-  gnEl('gnResSub',gnSelected.size+' items · €'+tv.toFixed(2)+' total');
-  setTimeout(function(){var rb=document.getElementById('gnResBar');if(rb)rb.style.width=pct+'%';},100);
-  var urgent=[...gnSelected].map(function(id){return GN_ITEMS.find(function(i){return i.id===id;});}).filter(function(i){return i&&i.days<=5;}).sort(function(a,b){return a.days-b.days;});
-  var ri=document.getElementById('gnResItems');
-  if(ri){
-    ri.innerHTML=urgent.slice(0,5).map(function(item){
-      var col=item.days<=1?'#A32D2D':item.days<=3?'#854F0B':'#3B6D11';
-      var bg=item.days<=1?'#FCEBEB':item.days<=3?'#FAEEDA':'#EAF3DE';
-      return '<div style="background:rgba(255,255,255,.04);border:0.5px solid '+(item.days<=3?'rgba(247,161,161,.2)':'rgba(255,255,255,.07)')+';border-radius:10px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
-        +'<span style="font-size:12px;color:#fff;font-weight:500;font-family:'DM Sans',sans-serif;">'+item.name+'</span>'
-        +'<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+bg+';color:'+col+';font-family:'DM Sans',sans-serif;">'+gnDl(item.days)+'</span>'
-        +'</div>';
-    }).join('')+(urgent.length===0?'<div style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:12px;">Nothing expiring this week — great job!</div>':'');
-  }
-  var comp=document.getElementById('gnResComparison');
-  if(comp)comp.innerHTML=ar>0?"The average household misses €28 a week. You just caught €"+ar.toFixed(2)+" before it disappeared.":"Most people don’t know what’s going bad. Now you do.";
-  var cta=document.getElementById('gnSaveCta');
-  if(cta)cta.textContent=ar>0?'Rescue €'+ar.toFixed(2)+' — save my fridge':'Save my fridge — free';
-}
-
-function gnSaveFromSelector(){
-  var guestId=localStorage.getItem('guardnest_guest_id');
-  if(!guestId){guestId='guest_'+Math.random().toString(36).substr(2,12)+'_'+Date.now();localStorage.setItem('guardnest_guest_id',guestId);}
-  var today=new Date().toISOString().split('T')[0];
-  var rows=[...gnSelected].map(function(id){var item=GN_ITEMS.find(function(i){return i.id===id;});if(!item)return null;return {guest_id:guestId,item_name:item.name,price:item.price,purchase_date:today,category:item.cat,days_until_spoil:item.days,status:'active',source:'selector_demo'};}).filter(Boolean);
-  localStorage.setItem('guardnest_saved_items',JSON.stringify(rows));
-  allItems=rows;
-  if(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){
-    supa.from('guest_items').insert(rows).then(function(res){if(!res.error){localStorage.removeItem('guardnest_saved_items');if(typeof gtag!=='undefined')gtag('event','selector_save_completed',{items:rows.length});}});
-  }
-  localStorage.setItem('gnSelectorItems',JSON.stringify(rows));
-  localStorage.setItem('gnSelectorAtRisk',gnAtRisk().toFixed(2));
-  var ds2=document.getElementById('ds2'),ds3=document.getElementById('ds3');
-  if(ds2)ds2.style.display='none';if(ds3)ds3.style.display='block';
-  gnEl('gnPushSavedSub',gnSelected.size+' items tracked · €'+gnAtRisk().toFixed(2)+' at risk this week');
-  var urgent=[...gnSelected].map(function(id){return GN_ITEMS.find(function(i){return i.id===id;});}).filter(function(i){return i&&i.days<=5;}).sort(function(a,b){return a.days-b.days;})[0];
-  if(urgent){
-    gnEl('gnPreview1Title',urgent.name+' — use '+(urgent.days<=1?'today':'before '+gnDl(urgent.days)));
-    gnEl('gnFirstReminder',urgent.name+' — reminder set for '+(urgent.days<=1?'tomorrow morning':'in '+gnDl(urgent.days)));
-  }
-  if(typeof gtag!=='undefined')gtag('event','demo_completed',{method:'selector',items:rows.length});
-}
-
-function gnRequestPush(){
-  if('Notification' in window){Notification.requestPermission().then(function(perm){if(perm==='granted')gnShowPushGranted();});}
-  else{gnShowPushGranted();}
-}
-function gnShowPushGranted(){
-  var ms=document.getElementById('gnPushMainSection'),g=document.getElementById('gnPushGranted');
-  if(ms)ms.style.display='none';if(g)g.style.display='block';
-}
-function gnSubmitPushEmail(){
-  var inp=document.getElementById('gnPushEmail'),v=inp?(inp.value||'').trim():'';
-  if(!v||!v.includes('@')){if(inp)inp.style.borderColor='rgba(162,45,45,.4)';return;}
-  gnSaveEmailLead(v,'push_screen_primary');
-  var ms=document.getElementById('gnPushMainSection');
-  if(ms)ms.innerHTML='<div style="font-size:12px;color:#4CAF82;text-align:center;padding:10px;font-family:'DM Sans',sans-serif;">✓ Saved — Monday report pre-filled.</div>';
-  setTimeout(function(){enterApp();},1800);
-}
-function gnSubmitAlsoEmail(){
-  var inp=document.getElementById('gnAlsoEmailInput'),v=inp?(inp.value||'').trim():'';
-  if(!v||!v.includes('@'))return;
-  gnSaveEmailLead(v,'push_also_email');
-  var ae=document.getElementById('gnAlsoEmail');if(ae)ae.innerHTML='<div style="font-size:12px;color:#4CAF82;text-align:center;padding:6px;">✓ Monday report added.</div>';
-}
-function gnSaveEmailLead(email,source){
-  localStorage.setItem('guardnest_lead_email',email);
-  var guestId=localStorage.getItem('guardnest_guest_id');
-  if(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){
-    supa.from('email_leads').insert({email:email,source:source,guest_id:guestId||null,email_sent:false,created_at:new Date().toISOString()}).then(function(){if(typeof gtag!=='undefined')gtag('event','email_captured',{source:source});});
-  }
-}
-function gnSkipPush(){enterApp();}
-
-function enterApp(){
-  localStorage.setItem('guardnest_onboarded','true');
-  localStorage.setItem('guardnest_seen_sample','1');
-  var dw=document.getElementById('demoScreenWrap');if(dw)dw.style.display='none';
-  var hook=document.getElementById('instantHook');if(hook)hook.style.display='none';
-  var appEl=document.getElementById('screen-app');
-  if(appEl){appEl.style.opacity='1';appEl.style.pointerEvents='auto';}
-  var banner=document.getElementById('guestBanner');if(banner)banner.style.display='flex';
-  showPage('vault');
-  try{loadItems().then(function(){refreshVault();refreshDashboard();});}catch(e){}
-  if(typeof gtag!=='undefined')gtag('event','demo_enter_app',{});
-}
 
 function demoGoToRealScanner() {
   hideSampleReport();
