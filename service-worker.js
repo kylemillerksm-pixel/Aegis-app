@@ -1,12 +1,17 @@
 // GuardNest Service Worker — Web Push
-const CACHE_NAME = 'guardnest-v1';
+const CACHE_NAME = 'guardnest-v2';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
+  // Clear ALL caches on activation — forces fresh index.html for all users
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .then(() => clients.claim())
+  );
 });
 
 // Handle incoming push notifications
