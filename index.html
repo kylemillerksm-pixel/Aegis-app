@@ -2407,7 +2407,7 @@ function logError(source, message, extra) {
   <!-- CTA -->
   <div id="hook-cta-wrap">
     <button id="hook-cta-btn" onclick="gnOpenFridgeDoor('landing')" touch-action="manipulation">
-      Show me what's going bad →
+      Open my fridge →
     </button>
     <div style="text-align:center;margin-top:8px;font-size:11px;color:rgba(255,255,255,0.22);font-family:'DM Sans',sans-serif;">Free · No account · 30 seconds</div>
   </div>
@@ -4746,11 +4746,13 @@ function gnOpenFridgeDoor(source) {
       if (welcome) welcome.classList.add('visible');
     }, 950);
 
-    // Proceed to demo after welcome
+    // Proceed to demo after welcome — show DS0 selector hook
     setTimeout(() => {
       const hook = document.getElementById('instantHook');
       if (hook) hook.style.display = 'none';
-      showSampleReport();
+      // Show the new selector demo (ds0 is already visible by default in demoScreenWrap)
+      const demoWrap = document.getElementById('demoScreenWrap');
+      if (demoWrap) demoWrap.style.display = 'flex';
     }, 2400);
 
     gtag('event', 'fridge_door_opened', { source: 'landing' });
@@ -8842,7 +8844,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <button id="demoCloseBtn" onclick="hideSampleReport()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.25);font-size:24px;cursor:pointer;z-index:10;padding:8px;touch-action:manipulation;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;">✕</button>
 
   <!-- SCREEN WRAPPER — slides between steps -->
-  <div id="demoScreenWrap" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 32px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;z-index:20;">
+  <div id="demoScreenWrap" style="width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 32px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;z-index:20;">
 
     <!-- ── SCREEN 0: Hook ───────────────────────────────────────── -->
     <div id="ds0" style="max-width:340px;width:100%;text-align:center;position:relative;z-index:2;padding:0 8px;">
