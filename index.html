@@ -5111,10 +5111,13 @@ function gnOpenFridgeDoor(source) {
       if (welcome) welcome.classList.add('visible');
     }, 950);
 
-    // Proceed to demo — hide hook, selector demo is underneath
+    // Make hook non-interactive as soon as doors start opening
+    const hookEl = document.getElementById('instantHook');
+    if (hookEl) hookEl.style.pointerEvents = 'none';
+
+    // Hide completely after animation completes
     setTimeout(() => {
-      const hook = document.getElementById('instantHook');
-      if (hook) hook.style.display = 'none';
+      if (hookEl) hookEl.style.display = 'none';
     }, 2400);
 
     gtag('event', 'fridge_door_opened', { source: 'landing' });
