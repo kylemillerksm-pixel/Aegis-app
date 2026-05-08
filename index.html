@@ -2224,8 +2224,8 @@ function logError(source, message, extra) {
     }
     #door-left  { left:0;  transform-origin:left center; }
     #door-right { right:0; transform-origin:right center; }
-    #door-left.open  { transform:perspective(1200px) rotateY(-88deg); }
-    #door-right.open { transform:perspective(1200px) rotateY(88deg); }
+    #door-left.open  { transform:perspective(1200px) rotateY(-88deg); pointer-events:none; }
+    #door-right.open { transform:perspective(1200px) rotateY(88deg); pointer-events:none; }
     .door-handle {
       position:absolute;top:50%;
       width:4px;height:52px;margin-top:-26px;
@@ -8876,224 +8876,216 @@ document.addEventListener('DOMContentLoaded', () => {
   <button id="demoCloseBtn" onclick="hideSampleReport()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:rgba(255,255,255,.25);font-size:24px;cursor:pointer;z-index:10;padding:8px;touch-action:manipulation;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;">✕</button>
 
   <!-- SCREEN WRAPPER — slides between steps -->
-  <div id="demoScreenWrap" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 32px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div id="demoScreenWrap" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 32px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;z-index:20;">
 
     <!-- ── SCREEN 0: Hook ───────────────────────────────────────── -->
-    <div id="ds0" style="max-width:380px;width:100%;text-align:center;">
+    <!-- ── SCREEN 0: Hook with fridge bg ─────────────────────── -->
+    <div id="ds0" style="max-width:380px;width:100%;text-align:center;position:relative;z-index:2;">
 
-      <div style="font-family:'Lora',Georgia,serif;font-size:13px;color:rgba(76,175,130,.7);margin-bottom:28px;letter-spacing:.05em;">GuardNest</div>
+      <div style="font-family:'Lora',Georgia,serif;font-size:13px;color:rgba(76,175,130,.7);margin-bottom:24px;letter-spacing:.05em;">GuardNest</div>
 
-      <!-- The dare -->
-      <div style="font-family:'Lora',Georgia,serif;font-size:24px;color:#fff;line-height:1.3;margin-bottom:10px;">How much of your last shop is already gone?</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:24px;">Point your camera at your grocery receipt.<br>We'll tell you in 8 seconds.</div>
+      <div style="font-family:'Lora',Georgia,serif;font-size:26px;color:#fff;line-height:1.3;margin-bottom:10px;">What's in your fridge<br>right now?</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:24px;">Tap what you bought recently.<br>We'll show you exactly what's at risk.</div>
 
-      <!-- Receipt illustration -->
-      <div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;margin-bottom:22px;text-align:left;">
-        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="height:4px;width:52%;background:rgba(255,255,255,.07);border-radius:2px;"></div>
-            <div style="height:4px;width:16%;background:rgba(247,161,161,.28);border-radius:2px;"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="height:4px;width:45%;background:rgba(255,255,255,.05);border-radius:2px;"></div>
-            <div style="height:4px;width:16%;background:rgba(76,175,130,.22);border-radius:2px;"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="height:4px;width:58%;background:rgba(255,255,255,.06);border-radius:2px;"></div>
-            <div style="height:4px;width:16%;background:rgba(247,161,161,.22);border-radius:2px;"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="height:4px;width:42%;background:rgba(255,255,255,.04);border-radius:2px;"></div>
-            <div style="height:4px;width:16%;background:rgba(76,175,130,.18);border-radius:2px;"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div style="height:4px;width:50%;background:rgba(255,255,255,.05);border-radius:2px;"></div>
-            <div style="height:4px;width:16%;background:rgba(247,161,161,.2);border-radius:2px;"></div>
-          </div>
-        </div>
-        <div style="font-size:10px;color:rgba(255,255,255,.18);text-align:center;font-family:'DM Sans',sans-serif;">your receipt · 8 seconds</div>
+      <div style="background:rgba(162,45,45,.12);border:0.5px solid rgba(247,161,161,.15);border-radius:16px;padding:16px;margin-bottom:20px;text-align:left;">
+        <div style="font-size:10px;font-weight:700;color:rgba(247,161,161,.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;font-family:var(--app-font);">Average EU household</div>
+        <div style="font-family:'Lora',Georgia,serif;font-size:32px;color:#fff;line-height:1;margin-bottom:6px;">€1,400</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);line-height:1.6;font-family:var(--app-font);">lost to food waste every year.<br>Most of it quietly disappearing from the fridge.</div>
       </div>
 
-      <!-- Social proof -->
-      <div style="font-size:11px;color:rgba(255,255,255,.22);line-height:1.6;margin-bottom:24px;font-family:'DM Sans',sans-serif;">4,200 households already tracking<br>their fridge this week.</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.2);margin-bottom:24px;font-family:var(--app-font);">4,200 households tracking their fridge this week.</div>
 
-      <!-- CTA -->
-      <button onclick="demoGoTo(1)" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;font-family:'DM Sans',sans-serif;">
-        Scan my receipt →
+      <button onclick="gnOpenSelector()" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);margin-bottom:8px;">
+        Show me what's at risk →
       </button>
-      <div style="font-size:10px;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif;">Free · no account needed</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.2);font-family:var(--app-font);">Free · no account · 30 seconds</div>
 
     </div>
-    <!-- ── SCREEN 1: Pick your item ─────────────────────────────── -->
-    <div id="ds1" style="display:none;max-width:380px;width:100%;text-align:center;">
-      <div style="font-family:'Lora',Georgia,serif;font-size:20px;color:#fff;margin-bottom:8px;line-height:1.3;">What goes bad in your<br>kitchen most often?</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.4);margin-bottom:20px;font-family:'DM Sans',sans-serif;">Pick the one that quietly disappears. We'll show you exactly what GuardNest catches.</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;" id="demoPickerS1">
-        <div onclick="demoPickItem(this,'Baby Spinach','🥬',2,3.49)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
-          <div style="width:36px;height:36px;border-radius:8px;background:rgba(45,106,79,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9c1-3 4-6 7-7M9 2c0 4-2 8-6 11" stroke="#4CAF82" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Leafy greens</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Spinach, salad bags, herbs</div>
-          </div>
-        </div>
-        <div onclick="demoPickItem(this,'Strawberries','🍓',2,4.99)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
-          <div style="width:36px;height:36px;border-radius:8px;background:rgba(162,45,45,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="10" r="5" stroke="#F7A4A4" stroke-width="1.5"/><path d="M9 5v2" stroke="#F7A4A4" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Fresh produce</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Berries, tomatoes, avocado</div>
-          </div>
-        </div>
-        <div onclick="demoPickItem(this,'Chicken Breast','🍗',1,9.99)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
-          <div style="width:36px;height:36px;border-radius:8px;background:rgba(133,79,11,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 13V8a4 4 0 018 0v5" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round"/><path d="M3 13h12" stroke="#FAC775" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Meat and fish</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Chicken, beef, salmon</div>
-          </div>
-        </div>
-        <div onclick="demoPickItem(this,'Greek Yogurt','🥛',3,5.99)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
-          <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="4" y="6" width="10" height="9" rx="2" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><path d="M7 6V5a2 2 0 014 0v1" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/></svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Dairy and eggs</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Yogurt, cheese, milk</div>
-          </div>
-        </div>
-        <div onclick="demoPickItem(this,'Leftovers','🍱',2,0)" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px;text-align:left;">
-          <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="7" rx="2" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/><path d="M6 8V6a3 3 0 016 0v2" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/></svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;">Leftovers</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;">Cooked meals, opened jars</div>
-          </div>
-        </div>
+
+    <!-- ── SCREEN 1: Intelligent selector ─────────────────────── -->
+    <div id="ds1" style="display:none;max-width:380px;width:100%;position:relative;z-index:2;">
+
+      <!-- Orientation banner — dismisses after 4s -->
+      <div id="gnSelectorTip" style="background:rgba(76,175,130,.12);border:0.5px solid rgba(76,175,130,.2);border-radius:10px;padding:9px 13px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;"><circle cx="7" cy="7" r="6" stroke="#4CAF82" stroke-width="1.2"/><path d="M7 6v4M7 4.5h.01" stroke="#4CAF82" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <div style="font-size:11px;color:rgba(76,175,130,.85);font-family:var(--app-font);line-height:1.5;">Tap everything in your fridge. The bars show how long each item lasts.</div>
       </div>
-      <button onclick="demoGoTo(2,true)" style="background:none;border:none;color:rgba(255,255,255,.25);font-size:12px;cursor:pointer;padding:10px;touch-action:manipulation;font-family:'DM Sans',sans-serif;">Not sure — skip →</button>
+
+      <!-- Live risk card -->
+      <div id="gnSelRiskCard" style="background:rgba(162,45,45,.1);border:0.5px solid rgba(247,161,161,.15);border-radius:13px;padding:13px 14px;margin-bottom:10px;transition:all .3s;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;">
+          <div>
+            <div id="gnSelRiskLbl" style="font-size:9px;font-weight:700;color:rgba(247,161,161,.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;font-family:var(--app-font);">At risk this week</div>
+            <div id="gnSelRiskAmt" style="font-family:'Lora',Georgia,serif;font-size:28px;color:#fff;transition:color .2s;">€0.00</div>
+          </div>
+          <div style="text-align:right;padding-top:2px;">
+            <div id="gnSelTotal" style="font-size:9px;color:rgba(255,255,255,.22);font-family:var(--app-font);">of €0.00 selected</div>
+            <div id="gnSelPct" style="font-size:10px;font-weight:700;color:rgba(247,161,161,.5);margin-top:2px;font-family:var(--app-font);"></div>
+          </div>
+        </div>
+        <div style="height:2px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:5px;">
+          <div id="gnSelRiskBar" style="height:100%;border-radius:2px;background:#E24B4A;width:0%;transition:width .5s;"></div>
+        </div>
+        <div id="gnSelRiskSub" style="font-size:10px;color:rgba(255,255,255,.22);font-family:var(--app-font);">Select items to see what's expiring</div>
+      </div>
+
+      <!-- Cross-item compound risk -->
+      <div id="gnCrossRisk" style="display:none;background:rgba(162,45,45,.14);border:0.5px solid rgba(247,161,161,.2);border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:10px;color:rgba(247,161,161,.85);line-height:1.5;font-family:var(--app-font);"></div>
+
+      <!-- Intelligent nudge -->
+      <div id="gnSelNudge" style="display:none;background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.07);border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:10px;color:rgba(255,255,255,.3);line-height:1.5;font-family:var(--app-font);font-style:italic;"></div>
+
+      <!-- Item list -->
+      <div id="gnItemList"></div>
+
+      <!-- Selection CTA -->
+      <div id="gnSelCta" style="background:rgba(45,106,79,.12);border:0.5px solid rgba(76,175,130,.18);border-radius:12px;padding:10px 13px;display:flex;justify-content:space-between;align-items:center;opacity:.4;pointer-events:none;transition:opacity .2s;margin-top:8px;">
+        <div>
+          <div id="gnSelCount" style="font-size:12px;color:#4CAF82;font-weight:500;font-family:var(--app-font);">0 selected</div>
+          <div id="gnSelUrgent" style="font-size:9px;color:rgba(76,175,130,.45);font-family:var(--app-font);"></div>
+        </div>
+        <button onclick="gnShowResult()" style="background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);">See my risk →</button>
+      </div>
+
     </div>
-    <!-- ── SCREEN 2: The reveal — one item, full focus ───────────── -->
-    <div id="ds2" style="display:none;max-width:380px;width:100%;text-align:center;">
-      <!-- Scanning animation — auto-hides -->
-      <div id="ds2-scanning" style="text-align:center;">
-        <div style="font-size:48px;margin-bottom:16px;" id="ds2ScanEmoji">🔍</div>
-        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;" id="ds2ScanTitle">Checking your fridge...</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:20px;" id="ds2ScanSub">Calculating freshness</div>
-        <div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:0;max-width:280px;margin:0 auto;">
-          <div id="ds2Bar" style="height:100%;width:0%;background:#4CAF82;border-radius:2px;transition:width .3s;"></div>
+
+    <!-- ── SCREEN 2: Personal result ───────────────────────────── -->
+    <div id="ds2" style="display:none;max-width:380px;width:100%;position:relative;z-index:2;">
+
+      <div style="font-family:'Lora',Georgia,serif;font-size:17px;color:#fff;margin-bottom:14px;line-height:1.3;">Your fridge this week</div>
+
+      <!-- Their number -->
+      <div id="gnResultCard" style="background:rgba(162,45,45,.12);border:0.5px solid rgba(247,161,161,.2);border-radius:16px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;color:rgba(247,161,161,.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;font-family:var(--app-font);">At risk right now</div>
+        <div id="gnResAmt" style="font-family:'Lora',Georgia,serif;font-size:40px;color:#fff;line-height:1;margin-bottom:5px;">€0.00</div>
+        <div id="gnResSub" style="font-size:11px;color:rgba(255,255,255,.4);font-family:var(--app-font);margin-bottom:10px;"></div>
+        <div style="height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;">
+          <div id="gnResBar" style="height:100%;background:#E24B4A;border-radius:2px;width:0%;transition:width .8s;"></div>
         </div>
       </div>
-      <!-- Result — shown after scan -->
-      <div id="ds2-result" style="display:none;">
-        <!-- Big urgent item card -->
-        <div id="ds2Card" style="background:rgba(224,85,85,.08);border:1.5px solid rgba(224,85,85,.3);border-radius:20px;padding:24px;margin-bottom:20px;text-align:center;">
-          <div style="font-size:11px;font-weight:700;color:#E05555;letter-spacing:.12em;margin-bottom:12px;">⚠️ GOING BAD SOON</div>
-          <div style="font-size:56px;margin-bottom:10px;" id="ds2Emoji">🥬</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.06em;color:#fff;margin-bottom:6px;" id="ds2Name">Baby Spinach</div>
-          <!-- Freshness bar -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;">
-              <div id="ds2FreshBar" style="height:100%;width:15%;background:#E05555;border-radius:4px;transition:width .8s ease;"></div>
-            </div>
+
+      <!-- Items at risk -->
+      <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;font-family:var(--app-font);">Needs attention</div>
+      <div id="gnResItems" style="margin-bottom:10px;"></div>
+
+      <!-- Comparison element — the missing piece -->
+      <div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+        <div id="gnResComparison" style="font-family:'Lora',Georgia,serif;font-size:13px;color:rgba(255,255,255,.45);font-style:italic;line-height:1.6;margin-bottom:6px;"></div>
+        <div style="font-size:10px;color:rgba(255,255,255,.2);font-family:var(--app-font);">GuardNest users rescue an average of €47/week.</div>
+      </div>
+
+      <button id="gnSaveCta" onclick="gnSaveFromSelector()" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:15px;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);margin-bottom:8px;">
+        Save my fridge — free
+      </button>
+      <div style="font-size:10px;color:rgba(255,255,255,.18);text-align:center;font-family:var(--app-font);margin-bottom:10px;">We'll remind you before anything expires</div>
+      <button onclick="demoGoToRealScanner()" style="background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:4px;font-family:var(--app-font);text-decoration:underline;text-underline-offset:2px;">Have a receipt? Scan it for exact prices →</button>
+
+    </div>
+
+    <!-- ── SCREEN 3: Push activation ───────────────────────────── -->
+    <div id="ds3" style="display:none;max-width:380px;width:100%;position:relative;z-index:2;">
+
+      <!-- Saved confirmation -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(45,106,79,.2);border:1.5px solid rgba(76,175,130,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4.5 11l4 4 9-9" stroke="#4CAF82" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="font-family:'Lora',Georgia,serif;font-size:22px;font-style:italic;color:#fff;margin-bottom:6px;">Your fridge is saved.</div>
+        <div id="gnPushSavedSub" style="font-size:12px;color:rgba(255,255,255,.35);font-family:var(--app-font);line-height:1.6;"></div>
+      </div>
+
+      <!-- The ask -->
+      <div style="margin-bottom:16px;">
+        <div style="font-family:'Lora',Georgia,serif;font-size:17px;color:#fff;line-height:1.35;margin-bottom:6px;">Never miss an expiry again.</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.38);line-height:1.7;font-family:var(--app-font);">GuardNest will notify you before things go bad — so you use them in time, not find them in the bin.</div>
+      </div>
+
+      <!-- Notification previews -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;font-family:var(--app-font);">What you'll receive</div>
+        <div id="gnPushPreview1" style="background:rgba(255,255,255,.06);border:0.5px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 13px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:8px;background:#2D6A4F;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5a4.5 4.5 0 014.5 4.5v2.5l1 1.5H2.5L3.5 8.5V6A4.5 4.5 0 018 1.5z" stroke="#4CAF82" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#4CAF82" stroke-width="1.3"/></svg>
           </div>
-          <div style="font-size:15px;font-weight:700;" id="ds2Days" style="color:#E05555;">Expires in 2 days</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;" id="ds2Price">~$3.49 at risk</div>
+          <div style="flex:1;">
+            <div id="gnPreview1Title" style="font-size:11px;font-weight:700;color:#fff;margin-bottom:2px;font-family:var(--app-font);">Use today — before it's too late</div>
+            <div id="gnPreview1Sub" style="font-size:10px;color:rgba(255,255,255,.4);font-family:var(--app-font);">Expires tomorrow · €2.99 at risk</div>
+          </div>
+          <div style="font-size:9px;color:rgba(255,255,255,.25);font-family:var(--app-font);">8am</div>
         </div>
-        <!-- The ONE action — no scrolling needed -->
-        <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
-          <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.7;" id="ds2Tip">You probably bought this last week. Use it tonight — add it to a salad or smoothie before it wilts.</div>
+        <div style="background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.07);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;opacity:.65;">
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(133,79,11,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5a4.5 4.5 0 014.5 4.5v2.5l1 1.5H2.5L3.5 8.5V6A4.5 4.5 0 018 1.5z" stroke="#FAC775" stroke-width="1.3" stroke-linecap="round"/><path d="M6.5 12.5a1.5 1.5 0 003 0" stroke="#FAC775" stroke-width="1.3"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:#fff;margin-bottom:2px;font-family:var(--app-font);">Monday report ready</div>
+            <div id="gnPreviewMonSub" style="font-size:10px;color:rgba(255,255,255,.4);font-family:var(--app-font);">Your weekly fridge summary</div>
+          </div>
+          <div style="font-size:9px;color:rgba(255,255,255,.25);font-family:var(--app-font);">Mon</div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;">
-          <div style="font-size:16px;animation:chevronPulse 1.4s ease-in-out infinite;">👇</div>
-          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.04em;">Tap the button below to continue the demo</div>
+      </div>
+
+      <!-- When notified -->
+      <div style="background:rgba(255,255,255,.03);border:0.5px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 14px;margin-bottom:18px;">
+        <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;font-family:var(--app-font);">When we notify you</div>
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px;">
+          <div style="width:18px;height:18px;border-radius:50%;background:rgba(76,175,130,.15);border:0.5px solid rgba(76,175,130,.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#4CAF82;flex-shrink:0;margin-top:1px;font-family:var(--app-font);">1</div>
+          <div><div style="font-size:11px;font-weight:500;color:#fff;margin-bottom:1px;font-family:var(--app-font);">Day before something expires</div><div style="font-size:10px;color:rgba(255,255,255,.3);font-family:var(--app-font);">One alert per item, once only</div></div>
         </div>
-        <button id="ds2ActionBtn" onclick="demoMarkUsed()" style="width:100%;background:#4CAF82;color:#0e1117;border:none;border-radius:14px;padding:17px;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;">
-          👍 Got it — show me what happens next
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:9px;">
+          <div style="width:18px;height:18px;border-radius:50%;background:rgba(76,175,130,.15);border:0.5px solid rgba(76,175,130,.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#4CAF82;flex-shrink:0;margin-top:1px;font-family:var(--app-font);">2</div>
+          <div><div style="font-size:11px;font-weight:500;color:#fff;margin-bottom:1px;font-family:var(--app-font);">Monday 8am weekly summary</div><div style="font-size:10px;color:rgba(255,255,255,.3);font-family:var(--app-font);">Pre-filled with your items</div></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div style="width:18px;height:18px;border-radius:50%;background:rgba(76,175,130,.15);border:0.5px solid rgba(76,175,130,.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#4CAF82;flex-shrink:0;margin-top:1px;font-family:var(--app-font);">3</div>
+          <div><div style="font-size:11px;font-weight:500;color:#fff;margin-bottom:1px;font-family:var(--app-font);">After each new scan</div><div style="font-size:10px;color:rgba(255,255,255,.3);font-family:var(--app-font);">Updated risk and pattern insights</div></div>
+        </div>
+      </div>
+
+      <!-- Primary: Push -->
+      <div id="gnPushMainSection">
+        <button onclick="gnRequestPush()" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:15px;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);margin-bottom:10px;">
+          Turn on reminders →
         </button>
-        <div style="font-size:11px;color:rgba(255,255,255,.2);">This is a demo — nothing is being saved yet</div>
-      </div>
-    </div>
 
-    <!-- ── SCREEN 3: Payoff + CTA ───────────────────────────────── -->
-    <div id="ds3" style="display:none;max-width:380px;width:100%;text-align:center;">
-
-      <!-- ① Personalized payoff -->
-      <div style="background:rgba(162,45,45,.12);border:0.5px solid rgba(247,161,161,.2);border-radius:14px;padding:14px;margin-bottom:10px;text-align:left;">
-        <div style="font-size:10px;font-weight:700;color:rgba(247,161,161,.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-family:'DM Sans',sans-serif;">GuardNest found</div>
-        <div id="ds3SaveText" style="font-family:'Lora',Georgia,serif;font-size:20px;color:#fff;margin-bottom:5px;line-height:1.2;">~€3.49 at risk right now</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif;line-height:1.6;" id="ds3Insight">Your Baby Spinach has 2 days left. Most households have 4–6 items like this going unnoticed at any time.</div>
-      </div>
-
-      <!-- ② Bridge line -->
-      <div style="text-align:center;padding:4px 0 6px;">
-        <div style="font-size:12px;color:rgba(255,255,255,.35);font-family:'Lora',Georgia,serif;font-style:italic;">That was one item. Most fridges have eight.</div>
-      </div>
-
-      <!-- ③ Intelligence ladder -->
-      <div style="background:rgba(255,255,255,.04);border:0.5px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;margin-bottom:14px;">
-
-        <!-- Week 1 unlocked -->
-        <div style="padding:11px 14px;border-bottom:0.5px solid rgba(255,255,255,.06);">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-            <div style="font-size:11px;font-weight:700;color:#4CAF82;font-family:'DM Sans',sans-serif;">Week 1</div>
-            <div style="font-size:9px;font-weight:700;color:#4CAF82;background:rgba(76,175,130,.15);padding:2px 7px;border-radius:20px;font-family:'DM Sans',sans-serif;">Starts now</div>
-          </div>
-          <div style="font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;margin-bottom:3px;font-weight:600;">See exactly what's going bad</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;line-height:1.5;">Monday morning we tell you what needs attention that week.</div>
+        <!-- Divider -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,.06);"></div>
+          <span style="font-size:10px;color:rgba(255,255,255,.2);font-family:var(--app-font);">or get the Monday report by email</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,.06);"></div>
         </div>
 
-        <!-- Week 3 blurred -->
-        <div style="padding:11px 14px;border-bottom:0.5px solid rgba(255,255,255,.04);position:relative;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.2);font-family:'DM Sans',sans-serif;">Week 3</div>
-            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);padding:2px 7px;border-radius:20px;font-family:'DM Sans',sans-serif;">After scan 3</div>
-          </div>
-          <div style="filter:blur(6px);user-select:none;">
-            <div style="font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;margin-bottom:3px;font-weight:600;">Your most wasted item</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;line-height:1.5;">Cost per week · cost per year · why it keeps happening.</div>
-          </div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(14,17,23,.4);">
-            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;background:rgba(14,17,23,.75);padding:4px 12px;border-radius:20px;">Unlocks after scan 3</div>
+        <!-- Email capture — pre-filled with selector data -->
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input id="gnPushEmail" type="email" placeholder="your@email.com" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;font-size:16px;color:#fff;outline:none;font-family:var(--app-font);">
+          <button onclick="gnSubmitPushEmail()" style="background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);border-radius:10px;padding:12px 14px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);">Send →</button>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.18);text-align:center;font-family:var(--app-font);margin-bottom:12px;">Monday report pre-filled with your fridge items</div>
+
+        <button onclick="gnSkipPush()" style="width:100%;background:none;border:none;color:rgba(255,255,255,.2);font-size:11px;cursor:pointer;padding:6px;font-family:var(--app-font);">Maybe later</button>
+      </div>
+
+      <!-- Post-push granted state -->
+      <div id="gnPushGranted" style="display:none;">
+        <div style="background:rgba(45,106,79,.1);border:0.5px solid rgba(76,175,130,.2);border-radius:14px;padding:14px;margin-bottom:14px;text-align:left;">
+          <div style="font-size:9px;font-weight:700;color:rgba(76,175,130,.5);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;font-family:var(--app-font);">Your first reminder</div>
+          <div id="gnFirstReminder" style="font-size:13px;font-weight:500;color:#fff;margin-bottom:3px;font-family:var(--app-font);"></div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);font-family:var(--app-font);">We'll remind you at 8am. Check back before it expires.</div>
+        </div>
+
+        <!-- Also email after push granted -->
+        <div id="gnAlsoEmail" style="margin-bottom:14px;">
+          <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:8px;text-align:center;font-family:var(--app-font);">Also want the Monday report by email?</div>
+          <div style="display:flex;gap:6px;">
+            <input id="gnAlsoEmailInput" type="email" placeholder="your@email.com" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 12px;font-size:16px;color:#fff;outline:none;font-family:var(--app-font);">
+            <button onclick="gnSubmitAlsoEmail()" style="background:#2D6A4F;border:none;color:#fff;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);">Send →</button>
           </div>
         </div>
 
-        <!-- Week 6 blurred -->
-        <div style="padding:11px 14px;position:relative;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.15);font-family:'DM Sans',sans-serif;">Week 6+</div>
-            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.15);background:rgba(255,255,255,.03);padding:2px 7px;border-radius:20px;font-family:'DM Sans',sans-serif;">Yours after 6 scans</div>
-          </div>
-          <div style="filter:blur(7px);user-select:none;">
-            <div style="font-size:12px;color:#fff;font-family:'DM Sans',sans-serif;margin-bottom:3px;font-weight:600;">Your kitchen profile</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Sans',sans-serif;line-height:1.5;">Best shopping day · repeat offenders · annual rescue total.</div>
-          </div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(14,17,23,.5);">
-            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.25);font-family:'DM Sans',sans-serif;background:rgba(14,17,23,.85);padding:4px 12px;border-radius:20px;">Yours after 6 scans</div>
-          </div>
-        </div>
-
+        <button onclick="enterApp()" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:15px;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:var(--app-font);">
+          See my fridge →
+        </button>
       </div>
-
-      <!-- ④ Single CTA -->
-      <button onclick="gtag('event','demo_see_mine');demoGoToRealScanner();" style="width:100%;background:#2D6A4F;color:#fff;border:none;border-radius:20px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:8px;font-family:'DM Sans',sans-serif;">
-        Start with a scan — free
-      </button>
-      <div style="font-size:10px;color:rgba(255,255,255,.2);margin-bottom:16px;font-family:'DM Sans',sans-serif;">Unlock your pattern report after scan 3</div>
-
-      <!-- Email capture — soft secondary -->
-      <div id="ds3RemindWrap" style="margin-top:4px;">
-        <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:8px;text-align:center;font-family:'DM Sans',sans-serif;">Or get your Monday report by email instead</div>
-        <div style="display:flex;gap:6px;">
-          <input id="ds3Email" type="email" placeholder="your@email.com" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 12px;font-size:16px;color:#fff;outline:none;font-family:'DM Sans',sans-serif;">
-          <button onclick="submitDemoReminderNew()" style="background:#2D6A4F;border:none;color:#fff;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:'DM Sans',sans-serif;white-space:nowrap;">Send →</button>
-        </div>
-      </div>
-      <div id="ds3RemindSuccess" style="display:none;padding:10px;font-size:13px;color:#4CAF82;font-family:'DM Sans',sans-serif;text-align:center;">Saved — check your inbox Monday.</div>
 
     </div>
 
@@ -9698,6 +9690,470 @@ function gnDismissScanFailure() {
   var overlay = document.getElementById('gnScanFailureOverlay');
   if (overlay) overlay.remove();
   showPage('scanner');
+}
+
+
+// ── SELECTOR DEMO — items, state, functions ───────────────────────
+
+var GN_ITEMS = [
+  {id:'spinach',  name:'Baby spinach',    cat:'Greens',  price:2.99, base:4,  days:4,  hist:true,  waste:68, pair:'herbs'},
+  {id:'herbs',    name:'Fresh herbs',     cat:'Greens',  price:1.29, base:3,  days:3,  hist:false, waste:71, pair:'spinach'},
+  {id:'kale',     name:'Kale',            cat:'Greens',  price:2.49, base:6,  days:6,  hist:false, waste:55, pair:null},
+  {id:'salad',    name:'Mixed salad bag', cat:'Greens',  price:1.99, base:4,  days:4,  hist:false, waste:62, pair:null},
+  {id:'courgette',name:'Courgette',       cat:'Greens',  price:1.09, base:9,  days:9,  hist:false, waste:30, pair:null},
+  {id:'chicken',  name:'Chicken breast',  cat:'Protein', price:5.99, base:4,  days:4,  hist:true,  waste:18, pair:null},
+  {id:'salmon',   name:'Salmon fillet',   cat:'Protein', price:7.49, base:2,  days:2,  hist:false, waste:22, pair:null},
+  {id:'beef',     name:'Beef mince',      cat:'Protein', price:6.99, base:5,  days:5,  hist:false, waste:15, pair:null},
+  {id:'sausages', name:'Pork sausages',   cat:'Protein', price:3.49, base:6,  days:6,  hist:false, waste:20, pair:null},
+  {id:'prawns',   name:'King prawns',     cat:'Protein', price:6.99, base:2,  days:2,  hist:false, waste:35, pair:null},
+  {id:'milk',     name:'Whole milk',      cat:'Dairy',   price:1.19, base:7,  days:7,  hist:true,  waste:12, pair:null},
+  {id:'yogurt',   name:'Greek yogurt',    cat:'Dairy',   price:2.49, base:9,  days:9,  hist:false, waste:25, pair:null},
+  {id:'eggs',     name:'Free range eggs', cat:'Dairy',   price:3.29, base:21, days:21, hist:false, waste:8,  pair:null},
+  {id:'cheese',   name:'Cheddar',         cat:'Dairy',   price:3.99, base:14, days:14, hist:false, waste:18, pair:null},
+  {id:'butter',   name:'Butter',          cat:'Dairy',   price:2.29, base:21, days:21, hist:false, waste:5,  pair:null},
+  {id:'avocado',  name:'Avocado',         cat:'Produce', price:1.49, base:3,  days:3,  hist:false, waste:45, pair:null},
+  {id:'tomatoes', name:'Vine tomatoes',   cat:'Produce', price:1.99, base:5,  days:5,  hist:false, waste:32, pair:null},
+  {id:'berries',  name:'Mixed berries',   cat:'Produce', price:3.49, base:3,  days:3,  hist:false, waste:52, pair:null},
+  {id:'pepper',   name:'Bell peppers',    cat:'Produce', price:1.29, base:7,  days:7,  hist:false, waste:22, pair:null},
+  {id:'mushrooms',name:'Mushrooms',       cat:'Produce', price:1.49, base:5,  days:5,  hist:false, waste:40, pair:null},
+];
+
+var GN_CAT_ORDER = ['Greens','Protein','Dairy','Produce'];
+var GN_DEFAULT_SHOW = 3;
+var gnSelected = new Set();
+var gnExpanded = new Set();
+var gnWhen = {};
+var gnScanCount = parseInt(localStorage.getItem('guardnest_scan_count') || '0');
+
+function gnShelfColor(d){ return d<=3?'#E24B4A':d<=5?'#EF9F27':'#4CAF82'; }
+function gnShelfPct(d){ return Math.min((d/14)*100,100).toFixed(0); }
+function gnDayLabel(d){ return d<=0?'today':d===1?'1 day':d+' days'; }
+
+function gnAtRisk(){
+  var t=0;
+  gnSelected.forEach(function(id){
+    var i=GN_ITEMS.find(function(x){return x.id===id;});
+    if(i&&i.days<=5)t+=i.price;
+  });
+  return t;
+}
+
+function gnTotalVal(){
+  var t=0;
+  gnSelected.forEach(function(id){
+    var i=GN_ITEMS.find(function(x){return x.id===id;});
+    if(i)t+=i.price;
+  });
+  return t;
+}
+
+function gnUrgentCount(){
+  var c=0;
+  gnSelected.forEach(function(id){
+    var i=GN_ITEMS.find(function(x){return x.id===id;});
+    if(i&&i.days<=3)c++;
+  });
+  return c;
+}
+
+function gnSetEl(id,txt){
+  var e=document.getElementById(id);
+  if(e)e.textContent=txt;
+}
+
+function gnUpdateSelRisk(){
+  var ar=gnAtRisk(), tv=gnTotalVal(), uc=gnUrgentCount();
+  var pct=tv>0?Math.round((ar/tv)*100):0;
+
+  var aEl=document.getElementById('gnSelRiskAmt');
+  if(aEl){
+    aEl.innerHTML='€'+ar.toFixed(2);
+    aEl.style.color=ar>0?'#F7A4A4':'#fff';
+    setTimeout(function(){if(aEl)aEl.style.color='#fff';},350);
+  }
+
+  var rc=document.getElementById('gnSelRiskCard');
+  if(rc)rc.style.background=ar===0&&gnSelected.size>0?'rgba(45,106,79,.08)':'rgba(162,45,45,.1)';
+
+  gnSetEl('gnSelTotal','of €'+tv.toFixed(2)+' selected');
+  gnSetEl('gnSelPct',tv>0?(pct+'% at risk'):'');
+  var rb=document.getElementById('gnSelRiskBar'); if(rb)rb.style.width=pct+'%';
+  gnSetEl('gnSelRiskSub',
+    gnSelected.size===0?'Select items to see what\'s expiring':
+    ar===0?'All looking good \u2014 nothing expiring soon':
+    uc+' item'+(uc!==1?'s':'')+' expiring within 3 days');
+
+  gnSetEl('gnSelCount',gnSelected.size+' selected · €'+tv.toFixed(2));
+  gnSetEl('gnSelUrgent',ar>0?'€'+ar.toFixed(2)+' needs attention this week':'');
+
+  var cta=document.getElementById('gnSelCta');
+  if(cta){
+    cta.style.opacity=gnSelected.size>0?'1':'0.4';
+    cta.style.pointerEvents=gnSelected.size>0?'auto':'none';
+  }
+
+  gnUpdateCrossRisk();
+  gnUpdateNudge();
+}
+
+function gnUpdateCrossRisk(){
+  var c=document.getElementById('gnCrossRisk');
+  if(!c)return;
+  if(gnSelected.has('spinach')&&gnSelected.has('herbs')){
+    c.style.display='block';
+    c.innerHTML='<strong style="color:#F7A4A4;">Compound risk:</strong> Spinach + herbs go together. Miss Thursday and both are wasted. <strong style="color:#F7A4A4;">€'+(2.99+1.29).toFixed(2)+' combined.</strong>';
+  } else if(gnSelected.has('salmon')&&gnSelected.has('prawns')){
+    c.style.display='block';
+    c.innerHTML='<strong style="color:#F7A4A4;">Two seafood items</strong> both expire in 2 days. Use one tonight. <strong style="color:#F7A4A4;">€'+(7.49+6.99).toFixed(2)+' at risk.</strong>';
+  } else {
+    c.style.display='none';
+  }
+}
+
+function gnUpdateNudge(){
+  var n=document.getElementById('gnSelNudge');
+  if(!n)return;
+  var hasProd=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Produce';});});
+  var hasDairy=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Dairy';});});
+  var hasGreen=[...gnSelected].some(function(id){return GN_ITEMS.find(function(i){return i.id===id&&i.cat==='Greens';});});
+  if(gnSelected.size>=3&&!hasProd&&hasGreen){
+    n.style.display='block';
+    n.textContent='Most households also have fresh produce this week — berries or avocado tend to be forgotten.';
+  } else if(gnSelected.size>=5&&!hasDairy){
+    n.style.display='block';
+    n.textContent='You haven\'t added dairy. Yogurt and milk expire sooner than most people expect.';
+  } else {
+    n.style.display='none';
+  }
+}
+
+function gnRenderItems(){
+  var list=document.getElementById('gnItemList');
+  if(!list)return;
+  var html='';
+
+  GN_CAT_ORDER.forEach(function(cat){
+    var items=GN_ITEMS.filter(function(i){return i.cat===cat;});
+    var selInCat=items.filter(function(i){return gnSelected.has(i.id);}).length;
+    var visible=gnExpanded.has(cat)?items:items.slice(0,GN_DEFAULT_SHOW);
+    var sorted=visible.slice().sort(function(a,b){
+      var as=gnSelected.has(a.id)||a.hist, bs=gnSelected.has(b.id)||b.hist;
+      if(as&&!bs)return -1; if(!as&&bs)return 1;
+      if(as&&bs)return a.days-b.days; return 0;
+    });
+
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 7px;">'
+      +'<span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.18);font-family:var(--app-font);">'+cat+'</span>'
+      +'<span id="cok-'+cat+'" style="font-size:9px;color:#4CAF82;font-family:var(--app-font);opacity:'+(selInCat>=2?'1':'0')+';transition:opacity .3s;">\u2713 done</span>'
+      +'</div>';
+
+    sorted.forEach(function(item){
+      var sel=gnSelected.has(item.id), hist=item.hist&&!sel;
+      var showBar=sel||hist;
+      var col=gnShelfColor(item.days);
+      var textCol=sel||hist?'#fff':'rgba(255,255,255,.35)';
+      var fw=sel||hist?'500':'400';
+      var bg=sel?'rgba(255,255,255,.07)':hist?'rgba(76,175,130,.04)':'rgba(255,255,255,.03)';
+      var bd=sel?'rgba(76,175,130,.4)':hist?'rgba(76,175,130,.2)':'rgba(255,255,255,.08)';
+      var checkBg=sel||hist?'#2D6A4F':'transparent';
+      var checkBd=sel||hist?'#2D6A4F':'rgba(255,255,255,.15)';
+      var priceCol=sel?'rgba(255,255,255,.35)':'rgba(255,255,255,.15)';
+
+      html+='<div onclick="gnToggleItem('+JSON.stringify(item.id)+')" style="border-radius:11px;padding:10px 12px;cursor:pointer;border:0.5px solid '+bd+';background:'+bg+';margin-bottom:5px;">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(showBar?'6':'0')+'px;">';
+      html+='<div style="display:flex;align-items:center;gap:5px;">';
+      html+='<span style="font-size:12px;color:'+textCol+';font-weight:'+fw+';font-family:var(--app-font);">'+item.name+'</span>';
+      if(hist&&!sel) html+='<span style="font-size:8px;color:rgba(76,175,130,.5);background:rgba(76,175,130,.08);padding:1px 5px;border-radius:4px;font-family:var(--app-font);">usually buy</span>';
+      if(sel&&gnScanCount>=3&&item.waste>50) html+='<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(162,45,45,.2);color:#F7A4A4;font-family:var(--app-font);">'+item.waste+'% waste</span>';
+      if(sel&&gnScanCount>=3&&item.waste<=25) html+='<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(45,106,79,.2);color:#4CAF82;font-family:var(--app-font);">'+item.waste+'% used</span>';
+      html+='</div>';
+      html+='<div style="display:flex;align-items:center;gap:6px;">';
+      html+='<span style="font-size:10px;color:'+priceCol+';font-family:var(--app-font);">\u20ac'+item.price.toFixed(2)+'</span>';
+      html+='<div style="width:17px;height:17px;border-radius:50%;border:1.5px solid '+checkBd+';background:'+checkBg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
+      if(sel||hist) html+='<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2.5 2.5L7.5 2" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      html+='</div></div></div>';
+
+      if(showBar){
+        html+='<div style="display:flex;align-items:center;gap:7px;">';
+        html+='<div style="height:2px;background:rgba(255,255,255,.06);border-radius:2px;flex:1;overflow:hidden;"><div style="height:100%;border-radius:2px;background:'+col+';width:'+gnShelfPct(item.days)+'%;"></div></div>';
+        html+='<span style="font-size:9px;font-weight:700;color:'+col+';white-space:nowrap;font-family:var(--app-font);">'+gnDayLabel(item.days)+'</span>';
+        if(sel){
+          var w=gnWhen[item.id]||'today';
+          html+='<div style="display:flex;gap:3px;" onclick="event.stopPropagation()">';
+          ['today','2d','4d'].forEach(function(wv){
+            var wbg=w===wv?'rgba(76,175,130,.15)':'rgba(255,255,255,.06)';
+            var wcol=w===wv?'#4CAF82':'rgba(255,255,255,.35)';
+            html+='<button onclick="gnSetWhen('+JSON.stringify(item.id)+','+JSON.stringify(wv)+')" style="font-size:9px;background:'+wbg+';border:none;border-radius:6px;padding:2px 6px;cursor:pointer;color:'+wcol+';font-family:var(--app-font);">'+wv+'</button>';
+          });
+          html+='</div>';
+        }
+        html+='</div>';
+      }
+      html+='</div>';
+    });
+
+    if(!gnExpanded.has(cat)&&items.length>GN_DEFAULT_SHOW){
+      html+='<button onclick="gnExpandCat('+JSON.stringify(cat)+')" style="font-size:10px;color:rgba(255,255,255,.22);cursor:pointer;background:none;border:none;padding:4px 0 6px;width:100%;text-align:center;font-family:var(--app-font);">+ '+(items.length-GN_DEFAULT_SHOW)+' more in '+cat.toLowerCase()+'</button>';
+    }
+  });
+
+  list.innerHTML=html;
+}
+function gnToggleItem(id){
+  if(gnSelected.has(id)){
+    gnSelected.delete(id);
+    delete gnWhen[id];
+    var i=GN_ITEMS.find(function(x){return x.id===id;});
+    if(i)i.days=i.base;
+  } else {
+    gnSelected.add(id);
+  }
+  gnRenderItems();
+  gnUpdateSelRisk();
+}
+
+function gnExpandCat(cat){
+  gnExpanded.add(cat);
+  gnRenderItems();
+}
+
+function gnSetWhen(id,w){
+  gnWhen[id]=w;
+  var i=GN_ITEMS.find(function(x){return x.id===id;});
+  if(i)i.days=Math.max(0,i.base-(w==='2d'?2:w==='4d'?4:0));
+  gnRenderItems();
+  gnUpdateSelRisk();
+}
+
+function gnOpenSelector(){
+  // Transition ds0 out, ds1 in
+  var ds0=document.getElementById('ds0');
+  var ds1=document.getElementById('ds1');
+  if(ds0)ds0.style.display='none';
+  if(ds1)ds1.style.display='block';
+
+  // Dismiss tip after 4s
+  setTimeout(function(){
+    var tip=document.getElementById('gnSelectorTip');
+    if(tip){tip.style.transition='opacity .5s';tip.style.opacity='0';setTimeout(function(){if(tip)tip.style.display='none';},500);}
+  },4000);
+
+  gnRenderItems();
+  gnUpdateSelRisk();
+}
+
+function gnShowResult(){
+  var ds1=document.getElementById('ds1');
+  var ds2=document.getElementById('ds2');
+  if(ds1)ds1.style.display='none';
+  if(ds2)ds2.style.display='block';
+
+  var ar=gnAtRisk(), tv=gnTotalVal();
+  var pct=tv>0?Math.round((ar/tv)*100):0;
+
+  var aEl=document.getElementById('gnResAmt');
+  if(aEl)aEl.innerHTML='€'+ar.toFixed(2);
+
+  var sEl=document.getElementById('gnResSub');
+  if(sEl)sEl.textContent=gnSelected.size+' items · €'+tv.toFixed(2)+' total';
+
+  setTimeout(function(){
+    var rb=document.getElementById('gnResBar');
+    if(rb)rb.style.width=pct+'%';
+  },100);
+
+  // Items at risk
+  var urgent=[...gnSelected].map(function(id){return GN_ITEMS.find(function(i){return i.id===id;});})
+    .filter(function(i){return i&&i.days<=5;})
+    .sort(function(a,b){return a.days-b.days;});
+
+  var ri=document.getElementById('gnResItems');
+  if(ri){
+    ri.innerHTML=urgent.slice(0,5).map(function(item){
+      var col=item.days<=1?'#A32D2D':item.days<=3?'#854F0B':'#3B6D11';
+      var bg=item.days<=1?'#FCEBEB':item.days<=3?'#FAEEDA':'#EAF3DE';
+      return '<div style="background:rgba(255,255,255,.04);border:0.5px solid '+(item.days<=3?'rgba(247,161,161,.2)':'rgba(255,255,255,.07)')+';border-radius:10px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+        +'<div style="display:flex;align-items:center;gap:6px;">'
+        +'<span style="font-size:12px;color:#fff;font-weight:500;font-family:var(--app-font);">'+item.name+'</span>'
+        +(gnScanCount>=3&&item.waste>50?'<span style="font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(162,45,45,.2);color:#F7A4A4;font-family:var(--app-font);">'+item.waste+'% waste rate</span>':'')
+        +'</div>'
+        +'<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+bg+';color:'+col+';font-family:var(--app-font);">'+gnDayLabel(item.days)+'</span>'
+        +'</div>';
+    }).join('')+(urgent.length===0?'<div style="font-size:11px;color:rgba(255,255,255,.3);text-align:center;padding:12px;font-family:var(--app-font);">Nothing expiring this week — great job!</div>':'');
+  }
+
+  // Comparison element
+  var comp=document.getElementById('gnResComparison');
+  if(comp){
+    if(ar>0){
+      comp.innerHTML="The average household misses €28 a week. You just caught €"+ar.toFixed(2)+" before it disappeared.";
+    } else {
+      comp.innerHTML="Most people don't know what's going bad in their fridge. Now you do.";
+    }
+  }
+
+  // CTA with their amount
+  var cta=document.getElementById('gnSaveCta');
+  if(cta)cta.textContent=ar>0?'Rescue €'+ar.toFixed(2)+' — save my fridge':'Save my fridge — free';
+}
+
+function gnSaveFromSelector(){
+  // Save selected items to guest_items via existing guestSaveAnonymous flow
+  var guestId=localStorage.getItem('guardnest_guest_id');
+  if(!guestId){guestId='guest_'+Math.random().toString(36).substr(2,12)+'_'+Date.now();localStorage.setItem('guardnest_guest_id',guestId);}
+
+  var today=new Date().toISOString().split('T')[0];
+  var rows=[...gnSelected].map(function(id){
+    var item=GN_ITEMS.find(function(i){return i.id===id;});
+    if(!item)return null;
+    return {
+      guest_id:guestId,
+      item_name:item.name,
+      price:item.price,
+      purchase_date:today,
+      category:item.cat,
+      days_until_spoil:item.days,
+      status:'active',
+      source:'selector_demo'
+    };
+  }).filter(Boolean);
+
+  // Save to localStorage immediately
+  localStorage.setItem('guardnest_saved_items',JSON.stringify(rows));
+  allItems=rows;
+
+  // Insert to Supabase
+  if(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){
+    supa.from('guest_items').insert(rows).then(function(res){
+      if(res.error)console.log('Selector insert error:',res.error);
+      else {
+        localStorage.removeItem('guardnest_saved_items');
+        if(typeof gtag!=='undefined')gtag('event','selector_save_completed',{items:rows.length,at_risk:gnAtRisk().toFixed(2)});
+      }
+    });
+  }
+
+  // Save email_leads pre-filled with items for Monday report
+  localStorage.setItem('gnSelectorItems',JSON.stringify(rows));
+  localStorage.setItem('gnSelectorAtRisk',gnAtRisk().toFixed(2));
+
+  // Move to push activation screen
+  var ds2=document.getElementById('ds2');
+  var ds3=document.getElementById('ds3');
+  if(ds2)ds2.style.display='none';
+  if(ds3)ds3.style.display='block';
+
+  // Pre-fill push screen with their data
+  var sub=document.getElementById('gnPushSavedSub');
+  if(sub)sub.textContent=gnSelected.size+' items tracked · €'+gnAtRisk().toFixed(2)+' at risk this week';
+
+  // Personalize notification preview with their most urgent item
+  var urgent=[...gnSelected].map(function(id){return GN_ITEMS.find(function(i){return i.id===id;});})
+    .filter(function(i){return i&&i.days<=5;})
+    .sort(function(a,b){return a.days-b.days;})[0];
+
+  if(urgent){
+    var p1t=document.getElementById('gnPreview1Title');
+    var p1s=document.getElementById('gnPreview1Sub');
+    if(p1t)p1t.textContent=urgent.name+' — use '+(urgent.days<=1?'today':'before '+gnDayLabel(urgent.days));
+    if(p1s)p1s.textContent='Expires in '+gnDayLabel(urgent.days)+' · €'+urgent.price.toFixed(2)+' at risk';
+
+    var monSub=document.getElementById('gnPreviewMonSub');
+    if(monSub)monSub.textContent=gnSelected.size+' items tracked · report pre-filled';
+  }
+
+  // Fire GA4 event
+  if(typeof gtag!=='undefined')gtag('event','demo_completed',{method:'selector',items:rows.length,at_risk:gnAtRisk().toFixed(2)});
+}
+
+function gnRequestPush(){
+  if('Notification' in window){
+    Notification.requestPermission().then(function(perm){
+      if(perm==='granted'){
+        gnShowPushGranted();
+        if(typeof gtag!=='undefined')gtag('event','push_granted',{source:'demo_selector'});
+        // Register service worker push
+        if('serviceWorker' in navigator&&navigator.serviceWorker.controller){
+          navigator.serviceWorker.controller.postMessage({type:'SUBSCRIBE_PUSH'});
+        }
+      } else {
+        // Declined — show email only
+        var ms=document.getElementById('gnPushMainSection');
+        if(ms){ms.children[0].style.display='none';}
+        if(typeof gtag!=='undefined')gtag('event','push_declined',{source:'demo_selector'});
+      }
+    });
+  } else {
+    gnShowPushGranted();
+  }
+}
+
+function gnShowPushGranted(){
+  var ms=document.getElementById('gnPushMainSection');
+  var granted=document.getElementById('gnPushGranted');
+  if(ms)ms.style.display='none';
+  if(granted)granted.style.display='block';
+
+  // Show first reminder personalized
+  var urgent=[...gnSelected].map(function(id){return GN_ITEMS.find(function(i){return i.id===id;});})
+    .filter(function(i){return i&&i.days<=5;})
+    .sort(function(a,b){return a.days-b.days;})[0];
+  var fr=document.getElementById('gnFirstReminder');
+  if(fr&&urgent)fr.textContent=urgent.name+' — reminder set for '+(urgent.days<=1?'tomorrow morning':'in '+gnDayLabel(urgent.days));
+}
+
+function gnSubmitPushEmail(){
+  var v=(document.getElementById('gnPushEmail')||{}).value||'';
+  v=v.trim();
+  if(!v||!v.includes('@')){
+    var inp=document.getElementById('gnPushEmail');
+    if(inp)inp.style.borderColor='rgba(162,45,45,.4)';
+    return;
+  }
+  gnSaveEmailLead(v,'push_screen_primary');
+  var emailSection=document.getElementById('gnPushMainSection');
+  if(emailSection){
+    var inp=emailSection.querySelector('input');
+    var btn=emailSection.querySelector('button[onclick="gnSubmitPushEmail()"]');
+    if(inp)inp.style.display='none';
+    if(btn)btn.style.display='none';
+    var conf=document.createElement('div');
+    conf.style.cssText='font-size:12px;color:#4CAF82;text-align:center;padding:8px;font-family:var(--app-font);';
+    conf.textContent='✓ Saved — your Monday report is pre-filled with your fridge items.';
+    if(inp&&inp.parentNode)inp.parentNode.insertBefore(conf,inp);
+  }
+  setTimeout(function(){gnSkipPush();},1500);
+}
+
+function gnSubmitAlsoEmail(){
+  var v=(document.getElementById('gnAlsoEmailInput')||{}).value||'';
+  v=v.trim();
+  if(!v||!v.includes('@'))return;
+  gnSaveEmailLead(v,'push_screen_also_email');
+  var ae=document.getElementById('gnAlsoEmail');
+  if(ae)ae.innerHTML='<div style="font-size:12px;color:#4CAF82;text-align:center;padding:6px;font-family:var(--app-font);">✓ Monday report added.</div>';
+}
+
+function gnSaveEmailLead(email, source){
+  localStorage.setItem('guardnest_lead_email',email);
+  var guestId=localStorage.getItem('guardnest_guest_id');
+  var items=localStorage.getItem('gnSelectorItems');
+  var atRisk=localStorage.getItem('gnSelectorAtRisk');
+
+  supa.from('email_leads').insert({
+    email:email,
+    source:source,
+    guest_id:guestId||null,
+    email_sent:false,
+    created_at:new Date().toISOString(),
+    metadata:JSON.stringify({items:items?JSON.parse(items):[],at_risk:atRisk||'0'})
+  }).then(function(res){
+    if(typeof gtag!=='undefined')gtag('event','email_captured',{source:source});
+  });
+}
+
+function gnSkipPush(){
+  enterApp();
 }
 
 function demoGoToRealScanner() {
