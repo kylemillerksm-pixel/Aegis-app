@@ -9214,13 +9214,8 @@ function hideSampleReport() {
 
 // Define showSampleReport for new flow
 function showSampleReport() {
-  document.getElementById('sampleReportModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  const appEl = document.getElementById('screen-app');
-  if (appEl) appEl.style.pointerEvents = 'none';
-  window._demoPick = { name:'Baby Spinach', emoji:'🥬', days:2, price:3.49 };
-  window._demoMissionDone = false;
-  demoGoTo(0);
+  // No-op — fridge door instantHook handles demo now
+  // Old sampleReportModal is replaced by the selector demo
 };
 
 // Keep advanceDemoToStep1 as no-op for backwards compat
@@ -9647,6 +9642,23 @@ function gnSaveEmailLead(email,source){
   }
 }
 
+function enterApp() {
+  // Mark onboarded — returning guests go straight to app
+  localStorage.setItem('guardnest_onboarded', 'true');
+  localStorage.setItem('guardnest_seen_sample', '1');
+  // Show the app
+  var appEl = document.getElementById('screen-app');
+  if (appEl) { appEl.style.opacity = '1'; appEl.style.pointerEvents = 'auto'; }
+  var hook = document.getElementById('instantHook');
+  if (hook) hook.style.display = 'none';
+  var banner = document.getElementById('guestBanner');
+  if (banner) banner.style.display = 'flex';
+  // Load items and show vault
+  showPage('vault');
+  try { loadItems().then(function() { refreshVault(); refreshDashboard(); }); } catch(e) {}
+  if (typeof gtag !== 'undefined') gtag('event', 'demo_enter_app', {});
+}
+
 function gnSkipPush(){ enterApp(); }
 
 function demoGoToRealScanner() {
@@ -9790,37 +9802,50 @@ async function demoSaveAndClose() {
 <script>
 function bootGuestMode() {
   const isDemoMode = new URLSearchParams(window.location.search).get('demo') === 'true';
+  const hasOnboarded = localStorage.getItem('guardnest_onboarded') === 'true';
+  const hasSeenSample = localStorage.getItem('guardnest_seen_sample');
 
-  // Show the app directly in guest mode — no auth required
+  if (isDemoMode) {
+    // Demo URL — show app transparent, run old demo compat
+    document.getElementById('screen-auth').classList.add('hidden');
+    document.getElementById('screen-app').classList.add('visible');
+    document.body.classList.add('app-active');
+    applyMobileLayout();
+    showPage('scanner');
+    const appEl = document.getElementById('screen-app');
+    if (appEl) { appEl.style.opacity = '0'; appEl.style.pointerEvents = 'none'; }
+    const banner = document.getElementById('guestBanner');
+    if (banner) banner.style.display = 'none';
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  if (!hasOnboarded && !hasSeenSample) {
+    // First time guest — keep instantHook (fridge door) visible
+    // App loads silently in background, door is the only thing user sees
+    document.getElementById('screen-auth').classList.add('hidden');
+    document.getElementById('screen-app').classList.add('visible');
+    document.body.classList.add('app-active');
+    applyMobileLayout();
+    showPage('dashboard');
+    // Keep app hidden behind fridge door
+    const appEl = document.getElementById('screen-app');
+    if (appEl) { appEl.style.opacity = '0'; appEl.style.pointerEvents = 'none'; }
+    const banner = document.getElementById('guestBanner');
+    if (banner) banner.style.display = 'none';
+    // instantHook stays visible — user taps door to enter demo
+    return;
+  }
+
+  // Returning guest — show app normally
   document.getElementById('screen-auth').classList.add('hidden');
   document.getElementById('screen-app').classList.add('visible');
   document.body.classList.add('app-active');
   applyMobileLayout();
-  showPage('scanner');
-
-  if (isDemoMode) {
-    // Make app transparent and non-interactive instead of visibility:hidden
-    // visibility:hidden on iOS Safari hides child modals too
-    const appEl = document.getElementById('screen-app');
-    if (appEl) {
-      appEl.style.opacity = '0';
-      appEl.style.pointerEvents = 'none';
-    }
-    const banner = document.getElementById('guestBanner');
-    if (banner) banner.style.display = 'none';
-    window.history.replaceState({}, '', window.location.pathname);
-    showSampleReport();
-  } else {
-    // Show guest banner
-    const banner = document.getElementById('guestBanner');
-    if (banner) banner.style.display = 'flex';
-    // Show onboarding for first time guests
-    if (!localStorage.getItem('guardnest_seen_sample')) {
-      setTimeout(() => showSampleReport(), 600);
-    } else {
-      try { checkOnboarding(); } catch(e) {}
-    }
-  }
+  showPage('dashboard');
+  const banner = document.getElementById('guestBanner');
+  if (banner) banner.style.display = 'flex';
+  try { loadItems().then(function() { refreshVault(); refreshDashboard(); }); } catch(e) {}
 }
 
 function guestMarkUsed(index, event) {
