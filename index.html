@@ -2623,7 +2623,7 @@ function gnSaveFromSelector(){
   var guestId=localStorage.getItem('guardnest_guest_id');
   if(!guestId){guestId='guest_'+Math.random().toString(36).substr(2,12)+'_'+Date.now();localStorage.setItem('guardnest_guest_id',guestId);}
   var today=new Date().toISOString().split('T')[0];
-  var rows=[...gnSelected].map(function(id){var item=GN_ITEMS.find(function(i){return i.id===id;});if(!item)return null;return {guest_id:guestId,item_name:item.name,price:item.price,purchase_date:today,category:item.cat,days_until_spoil:item.days,status:'active',source:'selector_demo'};}).filter(Boolean);
+  var rows=[...gnSelected].map(function(id){var item=GN_ITEMS.find(function(i){return i.id===id;});if(!item)return null;return {guest_id:guestId,item_name:item.name,price:item.price,purchase_date:today,category:item.cat,days_until_spoil:item.days,status:'active'};}).filter(Boolean);
   localStorage.setItem('guardnest_saved_items',JSON.stringify(rows));
   allItems=rows;
   if(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){
