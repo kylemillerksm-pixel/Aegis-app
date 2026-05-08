@@ -2643,8 +2643,27 @@ function gnSaveFromSelector(){
 }
 
 function gnRequestPush(){
-  if('Notification' in window){Notification.requestPermission().then(function(perm){if(perm==='granted')gnShowPushGranted();});}
-  else{gnShowPushGranted();}
+  if('Notification' in window){
+    if(Notification.permission==='granted'){
+      gnShowPushGranted();
+      return;
+    }
+    if(Notification.permission==='denied'){
+      // Already denied — skip to email only, hide push button
+      var btn=document.querySelector('[onclick="gnRequestPush()"]');
+      if(btn)btn.style.display='none';
+      return;
+    }
+    Notification.requestPermission().then(function(perm){
+      if(perm==='granted'){gnShowPushGranted();}
+      else{
+        var btn=document.querySelector('[onclick="gnRequestPush()"]');
+        if(btn)btn.style.display='none';
+      }
+    });
+  } else {
+    gnShowPushGranted();
+  }
 }
 function gnShowPushGranted(){
   var ms=document.getElementById('gnPushMainSection'),g=document.getElementById('gnPushGranted');
@@ -2668,7 +2687,7 @@ function gnSaveEmailLead(email,source){
   localStorage.setItem('guardnest_lead_email',email);
   var guestId=localStorage.getItem('guardnest_guest_id');
   if(location.hostname!=='127.0.0.1'&&location.hostname!=='localhost'){
-    supa.from('email_leads').insert({email:email,source:source,guest_id:guestId||null,email_sent:false,created_at:new Date().toISOString()}).then(function(){if(typeof gtag!=='undefined')gtag('event','email_captured',{source:source});});
+    supa.from('email_leads').insert({email:email,source:source,email_sent:false,created_at:new Date().toISOString()}).then(function(){if(typeof gtag!=='undefined')gtag('event','email_captured',{source:source});});
   }
 }
 function gnSkipPush(){enterApp();}
@@ -5529,6 +5548,8 @@ var PAGE_TITLES = {
 
 // Prevent 300ms tap delay on mobile
 document.addEventListener('touchstart', function(){}, {passive: true});
+
+function gnShowCheckinCard(){}
 
 function showPage(id) {
   // Remove post-demo guide overlay if present
